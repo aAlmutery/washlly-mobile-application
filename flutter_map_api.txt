@@ -1,0 +1,524 @@
+﻿
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_html-3.0.0\lib\sr
+c\style\marker.dart:3:class Marker {
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_html-3.0.0\lib\sr
+c\style\marker.dart:4:  final Content content;
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_html-3.0.0\lib\sr
+c\style\marker.dart:5:
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_html-3.0.0-beta.2
+\lib\src\style\marker.dart:3:class Marker {
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_html-3.0.0-beta.2
+\lib\src\style\marker.dart:4:  final Content content;
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_html-3.0.0-beta.2
+\lib\src\style\marker.dart:5:
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\example
+\lib\main.dart:82:        InteractiveFlagsPage.route: (context) => const 
+InteractiveFlagsPage(),
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\example
+\lib\main.dart:83:        FlingAnimationDampingPage.route: (context) =>
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\example
+\lib\main.dart:84:            const FlingAnimationDampingPage(),
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\example
+\lib\pages\interactive_test_page.dart:7:class InteractiveFlagsPage extends 
+StatefulWidget {
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\example
+\lib\pages\interactive_test_page.dart:8:  static const String route = 
+'/interactive_flags_page';
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\example
+\lib\pages\interactive_test_page.dart:9:
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\example
+\lib\pages\interactive_test_page.dart:10:  const 
+InteractiveFlagsPage({super.key});
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\example
+\lib\pages\interactive_test_page.dart:11:
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\example
+\lib\pages\interactive_test_page.dart:12:  @override
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\example
+\lib\pages\interactive_test_page.dart:13:  State createState() => 
+_InteractiveFlagsPageState();
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\example
+\lib\pages\interactive_test_page.dart:14:}
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\example
+\lib\pages\interactive_test_page.dart:15:
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\example
+\lib\pages\interactive_test_page.dart:16:class _InteractiveFlagsPageState 
+extends State<InteractiveFlagsPage> {
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\example
+\lib\pages\interactive_test_page.dart:17:  final flagsSet =
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\example
+\lib\pages\interactive_test_page.dart:18:      
+ValueNotifier(InteractiveFlag.drag | InteractiveFlag.pinchZoom);
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\example
+\lib\pages\interactive_test_page.dart:32:      drawer: const 
+MenuDrawer(InteractiveFlagsPage.route),
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\example
+\lib\pages\interactive_test_page.dart:33:      body: Padding(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\example
+\lib\pages\interactive_test_page.dart:34:        padding: const 
+EdgeInsets.all(8),
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\example
+\lib\pages\map_controller.dart:7:class MapControllerPage extends 
+StatefulWidget {
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\example
+\lib\pages\map_controller.dart:8:  static const String route = 
+'map_controller';
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\example
+\lib\pages\map_controller.dart:9:
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\example
+\lib\pages\map_controller.dart:16:class MapControllerPageState extends 
+State<MapControllerPage> {
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\example
+\lib\pages\map_controller.dart:17:  /// This example uses a global 
+MapController instance to test if the
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\example
+\lib\pages\map_controller.dart:18:  /// controller can get applied to the map 
+multiple times.
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\example
+\lib\pages\markers.dart:7:class MarkerPage extends StatefulWidget {
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\example
+\lib\pages\markers.dart:8:  static const String route = '/markers';
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\example
+\lib\pages\markers.dart:9:
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\example
+\lib\widgets\drawer\menu_drawer.dart:191:            routeName: 
+InteractiveFlagsPage.route,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\example
+\lib\widgets\drawer\menu_drawer.dart:192:            currentRoute: 
+currentRoute,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\example
+\lib\widgets\drawer\menu_drawer.dart:193:          ),
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\gestures\map_events.dart:53:  interactiveFlagsChanged,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\gestures\map_events.dart:54:
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\gestures\map_events.dart:55:  /// The [MapEvent] is caused by calling 
+fitCamera.
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\gestures\map_events.dart:237:/// Emits when InteractiveFlags contains fling 
+and there wasn't enough velocity
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\gestures\map_events.dart:238:/// to start fling animation
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\gestures\map_events.dart:239:@immutable
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\gestures\map_interactive_viewer.dart:206:      
+_closeFlingAnimationController(MapEventSource.interactiveFlagsChanged);
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\gestures\map_interactive_viewer.dart:207:    }
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\gestures\map_interactive_viewer.dart:208:    if 
+(InteractiveFlag.hasDoubleTapZoom(newOptions.flags)) {
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\gestures\map_interactive_viewer.dart:209:      
+_closeDoubleTapController(MapEventSource.interactiveFlagsChanged);
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\gestures\map_interactive_viewer.dart:210:    }
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\gestures\map_interactive_viewer.dart:211:
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\gestures\map_interactive_viewer.dart:223:      
+widget.controller.rotateEnded(MapEventSource.interactiveFlagsChanged);
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\gestures\map_interactive_viewer.dart:224:    }
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\gestures\map_interactive_viewer.dart:225:
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\gestures\map_interactive_viewer.dart:256:      
+widget.controller.moveEnded(MapEventSource.interactiveFlagsChanged);
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\gestures\map_interactive_viewer.dart:257:    }
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\gestures\map_interactive_viewer.dart:258:
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\layer\marker_layer\marker.dart:9:class Marker {
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\layer\marker_layer\marker.dart:10:  /// Provide an optional [Key] for the 
+[Marker].
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\layer\marker_layer\marker.dart:11:  /// This key will get passed through to 
+the created marker widget.
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\layer\marker_layer\marker_layer.dart:9:class MarkerLayer extends 
+StatelessWidget {
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\layer\marker_layer\marker_layer.dart:10:  /// The list of [Marker]s.
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\layer\marker_layer\marker_layer.dart:11:  final List<Marker> markers;
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\map\camera\camera_fit.dart:28:  }) = FitBounds._;
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\map\camera\camera_fit.dart:29:
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\map\camera\camera_fit.dart:30:  /// Fits the camera inside the [bounds]
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\map\camera\camera_fit.dart:65:class FitBounds extends CameraFit {
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\map\camera\camera_fit.dart:66:  /// The bounds which the camera should 
+contain once it is fitted.
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\map\camera\camera_fit.dart:67:  final LatLngBounds bounds;
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\map\camera\camera_fit.dart:94:  const FitBounds._({
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\map\camera\camera_fit.dart:95:    required this.bounds,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\map\camera\camera_fit.dart:96:    this.padding = EdgeInsets.zero,
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\map\controller\map_controller.dart:13:abstract class MapController {
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\map\controller\map_controller.dart:14:  /// Controller to programmatically 
+interact with a [FlutterMap].
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\map\controller\map_controller.dart:15:  ///
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\map\controller\map_controller_impl.dart:15:class MapControllerImpl extends 
+ValueNotifier<_MapControllerState>
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\map\controller\map_controller_impl.dart:16:    implements MapController {
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\map\controller\map_controller_impl.dart:17:  final _mapEventStreamController 
+= StreamController<MapEvent>.broadcast();
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\map\options\options.dart:56:class MapOptions {
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\map\options\options.dart:57:  /// The Coordinate Reference System, defaults 
+to [Epsg3857].
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\lib\src
+\map\options\options.dart:58:  final Crs crs;
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\fl
+utter_map_test.dart:218:  int _interactiveFlags = InteractiveFlag.all;
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\fl
+utter_map_test.dart:219:
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\fl
+utter_map_test.dart:220:  @override
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\fl
+utter_map_test.dart:235:              flags: _interactiveFlags,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\fl
+utter_map_test.dart:236:            ),
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\fl
+utter_map_test.dart:237:          ),
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\fl
+utter_map_test.dart:245:                      _interactiveFlags =
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\fl
+utter_map_test.dart:246:                          
+InteractiveFlag.hasDrag(_interactiveFlags)
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\fl
+utter_map_test.dart:247:                              ? _interactiveFlags & 
+~InteractiveFlag.drag
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\fl
+utter_map_test.dart:248:                              : InteractiveFlag.all;
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\fl
+utter_map_test.dart:249:                    });
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:105:    Future<void> testFitBounds({
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:106:      required double rotation,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:107:      required CameraFit cameraConstraint,
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:145:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:146:      rotation: -360,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:147:      cameraConstraint: 
+CameraFit.bounds(bounds: bounds),
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:155:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:156:      rotation: -300,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:157:      cameraConstraint: 
+CameraFit.bounds(bounds: bounds),
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:165:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:166:      rotation: -240,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:167:      cameraConstraint: 
+CameraFit.bounds(bounds: bounds),
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:175:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:176:      rotation: -180,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:177:      cameraConstraint: 
+CameraFit.bounds(bounds: bounds),
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:185:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:186:      rotation: -120,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:187:      cameraConstraint: 
+CameraFit.bounds(bounds: bounds),
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:195:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:196:      rotation: -60,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:197:      cameraConstraint: 
+CameraFit.bounds(bounds: bounds),
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:205:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:206:      rotation: 0,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:207:      cameraConstraint: 
+CameraFit.bounds(bounds: bounds),
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:215:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:216:      rotation: 60,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:217:      cameraConstraint: 
+CameraFit.bounds(bounds: bounds),
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:225:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:226:      rotation: 120,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:227:      cameraConstraint: 
+CameraFit.bounds(bounds: bounds),
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:235:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:236:      rotation: 180,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:237:      cameraConstraint: 
+CameraFit.bounds(bounds: bounds),
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:245:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:246:      rotation: 240,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:247:      cameraConstraint: 
+CameraFit.bounds(bounds: bounds),
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:255:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:256:      rotation: 300,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:257:      cameraConstraint: 
+CameraFit.bounds(bounds: bounds),
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:265:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:266:      rotation: 360,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:267:      cameraConstraint: 
+CameraFit.bounds(bounds: bounds),
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:280:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:281:      rotation: -360,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:282:      cameraConstraint: CameraFit.bounds(
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:293:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:294:      rotation: -300,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:295:      cameraConstraint: CameraFit.bounds(
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:306:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:307:      rotation: -240,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:308:      cameraConstraint: CameraFit.bounds(
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:319:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:320:      rotation: -180,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:321:      cameraConstraint: CameraFit.bounds(
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:332:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:333:      rotation: -120,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:334:      cameraConstraint: CameraFit.bounds(
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:345:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:346:      rotation: -60,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:347:      cameraConstraint: CameraFit.bounds(
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:358:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:359:      rotation: 0,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:360:      cameraConstraint: CameraFit.bounds(
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:371:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:372:      rotation: 60,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:373:      cameraConstraint: CameraFit.bounds(
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:384:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:385:      rotation: 120,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:386:      cameraConstraint: CameraFit.bounds(
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:397:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:398:      rotation: 180,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:399:      cameraConstraint: CameraFit.bounds(
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:410:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:411:      rotation: 240,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:412:      cameraConstraint: CameraFit.bounds(
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:423:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:424:      rotation: 300,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:425:      cameraConstraint: CameraFit.bounds(
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:436:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:437:      rotation: 360,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:438:      cameraConstraint: CameraFit.bounds(
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:454:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:455:      rotation: -360,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:456:      cameraConstraint: CameraFit.bounds(
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:467:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:468:      rotation: -300,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:469:      cameraConstraint: CameraFit.bounds(
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:480:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:481:      rotation: -240,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:482:      cameraConstraint: CameraFit.bounds(
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:493:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:494:      rotation: -180,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:495:      cameraConstraint: CameraFit.bounds(
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:506:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:507:      rotation: -120,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:508:      cameraConstraint: CameraFit.bounds(
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:519:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:520:      rotation: -60,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:521:      cameraConstraint: CameraFit.bounds(
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:532:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:533:      rotation: 0,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:534:      cameraConstraint: CameraFit.bounds(
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:545:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:546:      rotation: 60,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:547:      cameraConstraint: CameraFit.bounds(
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:558:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:559:      rotation: 120,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:560:      cameraConstraint: CameraFit.bounds(
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:571:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:572:      rotation: 180,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:573:      cameraConstraint: CameraFit.bounds(
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:584:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:585:      rotation: 240,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:586:      cameraConstraint: CameraFit.bounds(
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:597:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:598:      rotation: 300,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:599:      cameraConstraint: CameraFit.bounds(
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:610:    await testFitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:611:      rotation: 360,
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_map-8.3.0\test\ma
+p\map_controller_test.dart:612:      cameraConstraint: CameraFit.bounds(
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\google_maps-6.1.0\example
+\02-events\event-closure\page.dart:18:  map.fitBounds(bounds);
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\google_maps-6.1.0\example
+\02-events\event-closure\page.dart:19:
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\google_maps-6.1.0\example
+\02-events\event-closure\page.dart:20:  // Add 5 markers to map at random 
+locations.
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\google_maps-6.1.0\example
+\06-layers\layer-data-dragndrop\page.dart:40:  map.fitBounds(bounds);
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\google_maps-6.1.0\example
+\06-layers\layer-data-dragndrop\page.dart:41:}
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\google_maps-6.1.0\example
+\06-layers\layer-data-dragndrop\page.dart:42:
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\google_maps-6.1.0\example
+\08-services\distance-matrix\page.dart:77:      map.fitBounds(bounds);
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\google_maps-6.1.0\example
+\08-services\distance-matrix\page.dart:78:      final marker = 
+Marker(MarkerOptions()
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\google_maps-6.1.0\example
+\08-services\distance-matrix\page.dart:79:        ..map = map
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\google_maps-6.1.0\example
+\09-libraries\geometry-headings\page.dart:33:  map.fitBounds(bounds);
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\google_maps-6.1.0\example
+\09-libraries\geometry-headings\page.dart:34:
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\google_maps-6.1.0\example
+\09-libraries\geometry-headings\page.dart:35:  
+marker1.onPositionChanged.listen((_) => update());
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\google_maps-6.1.0\example
+\10-places\place-search-pagination\page.dart:67:  map.fitBounds(bounds);
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\google_maps-6.1.0\example
+\10-places\place-search-pagination\page.dart:68:}
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\google_maps-6.1.0\example
+\10-places\places-autocomplete\page.dart:38:      
+map.fitBounds(place.geometry!.viewport);
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\google_maps-6.1.0\example
+\10-places\places-autocomplete\page.dart:39:    } else {
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\google_maps-6.1.0\example
+\10-places\places-autocomplete\page.dart:40:      map
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\google_maps-6.1.0\example
+\10-places\places-searchbox\page.dart:13:  map.fitBounds(defaultBounds);
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\google_maps-6.1.0\example
+\10-places\places-searchbox\page.dart:14:
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\google_maps-6.1.0\example
+\10-places\places-searchbox\page.dart:15:  // Create the search box and link 
+it to the UI element.
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\google_maps-6.1.0\example
+\10-places\places-searchbox\page.dart:56:    map.fitBounds(bounds);
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\google_maps-6.1.0\example
+\10-places\places-searchbox\page.dart:57:  });
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\google_maps-6.1.0\example
+\10-places\places-searchbox\page.dart:58:
+> C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\google_maps-6.1.0\lib\src
+\generated\google_maps_core.js.g.dart:50:  external void fitBounds(
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\google_maps-6.1.0\lib\src
+\generated\google_maps_core.js.g.dart:51:    LatLngBounds? bounds, [
+  C:\Users\Ali\AppData\Local\Pub\Cache\hosted\pub.dev\google_maps-6.1.0\lib\src
+\generated\google_maps_core.js.g.dart:52:    Object? /*num?|Padding?*/ padding,
+
+

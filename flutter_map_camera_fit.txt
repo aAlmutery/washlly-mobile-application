@@ -1,0 +1,120 @@
+﻿import 'dart:math' as math;
+
+import 'package:flutter/widgets.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_map/src/misc/extensions.dart';
+import 'package:latlong2/latlong.dart';
+
+/// Describes a position for a [MapCamera]
+///
+/// Constraints are handled by [CameraConstraint].
+@immutable
+abstract class CameraFit {
+  /// Describes a position for a [MapCamera]
+  ///
+  /// Constraints are handled by [CameraConstraint].
+  const CameraFit();
+
+  /// Fits the [bounds] inside the camera
+  ///
+  /// For information about available options, see the documentation on the
+  /// appropriate properties.
+  const factory CameraFit.bounds({
+    required LatLngBounds bounds,
+    EdgeInsets padding,
+    double? maxZoom,
+    double minZoom,
+    bool forceIntegerZoomLevel,
+  }) = FitBounds._;
+
+  /// Fits the camera inside the [bounds]
+  ///
+  /// For information about available options, see the documentation on the
+  /// appropriate properties.
+  const factory CameraFit.insideBounds({
+    required LatLngBounds bounds,
+    EdgeInsets padding,
+    double? maxZoom,
+    double minZoom,
+    bool forceIntegerZoomLevel,
+  }) = FitInsideBounds._;
+
+  /// Fits the camera to the [coordinates], as closely as possible
+  ///
+  /// For information about available options, see the documentation on the
+  /// appropriate properties.
+  ///
+  /// Allows for more fine grained boundaries when the camera is rotated. See
+  /// https://github.com/fleaflet/flutter_map/pull/1549 for more information.
+  ///
+  /// `inside` is not supported due to lack of implementation.
+  const factory CameraFit.coordinates({
+    required List<LatLng> coordinates,
+    EdgeInsets padding,
+    double? maxZoom,
+    double minZoom,
+    bool forceIntegerZoomLevel,
+  }) = FitCoordinates._;
+
+  /// Create a new fitted camera based off the current [camera]
+  MapCamera fit(MapCamera camera);
+}
+
+/// The [CameraFit] should fit inside a given [LatLngBounds].
+@immutable
+class FitBounds extends CameraFit {
+  /// The bounds which the camera should contain once it is fitted.
+  final LatLngBounds bounds;
+
+  /// Adds a constant/pixel-based padding to the normal fit.
+  ///
+  /// Defaults to [EdgeInsets.zero].
+  final EdgeInsets padding;
+
+  /// The inclusive upper zoom limit used for the resulting fit.
+  ///
+  /// If the zoom level calculated for the fit exceeds the [maxZoom] value,
+  /// [maxZoom] will be used instead.
+  ///
+  /// Defaults to null.
+  final double? maxZoom;
+
+  /// The inclusive lower zoom limit used for the resulting fit.
+  ///
+  /// If the zoom level calculated for the fit undercuts the [minZoom] value,
+  /// [minZoom] will be used instead.
+  final double minZoom;
+
+  /// Whether the zoom level of the resulting fit should be rounded to the
+  /// nearest integer level.
+  ///
+  /// Defaults to `false`.
+  final bool forceIntegerZoomLevel;
+
+  const FitBounds._({
+    required this.bounds,
+    this.padding = EdgeInsets.zero,
+    this.maxZoom,
+    this.minZoom = 0,
+    this.forceIntegerZoomLevel = false,
+  });
+
+  /// Returns a new [MapCamera] which fits this classes configuration.
+  @override
+  MapCamera fit(MapCamera camera) {
+    final paddingTL = Offset(padding.left, padding.top);
+    final paddingBR = Offset(padding.right, padding.bottom);
+
+    final paddingTotalXY = paddingTL + paddingBR;
+
+    var newZoom = _getBoundsZoom(camera, paddingTotalXY);
+    if (maxZoom != null) newZoom = math.min(maxZoom!, newZoom);
+
+    final paddingOffset = (paddingBR - paddingTL) / 2;
+    final swPoint = camera.projectAtZoom(bounds.southWest, newZoom);
+    final nePoint = camera.projectAtZoom(bounds.northEast, newZoom);
+
+    final Offset projectedCenter;
+    if (camera.rotation != 0.0) {
+      final swPointRotated = swPoint.rotate(-camera.rotationRad);
+      final nePointRotated = nePoint.rotate(-camera.rotationRad);
