@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import '../models/station.dart';
 import '../services/supabase_service.dart';
 import '../widgets/bottom_nav_scaffold.dart';
@@ -17,6 +18,7 @@ class StationListScreen extends StatefulWidget {
 
 class _StationListScreenState extends State<StationListScreen> {
   late final Future<void> _loadFuture;
+  late final ScrollController _scrollController;
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _areaController = TextEditingController();
   List<Station> _stations = [];
@@ -24,11 +26,18 @@ class _StationListScreenState extends State<StationListScreen> {
   List<String> _serviceNames = [];
   String? _selectedService;
   bool _filterLoading = false;
+  bool _isLoadingMore = false;
+  bool _hasMoreStations = true;
+  int _currentPage = 0;
+  final int _pageSize = 10;
   final TextEditingController _serviceSearchController = TextEditingController();
+  Timer? _filterDebounceTimer;
 
   @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController();
+    _scrollController.addListener(_onScroll);
     _loadFuture = _loadData();
   }
 
@@ -37,17 +46,72 @@ class _StationListScreenState extends State<StationListScreen> {
     _searchController.dispose();
     _areaController.dispose();
     _serviceSearchController.dispose();
+    _scrollController.dispose();
+    _filterDebounceTimer?.cancel();
     super.dispose();
   }
 
   Future<void> _loadData() async {
-    final stations = await SupabaseService.instance.fetchStations();
+    final stations = await SupabaseService.instance.fetchStationsPaginated(
+      limit: _pageSize,
+      offset: 0,
+    );
     final serviceNames = await SupabaseService.instance.fetchServiceNames();
     setState(() {
       _stations = stations;
       _filteredStations = stations;
       _serviceNames = serviceNames;
+      _currentPage = 0;
+      _hasMoreStations = stations.length == _pageSize;
     });
+  }
+
+  void _onScroll() {
+    // Only load more if no filters are active
+    final hasSearch = _searchController.text.trim().isNotEmpty;
+    final hasArea = _areaController.text.trim().isNotEmpty;
+    final hasService = _selectedService != null && _selectedService!.isNotEmpty;
+
+    if (!hasSearch && !hasArea && !hasService) {
+      if (_scrollController.position.pixels >=
+          _scrollController.position.maxScrollExtent - 500) {
+        if (!_isLoadingMore && _hasMoreStations) {
+          _loadMoreStations();
+        }
+      }
+    }
+  }
+
+  Future<void> _loadMoreStations() async {
+    if (_isLoadingMore || !_hasMoreStations) return;
+
+    setState(() {
+      _isLoadingMore = true;
+    });
+
+    try {
+      final nextPage = _currentPage + 1;
+      final newStations = await SupabaseService.instance.fetchStationsPaginated(
+        limit: _pageSize,
+        offset: nextPage * _pageSize,
+      );
+
+      if (newStations.length < _pageSize) {
+        _hasMoreStations = false;
+      }
+
+      setState(() {
+        _stations.addAll(newStations);
+        // Only update filtered list - don't duplicate
+        _filteredStations = _stations;
+        _currentPage = nextPage;
+        _isLoadingMore = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingMore = false;
+      });
+    }
   }
 
   Future<void> _openServicePicker() async {
@@ -144,6 +208,16 @@ class _StationListScreenState extends State<StationListScreen> {
     }
   }
 
+  void _onFilterTextChanged() {
+    // Cancel previous timer
+    _filterDebounceTimer?.cancel();
+    
+    // Start new timer - apply filters after 500ms of no typing
+    _filterDebounceTimer = Timer(const Duration(milliseconds: 500), () {
+      _applyFilters();
+    });
+  }
+
   Future<void> _applyFilters() async {
     setState(() {
       _filterLoading = true;
@@ -158,19 +232,48 @@ class _StationListScreenState extends State<StationListScreen> {
       serviceStationIds = ids.toSet();
     }
 
-    final filtered = _stations.where((station) {
-      final nameMatch = search.isEmpty || station.name.toLowerCase().contains(search);
-      final areaMatch = area.isEmpty ||
-          station.address.toLowerCase().contains(area) ||
-          (station.detailedAddress?.toLowerCase().contains(area) ?? false);
-      final serviceMatch = serviceStationIds == null || serviceStationIds.contains(station.id);
-      return nameMatch && areaMatch && serviceMatch;
-    }).toList();
+    // If any filter (search, area, or service) is active, search the entire database
+    if (search.isNotEmpty || area.isNotEmpty || (_selectedService != null && _selectedService!.isNotEmpty)) {
+      final searchResults = await SupabaseService.instance.searchStations(
+        query: search,
+        areaFilter: area.isNotEmpty ? area : null,
+        serviceStationIds: serviceStationIds,
+      );
 
+      setState(() {
+        _filteredStations = searchResults;
+        _filterLoading = false;
+      });
+    } else {
+      // No filters active, use pagination with loaded stations
+      setState(() {
+        _filteredStations = _stations;
+        _filterLoading = false;
+      });
+      
+      // Scroll back to top
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
+  void _resetFilters() {
+    _searchController.clear();
+    _areaController.clear();
     setState(() {
-      _filteredStations = filtered;
-      _filterLoading = false;
+      _selectedService = null;
+      _filteredStations = _stations;
     });
+    
+    // Scroll back to top
+    _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
   }
 
   @override
@@ -199,13 +302,30 @@ class _StationListScreenState extends State<StationListScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Column(
                   children: [
-                    TextField(
-                      controller: _searchController,
-                      decoration: InputDecoration(
-                        labelText: loc.searchStationLabel,
-                        prefixIcon: Icon(Icons.search),
-                      ),
-                      onChanged: (_) => _applyFilters(),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _searchController,
+                            decoration: InputDecoration(
+                              labelText: loc.searchStationLabel,
+                              prefixIcon: Icon(Icons.search),
+                            ),
+                            onChanged: (_) => _onFilterTextChanged(),
+                          ),
+                        ),
+                        if (_searchController.text.isNotEmpty ||
+                            _areaController.text.isNotEmpty ||
+                            (_selectedService != null && _selectedService!.isNotEmpty))
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8),
+                            child: IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: _resetFilters,
+                              tooltip: 'Clear Filters',
+                            ),
+                          ),
+                      ],
                     ),
                     const SizedBox(height: 12),
                     Row(
@@ -217,7 +337,7 @@ class _StationListScreenState extends State<StationListScreen> {
                               labelText: loc.areaLabel,
                               prefixIcon: const Icon(Icons.location_on),
                             ),
-                            onChanged: (_) => _applyFilters(),
+                            onChanged: (_) => _onFilterTextChanged(),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -256,9 +376,16 @@ class _StationListScreenState extends State<StationListScreen> {
                 child: _filteredStations.isEmpty
                     ? Center(child: Text(loc.noStationsMatchFilters))
                     : ListView.builder(
+                        controller: _scrollController,
                         padding: const EdgeInsets.all(16),
-                        itemCount: _filteredStations.length,
+                        itemCount: _filteredStations.length + (_isLoadingMore ? 1 : 0),
                         itemBuilder: (context, index) {
+                          if (index == _filteredStations.length) {
+                            return const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                              child: Center(child: CircularProgressIndicator()),
+                            );
+                          }
                           final station = _filteredStations[index];
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 12),

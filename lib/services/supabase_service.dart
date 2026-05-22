@@ -19,6 +19,53 @@ class SupabaseService {
         .toList();
   }
 
+  Future<List<Station>> fetchStationsPaginated({
+    required int limit,
+    required int offset,
+  }) async {
+    final data = await client
+        .from('stations')
+        .select('id,name,address,detailed_address,latitude,longitude,is_active')
+        .eq('is_active', true)
+        .order('name')
+        .range(offset, offset + limit - 1);
+
+    return (data as List<dynamic>)
+        .map((item) => Station.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<List<Station>> searchStations({
+    required String query,
+    required String? areaFilter,
+    required Set<String>? serviceStationIds,
+  }) async {
+    var request = client
+        .from('stations')
+        .select('id,name,address,detailed_address,latitude,longitude,is_active')
+        .eq('is_active', true);
+
+    if (query.isNotEmpty) {
+      request = request.ilike('name', '%$query%');
+    }
+
+    if (areaFilter != null && areaFilter.isNotEmpty) {
+      request = request.or('address.ilike.%$areaFilter%,detailed_address.ilike.%$areaFilter%');
+    }
+
+    final data = await request.order('name');
+
+    final stations = (data as List<dynamic>)
+        .map((item) => Station.fromJson(item as Map<String, dynamic>))
+        .toList();
+
+    if (serviceStationIds != null && serviceStationIds.isNotEmpty) {
+      return stations.where((station) => serviceStationIds.contains(station.id)).toList();
+    }
+
+    return stations;
+  }
+
   Future<List<ServiceModel>> fetchServices(String stationId) async {
     final data = await client
         .from('services')
