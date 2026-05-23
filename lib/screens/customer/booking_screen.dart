@@ -36,17 +36,17 @@ class _BookingScreenState extends State<BookingScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final session = await SessionService.instance.loadCustomerSession();
+      if (mounted && session != null) {
+        _nameController.text = session.customerName;
+        _phoneController.text = session.customerPhone;
+      }
+    });
     if (widget.station != null) {
       _loadServices();
     } else {
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        _fetchLocation();
-        final session = await SessionService.instance.loadCustomerSession();
-        if (mounted && session != null) {
-          _nameController.text = session.customerName;
-          _phoneController.text = session.customerPhone;
-        }
-      });
+      WidgetsBinding.instance.addPostFrameCallback((_) => _fetchLocation());
     }
   }
 
@@ -55,7 +55,10 @@ class _BookingScreenState extends State<BookingScreen> {
     try {
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        setState(() => _locationError = 'خدمة الموقع معطّلة. يرجى تفعيلها من إعدادات الجهاز.');
+        if (mounted) {
+          final loc = AppLocalizations.of(context)!;
+          setState(() => _locationError = loc.quickLocationDisabled);
+        }
         return;
       }
       var permission = await Geolocator.checkPermission();
@@ -63,11 +66,17 @@ class _BookingScreenState extends State<BookingScreen> {
         permission = await Geolocator.requestPermission();
       }
       if (permission == LocationPermission.denied) {
-        setState(() => _locationError = 'تم رفض إذن الموقع. يرجى منح الإذن للمتابعة.');
+        if (mounted) {
+          final loc = AppLocalizations.of(context)!;
+          setState(() => _locationError = loc.quickLocationDenied);
+        }
         return;
       }
       if (permission == LocationPermission.deniedForever) {
-        setState(() => _locationError = 'تم رفض إذن الموقع بشكل دائم. يرجى تفعيله من إعدادات التطبيق.');
+        if (mounted) {
+          final loc = AppLocalizations.of(context)!;
+          setState(() => _locationError = loc.quickLocationDeniedForever);
+        }
         return;
       }
       final position = await Geolocator.getCurrentPosition(
@@ -75,7 +84,10 @@ class _BookingScreenState extends State<BookingScreen> {
       );
       if (mounted) setState(() => _position = position);
     } catch (_) {
-      if (mounted) setState(() => _locationError = 'تعذّر تحديد الموقع. يرجى المحاولة مجدداً.');
+      if (mounted) {
+        final loc = AppLocalizations.of(context)!;
+        setState(() => _locationError = loc.quickLocationFailed);
+      }
     } finally {
       if (mounted) setState(() => _loadingLocation = false);
     }
@@ -146,7 +158,7 @@ class _BookingScreenState extends State<BookingScreen> {
         bookingTime: _formattedTimeIso,
         customerPhone: _phoneController.text.trim(),
       );
-      final spinToken = discount['token'] as String?;
+      final spinToken = discount['token'] as String? ?? '';
       final spinPercent = discount['discountPercent'] as int? ?? 0;
       final booking = await SupabaseService.instance.createMapBooking(
         stationId: widget.station!.id,
@@ -156,7 +168,7 @@ class _BookingScreenState extends State<BookingScreen> {
         bookingDate: _formattedDate,
         bookingTime: _formattedTimeIso,
         spinDiscountPercent: spinPercent,
-        spinToken: spinToken!,
+        spinToken: spinToken,
       );
       setState(() {
         final loc = AppLocalizations.of(context)!;
@@ -191,7 +203,8 @@ class _BookingScreenState extends State<BookingScreen> {
       );
       setState(() {
         final loc = AppLocalizations.of(context)!;
-        _resultMessage = '${loc.quickBookingSentPrefix}${booking['target_count']}${loc.quickBookingSentSuffix}';
+        final targets = (booking['targets'] as List?) ?? [];
+        _resultMessage = '${loc.quickBookingSentPrefix}${targets.length}${loc.quickBookingSentSuffix}';
       });
     } catch (error) {
       setState(() {
@@ -204,15 +217,16 @@ class _BookingScreenState extends State<BookingScreen> {
   }
 
   Widget _buildLocationCard() {
+    final loc = AppLocalizations.of(context)!;
     if (_loadingLocation) {
       return Card(
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Row(
-            children: const [
-              SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2)),
-              SizedBox(width: 16),
-              Text('جاري تحديد موقعك...'),
+            children: [
+              const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2)),
+              const SizedBox(width: 16),
+              Text(loc.quickLocationDetecting),
             ],
           ),
         ),
@@ -241,7 +255,7 @@ class _BookingScreenState extends State<BookingScreen> {
                     child: OutlinedButton.icon(
                       onPressed: _fetchLocation,
                       icon: const Icon(Icons.refresh, size: 18),
-                      label: const Text('إعادة المحاولة'),
+                      label: Text(loc.quickLocationRetry),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -249,7 +263,7 @@ class _BookingScreenState extends State<BookingScreen> {
                     child: OutlinedButton.icon(
                       onPressed: () => Geolocator.openAppSettings(),
                       icon: const Icon(Icons.settings, size: 18),
-                      label: const Text('الإعدادات'),
+                      label: Text(loc.quickLocationSettings),
                     ),
                   ),
                 ],
@@ -265,12 +279,12 @@ class _BookingScreenState extends State<BookingScreen> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
           child: Row(
-            children: const [
-              Icon(Icons.location_on, color: Colors.green, size: 28),
-              SizedBox(width: 12),
+            children: [
+              const Icon(Icons.location_on, color: Colors.green, size: 28),
+              const SizedBox(width: 12),
               Text(
-                'تم تحديد موقعك بنجاح',
-                style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 15),
+                loc.quickLocationSuccess,
+                style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 15),
               ),
             ],
           ),

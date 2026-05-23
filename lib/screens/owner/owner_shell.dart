@@ -3,6 +3,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 import '../../models/booking.dart';
 import '../../models/owner_session.dart';
+import '../../models/service_model.dart';
 import '../../services/owner_session_service.dart';
 import '../../services/supabase_service.dart';
 import '../home_screen.dart';
@@ -263,23 +264,98 @@ class _OwnerStationTab extends StatefulWidget {
 }
 
 class _OwnerStationTabState extends State<_OwnerStationTab> {
-  late Future<List<Map<String, dynamic>>> _employeesFuture;
+  late Future<List<ServiceModel>> _servicesFuture;
 
   @override
   void initState() {
     super.initState();
-    _employeesFuture = _loadEmployees();
+    _servicesFuture = SupabaseService.instance.fetchServices(widget.session.stationId);
   }
 
-  Future<List<Map<String, dynamic>>> _loadEmployees() async {
+  void _refresh() => setState(() {
+    _servicesFuture = SupabaseService.instance.fetchServices(widget.session.stationId);
+  });
+
+  Future<void> _showAddServiceDialog() async {
+    final loc = AppLocalizations.of(context)!;
+    final nameController = TextEditingController();
+    final priceController = TextEditingController();
+    final durationController = TextEditingController();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(loc.ownerAddService),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: InputDecoration(labelText: loc.ownerServiceName),
+              textCapitalization: TextCapitalization.words,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: priceController,
+              decoration: InputDecoration(labelText: loc.ownerServicePrice),
+              keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: durationController,
+              decoration: InputDecoration(labelText: loc.ownerServiceDuration),
+              keyboardType: TextInputType.number,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(loc.cancelButton),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(loc.ownerAddServiceBtn),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    final name = nameController.text.trim();
+    final price = int.tryParse(priceController.text.trim()) ?? 0;
+    final duration = int.tryParse(durationController.text.trim());
+
+    if (name.isEmpty || price <= 0) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.ownerServiceInvalidInput)),
+        );
+      }
+      return;
+    }
+
     try {
-      final data = await SupabaseService.instance.client
-          .from('employees')
-          .select('*')
-          .eq('station_id', widget.session.stationId);
-      return List<Map<String, dynamic>>.from(data);
-    } catch (_) {
-      return [];
+      await SupabaseService.instance.addService(
+        stationId: widget.session.stationId,
+        name: name,
+        price: price,
+        durationMinutes: duration,
+      );
+      _refresh();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.ownerAddServiceSuccess)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        final loc2 = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${loc2.ownerAddServiceFailed}$e')),
+        );
+      }
     }
   }
 
@@ -308,19 +384,9 @@ class _OwnerStationTabState extends State<_OwnerStationTab> {
                     ),
                     const SizedBox(width: 16),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.session.stationName,
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${loc.ownerStationIdPrefix}${widget.session.stationId}',
-                            style: const TextStyle(color: Colors.grey, fontSize: 12),
-                          ),
-                        ],
+                      child: Text(
+                        widget.session.stationName,
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
@@ -328,49 +394,57 @@ class _OwnerStationTabState extends State<_OwnerStationTab> {
               ),
             ),
             const SizedBox(height: 24),
-            Text(
-              loc.ownerEmployees,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  loc.ownerMyServices,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                ElevatedButton.icon(
+                  onPressed: _showAddServiceDialog,
+                  icon: const Icon(Icons.add, size: 18),
+                  label: Text(loc.ownerAddService),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
-            FutureBuilder<List<Map<String, dynamic>>>(
-              future: _employeesFuture,
+            FutureBuilder<List<ServiceModel>>(
+              future: _servicesFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                final employees = snapshot.data ?? [];
-                if (employees.isEmpty) {
+                final services = snapshot.data ?? [];
+                if (services.isEmpty) {
                   return Center(
                     child: Padding(
                       padding: const EdgeInsets.all(24),
-                      child: Text(loc.ownerNoEmployees, style: const TextStyle(color: Colors.grey)),
+                      child: Text(loc.ownerNoServices, style: const TextStyle(color: Colors.grey)),
                     ),
                   );
                 }
                 return Column(
-                  children: employees
-                      .map(
-                        (e) => Card(
-                          child: ListTile(
-                            leading: const CircleAvatar(child: Icon(Icons.person)),
-                            title: Text(e['name'] ?? ''),
-                            subtitle: Text(e['phone'] ?? e['email'] ?? ''),
-                            trailing: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.blue.shade50,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                e['role'] ?? loc.ownerDefaultRole,
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                            ),
-                          ),
+                  children: services.map((s) => Card(
+                    child: ListTile(
+                      leading: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.shade50,
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                      )
-                      .toList(),
+                        child: Icon(Icons.build_circle_outlined, color: Colors.blue.shade700),
+                      ),
+                      title: Text(s.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      subtitle: s.durationMinutes != null
+                          ? Text('${s.durationMinutes} ${loc.ownerServiceDurationSuffix}')
+                          : null,
+                      trailing: Text(
+                        '${s.price}${loc.ownerCurrencySuffix}',
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green, fontSize: 15),
+                      ),
+                    ),
+                  )).toList(),
                 );
               },
             ),
@@ -418,21 +492,43 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
         sessionToken: widget.session.sessionToken,
       );
 
-  void _refresh() => setState(() => _bookingsFuture = _loadBookings());
+  void _refresh() => setState(() { _bookingsFuture = _loadBookings(); });
 
   Future<void> _complete(String bookingId) async {
     try {
-      await SupabaseService.instance.ownerUpdateBookingStatus(
-        bookingId: bookingId,
-        stationId: widget.session.stationId,
-        newStatus: 'completed',
-      );
+      // Prefer the edge function — it uses service_role and bypasses RLS.
+      // Fall back to direct REST if the edge function doesn't support 'complete'.
+      try {
+        await SupabaseService.instance.ownerManageBooking(
+          bookingId: bookingId,
+          action: 'complete',
+          sessionToken: widget.session.sessionToken,
+        );
+      } on Exception {
+        await SupabaseService.instance.ownerUpdateBookingStatus(
+          bookingId: bookingId,
+          stationId: widget.session.stationId,
+          newStatus: 'completed',
+        );
+      }
       _refresh();
+      if (mounted) {
+        final loc = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(loc.ownerCompleteSuccess),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
     } catch (e) {
       if (mounted) {
         final loc = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${loc.ownerCompleteFailed}$e')),
+          SnackBar(
+            content: Text('${loc.ownerCompleteFailed}$e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -466,11 +562,23 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
         newStatus: 'cancelled',
       );
       _refresh();
+      if (mounted) {
+        final loc2 = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(loc2.ownerCancelSuccess),
+            backgroundColor: Colors.grey.shade700,
+          ),
+        );
+      }
     } catch (e) {
       if (mounted) {
         final loc2 = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${loc2.ownerCancelFailed}$e')),
+          SnackBar(
+            content: Text('${loc2.ownerCancelFailed}$e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -512,7 +620,7 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
     }
   }
 
-  Future<void> _showPostponeDialog(String bookingId, {required bool isPending}) async {
+  Future<void> _showPostponeDialog(Booking booking) async {
     final loc = AppLocalizations.of(context)!;
     DateTime selectedDate = DateTime.now().add(const Duration(days: 1));
     TimeOfDay selectedTime = const TimeOfDay(hour: 10, minute: 0);
@@ -540,18 +648,20 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
         '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}';
 
     try {
-      if (isPending) {
-        await SupabaseService.instance.ownerManageBooking(
-          bookingId: bookingId,
-          action: 'postpone',
-          sessionToken: widget.session.sessionToken,
+      if (booking.status == 'confirmed') {
+        // Edge function only accepts pending/pending_owner_approval — use direct REST for confirmed.
+        await SupabaseService.instance.ownerPostponeConfirmedBooking(
+          bookingId: booking.id,
+          stationId: widget.session.stationId,
           proposedDate: dateStr,
           proposedTime: timeStr,
         );
       } else {
-        await SupabaseService.instance.ownerPostponeConfirmedBooking(
-          bookingId: bookingId,
-          stationId: widget.session.stationId,
+        // pending / pending_owner_approval — edge function sends customer notification automatically.
+        await SupabaseService.instance.ownerManageBooking(
+          bookingId: booking.id,
+          action: 'postpone',
+          sessionToken: widget.session.sessionToken,
           proposedDate: dateStr,
           proposedTime: timeStr,
         );
@@ -560,14 +670,20 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
       if (mounted) {
         final loc2 = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(loc2.ownerPostponeSuccess)),
+          SnackBar(
+            content: Text(loc2.ownerPostponeSuccess),
+            backgroundColor: Colors.orange,
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         final loc2 = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${loc2.ownerPostponeFailed}$e')),
+          SnackBar(
+            content: Text('${loc2.ownerPostponeFailed}$e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -603,42 +719,65 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
     );
   }
 
+  String _ownerStatusLabel(String status, AppLocalizations loc) {
+    switch (status) {
+      case 'pending':
+      case 'pending_owner_approval':
+        return loc.ownerStatusNeedsAction;
+      case 'pending_customer_approval':
+        return loc.ownerStatusPendingCustomer;
+      case 'confirmed':
+        return loc.ownerStatusConfirmed;
+      case 'completed':
+        return loc.ownerStatusCompleted;
+      case 'cancelled':
+        return loc.ownerStatusCancelled;
+      default:
+        return status;
+    }
+  }
+
   Color _statusColor(String status) {
     switch (status) {
       case 'pending':
       case 'pending_owner_approval':
-      case 'pending_customer_approval':
         return Colors.orange;
+      case 'pending_customer_approval':
+        return Colors.deepPurple;
       case 'confirmed':
         return Colors.green;
       case 'completed':
         return Colors.blue;
       case 'cancelled':
-        return Colors.red;
+        return Colors.grey;
       default:
         return Colors.grey;
     }
   }
 
   Widget _buildList(List<Map<String, dynamic>> bookings, _TabType tabType) {
+    final loc = AppLocalizations.of(context)!;
     if (bookings.isEmpty) {
-      final loc = AppLocalizations.of(context)!;
       return Center(
         child: Text(loc.ownerNoBookings, style: const TextStyle(color: Colors.grey)),
       );
     }
-    final loc = AppLocalizations.of(context)!;
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: bookings.length,
       itemBuilder: (context, index) {
         final b = Booking.fromJson(bookings[index]);
+        final statusColor = _statusColor(b.status);
+        final isAwaitingCustomer = b.status == 'pending_customer_approval';
+
         return Card(
+          margin: const EdgeInsets.only(bottom: 12),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Header
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -647,27 +786,89 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: _statusColor(b.status),
+                        color: statusColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: statusColor.withValues(alpha: 0.4)),
                       ),
                       child: Text(
-                        b.status.toUpperCase(),
-                        style: const TextStyle(color: Colors.white, fontSize: 11),
+                        _ownerStatusLabel(b.status, loc),
+                        style: TextStyle(
+                          color: statusColor,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
-                Text('${loc.ownerCustomerPrefix}${b.customerName}'),
-                Text('${loc.ownerPhonePrefix}${b.customerPhone}'),
-                const SizedBox(height: 6),
-                Text('${loc.ownerServicePrefix}${b.serviceName}'),
-                Text('${loc.ownerDatePrefix}${b.bookingDate} - ${b.bookingTime}'),
-                const SizedBox(height: 6),
-                Text('${loc.ownerPricePrefix}${b.price ?? 0}${loc.ownerCurrencySuffix}'),
-                if (tabType == _TabType.pending) ...[
+                const Divider(height: 20),
+
+                // Customer info
+                _OwnerInfoRow(icon: Icons.person, text: '${loc.ownerCustomerPrefix}${b.customerName}'),
+                const SizedBox(height: 4),
+                _OwnerInfoRow(icon: Icons.phone, text: '${loc.ownerPhonePrefix}${b.customerPhone}'),
+                const SizedBox(height: 4),
+                _OwnerInfoRow(icon: Icons.build_circle_outlined, text: '${loc.ownerServicePrefix}${b.serviceName}'),
+                const SizedBox(height: 4),
+                _OwnerInfoRow(icon: Icons.calendar_today, text: '${loc.ownerDatePrefix}${b.bookingDate}  ${b.bookingTime}'),
+                if (b.price != null) ...[
+                  const SizedBox(height: 4),
+                  _OwnerInfoRow(icon: Icons.attach_money, text: '${loc.ownerPricePrefix}${b.price!.toStringAsFixed(0)}${loc.ownerCurrencySuffix}'),
+                ],
+
+                // Proposed time (shown when owner postponed and waiting for customer)
+                if (b.proposedDate != null && b.proposedTime != null) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.deepPurple.withValues(alpha: 0.07),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.deepPurple.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.schedule, size: 16, color: Colors.deepPurple),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '${loc.ownerProposedTimeLabel}${b.proposedDate}  ${b.proposedTime}',
+                            style: const TextStyle(color: Colors.deepPurple, fontSize: 13),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+
+                // Awaiting customer note
+                if (isAwaitingCustomer) ...[
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.deepPurple.withValues(alpha: 0.07),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.hourglass_top, size: 16, color: Colors.deepPurple),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            loc.ownerAwaitingCustomerNote,
+                            style: const TextStyle(color: Colors.deepPurple, fontSize: 13),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+
+                // Actions for pending (only pending / pending_owner_approval — NOT pending_customer_approval)
+                if (tabType == _TabType.pending && !isAwaitingCustomer) ...[
                   const SizedBox(height: 14),
                   ElevatedButton.icon(
                     onPressed: () => _approve(b.id),
@@ -696,7 +897,7 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
                       const SizedBox(width: 8),
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: () => _showPostponeDialog(b.id, isPending: true),
+                          onPressed: () => _showPostponeDialog(b),
                           icon: const Icon(Icons.schedule, size: 18),
                           label: Text(loc.ownerPostponeBtn),
                           style: ElevatedButton.styleFrom(
@@ -708,6 +909,8 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
                     ],
                   ),
                 ],
+
+                // Actions for confirmed
                 if (tabType == _TabType.confirmed) ...[
                   const SizedBox(height: 14),
                   ElevatedButton.icon(
@@ -725,7 +928,7 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
                     children: [
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: () => _showPostponeDialog(b.id, isPending: false),
+                          onPressed: () => _showPostponeDialog(b),
                           icon: const Icon(Icons.schedule, size: 18),
                           label: Text(loc.ownerPostponeBtn),
                           style: ElevatedButton.styleFrom(
@@ -929,6 +1132,25 @@ class _OwnerProfileTab extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _OwnerInfoRow extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _OwnerInfoRow({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 16, color: Colors.grey),
+        const SizedBox(width: 8),
+        Expanded(child: Text(text, style: const TextStyle(fontSize: 14))),
+      ],
     );
   }
 }

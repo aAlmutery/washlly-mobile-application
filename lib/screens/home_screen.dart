@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../widgets/bottom_nav_scaffold.dart';
 import 'customer/booking_screen.dart';
-import 'owner/owner_login_screen.dart';
+import 'customer/profile_screen.dart';
 import 'station_list_screen.dart';
 import 'station_map_screen.dart';
 
@@ -131,11 +131,11 @@ class HomeScreen extends StatelessWidget {
                         onTap: () => Navigator.pushReplacementNamed(context, BookingScreen.routeName),
                       ),
                       _ActionCard(
-                        title: loc.actionOwnerLoginTitle,
+                        title: loc.bottomProfile,
                         subtitle: loc.actionOwnerLoginSubtitle,
-                        icon: Icons.person,
-                        color: Colors.purple,
-                        onTap: () => Navigator.pushReplacementNamed(context, OwnerLoginScreen.routeName),
+                        icon: Icons.account_circle,
+                        color: Colors.deepPurple,
+                        onTap: () => Navigator.pushReplacementNamed(context, ProfileScreen.routeName),
                       ),
                     ],
                   ),

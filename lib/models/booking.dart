@@ -36,23 +36,42 @@ class Booking {
   });
 
   factory Booking.fromJson(Map<String, dynamic> json) {
+    // Support both Supabase REST join format (services:{name,price}, stations:{name})
+    // and edge-function flat format (service_name, station_name, service_price / price).
+    final servicesMap = json['services'] as Map?;
+    final stationsMap = json['stations'] as Map?;
+
+    String parseTime(dynamic raw) {
+      final s = (raw as String?) ?? '00:00';
+      // Postgres may return "HH:MM:SS" — keep only "HH:MM"
+      return s.length > 5 ? s.substring(0, 5) : s;
+    }
+
     return Booking(
       id: json['id'] as String,
-      bookingNumber: json['booking_number'] as int,
-      stationId: json['station_id'] as String,
-      serviceName: (json['services'] as Map?)?['name'] as String? ?? 'Service',
-      stationName: (json['stations'] as Map?)?['name'] as String? ?? 'Station',
-      customerName: json['customer_name'] as String,
-      customerPhone: json['customer_phone'] as String,
-      bookingDate: json['booking_date'] as String,
-      bookingTime: json['booking_time'] as String,
-      status: json['status'] as String,
-      price: ((json['services'] as Map?)?['price'] as num?)?.toDouble(),
+      bookingNumber: json['booking_number'] as int? ?? 0,
+      stationId: json['station_id'] as String? ?? '',
+      serviceName: servicesMap?['name'] as String?
+          ?? json['service_name'] as String?
+          ?? '',
+      stationName: stationsMap?['name'] as String?
+          ?? json['station_name'] as String?
+          ?? '',
+      customerName: json['customer_name'] as String? ?? '',
+      customerPhone: json['customer_phone'] as String? ?? '',
+      bookingDate: json['booking_date'] as String? ?? '',
+      bookingTime: parseTime(json['booking_time']),
+      status: json['status'] as String? ?? 'pending',
+      price: (servicesMap?['price'] as num?)?.toDouble()
+          ?? (json['service_price'] as num?)?.toDouble()
+          ?? (json['price'] as num?)?.toDouble(),
       customerRating: json['customer_rating'] as int?,
-      ratedAt: json['rated_at'] != null ? DateTime.parse(json['rated_at']) : null,
+      ratedAt: json['rated_at'] != null ? DateTime.tryParse(json['rated_at'] as String) : null,
       proposedDate: json['proposed_date'] as String?,
-      proposedTime: json['proposed_time'] as String?,
-      createdAt: DateTime.parse(json['created_at'] as String),
+      proposedTime: json['proposed_time'] != null
+          ? parseTime(json['proposed_time'])
+          : null,
+      createdAt: DateTime.tryParse(json['created_at'] as String? ?? '') ?? DateTime.now(),
     );
   }
 }

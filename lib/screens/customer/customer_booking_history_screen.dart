@@ -25,9 +25,12 @@ class _CustomerBookingHistoryScreenState
   }
 
   Future<List<Map<String, dynamic>>> _load() =>
-      SupabaseService.instance.fetchCustomerBookings(widget.session.customerPhone);
+      SupabaseService.instance.fetchCustomerBookings(
+        widget.session.customerPhone,
+        sessionToken: widget.session.sessionToken,
+      );
 
-  void _refresh() => setState(() => _bookingsFuture = _load());
+  void _refresh() => setState(() { _bookingsFuture = _load(); });
 
   Future<void> _cancel(String bookingId) async {
     final loc = AppLocalizations.of(context)!;
@@ -52,9 +55,11 @@ class _CustomerBookingHistoryScreenState
     if (confirmed != true) return;
 
     try {
-      await SupabaseService.instance.cancelMapBooking(
+      await SupabaseService.instance.customerManageBooking(
         bookingId: bookingId,
+        action: 'cancel',
         customerPhone: widget.session.customerPhone,
+        sessionToken: widget.session.sessionToken,
       );
       _refresh();
       if (mounted) {
@@ -68,6 +73,51 @@ class _CustomerBookingHistoryScreenState
         final loc2 = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('${loc2.cancelBookingFailed}$e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _rejectPostpone(String bookingId) async {
+    final loc = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(loc.rejectPostponeTitle),
+        content: Text(loc.rejectPostponeConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(loc.noBtn),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: Text(loc.rejectPostponeBtn, style: const TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await SupabaseService.instance.customerManageBooking(
+        bookingId: bookingId,
+        action: 'reject_postpone',
+        customerPhone: widget.session.customerPhone,
+        sessionToken: widget.session.sessionToken,
+      );
+      _refresh();
+      if (mounted) {
+        final loc2 = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(loc2.rejectPostponeSuccess)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        final loc2 = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${loc2.rejectPostponeFailed}$e')),
         );
       }
     }
@@ -226,8 +276,8 @@ class _CustomerBookingHistoryScreenState
   bool _canCancel(String status) =>
       status == 'pending' ||
       status == 'pending_owner_approval' ||
-      status == 'pending_customer_approval' ||
       status == 'confirmed';
+  // pending_customer_approval is handled by the dedicated Reject New Time button
 
   @override
   Widget build(BuildContext context) {
@@ -317,6 +367,9 @@ class _CustomerBookingHistoryScreenState
                 onAcceptPostpone: b.status == 'pending_customer_approval'
                     ? () => _acceptPostpone(b.id)
                     : null,
+                onRejectPostpone: b.status == 'pending_customer_approval'
+                    ? () => _rejectPostpone(b.id)
+                    : null,
               );
             },
           );
@@ -334,6 +387,7 @@ class _BookingCard extends StatelessWidget {
   final VoidCallback onCancel;
   final VoidCallback? onRate;
   final VoidCallback? onAcceptPostpone;
+  final VoidCallback? onRejectPostpone;
 
   const _BookingCard({
     required this.booking,
@@ -343,6 +397,7 @@ class _BookingCard extends StatelessWidget {
     required this.onCancel,
     this.onRate,
     this.onAcceptPostpone,
+    this.onRejectPostpone,
   });
 
   @override
@@ -441,7 +496,7 @@ class _BookingCard extends StatelessWidget {
             ],
 
             // Action buttons
-            if (onAcceptPostpone != null || canCancel || onRate != null) ...[
+            if (onAcceptPostpone != null || onRejectPostpone != null || canCancel || onRate != null) ...[
               const SizedBox(height: 12),
               if (onAcceptPostpone != null) ...[
                 ElevatedButton.icon(
@@ -450,6 +505,19 @@ class _BookingCard extends StatelessWidget {
                   label: Text(loc.acceptPostponeBtn),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(double.infinity, 44),
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
+              if (onRejectPostpone != null) ...[
+                ElevatedButton.icon(
+                  onPressed: onRejectPostpone,
+                  icon: const Icon(Icons.schedule_outlined, size: 18),
+                  label: Text(loc.rejectPostponeBtn),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
                     foregroundColor: Colors.white,
                     minimumSize: const Size(double.infinity, 44),
                   ),

@@ -66,6 +66,21 @@ class SupabaseService {
     return stations;
   }
 
+  Future<void> addService({
+    required String stationId,
+    required String name,
+    required int price,
+    int? durationMinutes,
+  }) async {
+    await client.from('services').insert({
+      'station_id': stationId,
+      'name': name,
+      'price': price,
+      if (durationMinutes != null) 'duration_minutes': durationMinutes,
+      'is_active': true,
+    });
+  }
+
   Future<List<ServiceModel>> fetchServices(String stationId) async {
     final data = await client
         .from('services')
@@ -325,14 +340,46 @@ class SupabaseService {
     return Map<String, dynamic>.from(response.data as Map<String, dynamic>);
   }
 
-  Future<List<Map<String, dynamic>>> fetchCustomerBookings(String customerPhone) async {
+  Future<List<Map<String, dynamic>>> fetchCustomerBookings(
+    String customerPhone, {
+    String? sessionToken,
+  }) async {
+    if (sessionToken != null && sessionToken.isNotEmpty) {
+      try {
+        final response = await client.functions.invoke(
+          'customer-list-bookings',
+          body: {
+            'customer_phone': customerPhone,
+            'session_token': sessionToken,
+          },
+        );
+        if (response.status >= 400) {
+          throw Exception('Failed to load bookings (${response.status})');
+        }
+        final data = response.data;
+        if (data == null) return [];
+        final List list;
+        if (data is Map) {
+          list = (data['bookings'] as List?) ?? [];
+        } else if (data is List) {
+          list = data;
+        } else {
+          list = [];
+        }
+        return list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      } on FunctionException catch (_) {
+        // Edge function not deployed yet — fall through to REST fallback
+      }
+    }
+    // REST fallback: filter by phone, join services and stations
     final data = await client
         .from('bookings')
         .select('*,services(name,price),stations(name)')
         .eq('customer_phone', customerPhone)
         .order('created_at', ascending: false);
-
-    return (data as List<dynamic>).cast<Map<String, dynamic>>();
+    return (data as List<dynamic>)
+        .map((e) => Map<String, dynamic>.from(e as Map))
+        .toList();
   }
 
   Future<List<Map<String, dynamic>>> updateBookingStatus({
@@ -494,7 +541,7 @@ class SupabaseService {
         .select('*,services(name,price),stations(name)')
         .eq('station_id', stationId)
         .order('created_at', ascending: false);
-    return (data as List<dynamic>).cast<Map<String, dynamic>>();
+    return (data as List<dynamic>).map((e) => Map<String, dynamic>.from(e as Map)).toList();
   }
 
   /// Confirm, reject, or propose a new time for a booking via owner-manage-booking.
@@ -519,7 +566,17 @@ class SupabaseService {
         body: body,
         headers: {'Authorization': 'Bearer $sessionToken'},
       );
-      return Map<String, dynamic>.from(response.data as Map<dynamic, dynamic>);
+      if (response.status >= 400) {
+        final data = response.data;
+        String? msg;
+        if (data is Map) {
+          msg = data['error'] as String? ?? data['message'] as String?;
+        }
+        throw Exception(msg ?? 'Function error: ${response.status}');
+      }
+      final data = response.data;
+      if (data == null) return {};
+      return Map<String, dynamic>.from(data as Map<dynamic, dynamic>);
     } on FunctionException catch (e) {
       final details = e.details;
       String? msg;
@@ -538,7 +595,7 @@ class SupabaseService {
     required String proposedDate,
     required String proposedTime,
   }) async {
-    await client
+    final rows = await client
         .from('bookings')
         .update({
           'status': 'pending_customer_approval',
@@ -546,20 +603,29 @@ class SupabaseService {
           'proposed_time': proposedTime,
         })
         .eq('id', bookingId)
-        .eq('station_id', stationId);
+        .eq('station_id', stationId)
+        .select('id');
+    if ((rows as List).isEmpty) {
+      throw Exception('لم يتم تحديث الحجز — تحقق من الصلاحيات');
+    }
   }
 
   /// Update booking status directly (used by owner for confirmed → completed/cancelled).
+  /// Throws if no rows were updated (e.g. RLS policy blocked the write).
   Future<void> ownerUpdateBookingStatus({
     required String bookingId,
     required String stationId,
     required String newStatus,
   }) async {
-    await client
+    final rows = await client
         .from('bookings')
         .update({'status': newStatus})
         .eq('id', bookingId)
-        .eq('station_id', stationId);
+        .eq('station_id', stationId)
+        .select('id');
+    if ((rows as List).isEmpty) {
+      throw Exception('لم يتم تحديث الحجز — تحقق من الصلاحيات');
+    }
   }
 
   // Timeout and Alert Management
