@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import 'station_map_screen.dart';
+import '../services/owner_session_service.dart';
+import 'home_screen.dart';
+import 'owner_shell.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class WelcomeScreen extends StatefulWidget {
@@ -16,13 +18,23 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   @override
   void initState() {
     super.initState();
-    Timer(const Duration(seconds: 2), () {
+    Timer(const Duration(seconds: 2), () async {
       if (!mounted) return;
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        StationMapScreen.routeName,
-        (route) => false,
-      );
+      final ownerSession = await OwnerSessionService.instance.loadOwnerSession();
+      if (!mounted) return;
+      if (ownerSession != null) {
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          OwnerShell.routeName,
+          (route) => false,
+        );
+      } else {
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          HomeScreen.routeName,
+          (route) => false,
+        );
+      }
     });
   }
 

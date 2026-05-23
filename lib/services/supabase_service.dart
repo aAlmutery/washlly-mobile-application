@@ -147,6 +147,34 @@ class SupabaseService {
     return Map<String, dynamic>.from(response.data as Map<String, dynamic>);
   }
 
+  Future<Map<String, dynamic>> ownerSignIn({
+    required String phone,
+    required String password,
+  }) async {
+    final lookup = await ownerLoginLookup(phone);
+    final email = lookup['email'] as String;
+    final authResponse = await client.auth.signInWithPassword(
+      email: email,
+      password: password,
+    );
+    final userId = authResponse.user?.id ?? '';
+    final accessToken = authResponse.session?.accessToken ?? '';
+
+    final row = await client
+        .from('station_owners')
+        .select('owner_phone, station_id, stations(name)')
+        .eq('user_id', userId)
+        .single();
+
+    return {
+      'station_id': row['station_id'] as String? ?? '',
+      'owner_phone': row['owner_phone'] as String? ?? '',
+      'session_token': accessToken,
+      'station_name':
+          (row['stations'] as Map<String, dynamic>?)?['name'] as String? ?? '',
+    };
+  }
+
   Future<Map<String, dynamic>> spinBookingDiscount({
     required String stationId,
     required String serviceId,
@@ -316,6 +344,316 @@ class SupabaseService {
         .update({'status': status})
         .eq('id', bookingId)
         .select();
+
+    return (data as List<dynamic>).cast<Map<String, dynamic>>();
+  }
+
+  // Customer API Methods
+  Future<Map<String, dynamic>> customerLoginByPhone({
+    required String customerPhone,
+    String? customerName,
+  }) async {
+    final body = <String, dynamic>{'customer_phone': customerPhone};
+    if (customerName != null && customerName.isNotEmpty) {
+      body['customer_name'] = customerName;
+    }
+    final response = await client.functions.invoke(
+      'customer-login-by-phone',
+      body: body,
+    );
+
+    if (response.status >= 400) {
+      throw Exception('Function error: ${response.status}');
+    }
+
+    return Map<String, dynamic>.from(response.data as Map<String, dynamic>);
+  }
+
+  Future<Map<String, dynamic>> customerGetInbox({
+    required String customerPhone,
+    required String sessionToken,
+  }) async {
+    final response = await client.functions.invoke(
+      'customer-get-inbox',
+      body: {
+        'customer_phone': customerPhone,
+        'session_token': sessionToken,
+      },
+    );
+
+    if (response.status >= 400) {
+      throw Exception('Function error: ${response.status}');
+    }
+
+    return Map<String, dynamic>.from(response.data as Map<String, dynamic>);
+  }
+
+  Future<Map<String, dynamic>> customerManageBooking({
+    required String bookingId,
+    required String action,
+    required String customerPhone,
+    required String sessionToken,
+    String? bookingDate,
+    String? bookingTime,
+  }) async {
+    final body = {
+      'booking_id': bookingId,
+      'action': action,
+      'customer_phone': customerPhone,
+      'session_token': sessionToken,
+      if (bookingDate != null) 'booking_date': bookingDate,
+      if (bookingTime != null) 'booking_time': bookingTime,
+    };
+
+    final response = await client.functions.invoke(
+      'customer-manage-booking',
+      body: body,
+    );
+
+    if (response.status >= 400) {
+      throw Exception('Function error: ${response.status}');
+    }
+
+    return Map<String, dynamic>.from(response.data as Map<String, dynamic>);
+  }
+
+  Future<Map<String, dynamic>> customerSubmitRating({
+    required String bookingId,
+    required String customerPhone,
+    required String sessionToken,
+    required int rating,
+  }) async {
+    final response = await client.functions.invoke(
+      'customer-submit-rating',
+      body: {
+        'booking_id': bookingId,
+        'customer_phone': customerPhone,
+        'session_token': sessionToken,
+        'rating': rating,
+      },
+    );
+
+    if (response.status >= 400) {
+      throw Exception('Function error: ${response.status}');
+    }
+
+    return Map<String, dynamic>.from(response.data as Map<String, dynamic>);
+  }
+
+  Future<Map<String, dynamic>> customerMarkNotificationRead({
+    required String customerPhone,
+    required String sessionToken,
+    String? notificationId,
+    bool markAll = false,
+  }) async {
+    final body = {
+      'customer_phone': customerPhone,
+      'session_token': sessionToken,
+      if (notificationId != null) 'notification_id': notificationId,
+      if (markAll) 'mark_all': true,
+    };
+
+    final response = await client.functions.invoke(
+      'customer-mark-notification-read',
+      body: body,
+    );
+
+    if (response.status >= 400) {
+      throw Exception('Function error: ${response.status}');
+    }
+
+    return Map<String, dynamic>.from(response.data as Map<String, dynamic>);
+  }
+
+  // Owner API Methods
+  Future<Map<String, dynamic>> ownerLoginByPhone({
+    required String ownerPhone,
+  }) async {
+    final response = await client.functions.invoke(
+      'owner-login-by-phone',
+      body: {
+        'owner_phone': ownerPhone,
+      },
+    );
+
+    if (response.status >= 400) {
+      throw Exception('Function error: ${response.status}');
+    }
+
+    return Map<String, dynamic>.from(response.data as Map<String, dynamic>);
+  }
+
+  Future<List<Map<String, dynamic>>> ownerGetBookings({
+    required String stationId,
+    required String ownerPhone,
+    required String sessionToken,
+  }) async {
+    final response = await client.functions.invoke(
+      'owner-get-bookings',
+      body: {
+        'station_id': stationId,
+        'owner_phone': ownerPhone,
+        'session_token': sessionToken,
+      },
+    );
+
+    if (response.status >= 400) {
+      throw Exception('Function error: ${response.status}');
+    }
+
+    final data = response.data as Map<String, dynamic>;
+    return (data['bookings'] as List<dynamic>?)
+            ?.map((b) => b as Map<String, dynamic>)
+            .toList() ??
+        [];
+  }
+
+  Future<Map<String, dynamic>> ownerApproveBooking({
+    required String bookingId,
+    required String stationId,
+    required String ownerPhone,
+    required String sessionToken,
+  }) async {
+    final response = await client.functions.invoke(
+      'owner-approve-booking',
+      body: {
+        'booking_id': bookingId,
+        'station_id': stationId,
+        'owner_phone': ownerPhone,
+        'session_token': sessionToken,
+      },
+    );
+
+    if (response.status >= 400) {
+      throw Exception('Function error: ${response.status}');
+    }
+
+    return Map<String, dynamic>.from(response.data as Map<String, dynamic>);
+  }
+
+  Future<Map<String, dynamic>> ownerRejectBooking({
+    required String bookingId,
+    required String stationId,
+    required String ownerPhone,
+    required String sessionToken,
+    String? reason,
+  }) async {
+    final response = await client.functions.invoke(
+      'owner-reject-booking',
+      body: {
+        'booking_id': bookingId,
+        'station_id': stationId,
+        'owner_phone': ownerPhone,
+        'session_token': sessionToken,
+        if (reason != null) 'reason': reason,
+      },
+    );
+
+    if (response.status >= 400) {
+      throw Exception('Function error: ${response.status}');
+    }
+
+    return Map<String, dynamic>.from(response.data as Map<String, dynamic>);
+  }
+
+  Future<Map<String, dynamic>> ownerProposeTime({
+    required String bookingId,
+    required String stationId,
+    required String ownerPhone,
+    required String sessionToken,
+    required String proposedDate,
+    required String proposedTime,
+  }) async {
+    final response = await client.functions.invoke(
+      'owner-propose-time',
+      body: {
+        'booking_id': bookingId,
+        'station_id': stationId,
+        'owner_phone': ownerPhone,
+        'session_token': sessionToken,
+        'proposed_date': proposedDate,
+        'proposed_time': proposedTime,
+      },
+    );
+
+    if (response.status >= 400) {
+      throw Exception('Function error: ${response.status}');
+    }
+
+    return Map<String, dynamic>.from(response.data as Map<String, dynamic>);
+  }
+
+  // Timeout and Alert Management
+  Future<List<Map<String, dynamic>>> getBookingAlerts({
+    required String bookingId,
+  }) async {
+    final data = await client
+        .from('booking_alerts')
+        .select('*')
+        .eq('booking_id', bookingId)
+        .order('created_at', ascending: false);
+
+    return (data as List<dynamic>).cast<Map<String, dynamic>>();
+  }
+
+  Future<List<Map<String, dynamic>>> getTimeoutAlerts({
+    required String customerPhone,
+  }) async {
+    final data = await client
+        .from('timeout_alerts')
+        .select('*')
+        .eq('customer_phone', customerPhone)
+        .eq('status', 'active')
+        .order('timeout_time', ascending: true);
+
+    return (data as List<dynamic>).cast<Map<String, dynamic>>();
+  }
+
+  Future<Map<String, dynamic>> acknowledgeTimeoutAlert({
+    required String alertId,
+  }) async {
+    final data = await client
+        .from('timeout_alerts')
+        .update({'status': 'acknowledged'})
+        .eq('id', alertId)
+        .select()
+        .single();
+
+    return (data as Map).cast<String, dynamic>();
+  }
+
+  Future<Map<String, dynamic>> resolveBookingConflict({
+    required String bookingId,
+    required String resolutionAction,
+    required String reason,
+  }) async {
+    final response = await client.functions.invoke(
+      'resolve-booking-conflict',
+      body: {
+        'booking_id': bookingId,
+        'resolution_action': resolutionAction,
+        'reason': reason,
+      },
+    );
+
+    if (response.status >= 400) {
+      throw Exception('Function error: ${response.status}');
+    }
+
+    return Map<String, dynamic>.from(response.data as Map<String, dynamic>);
+  }
+
+  Future<List<Map<String, dynamic>>> getConflictingBookings({
+    required String stationId,
+    required DateTime timeSlot,
+  }) async {
+    final dateStr = timeSlot.toString().split(' ')[0];
+    final data = await client
+        .from('bookings')
+        .select('*')
+        .eq('station_id', stationId)
+        .eq('booking_date', dateStr)
+        .or('status.eq.pending,status.eq.confirmed');
 
     return (data as List<dynamic>).cast<Map<String, dynamic>>();
   }

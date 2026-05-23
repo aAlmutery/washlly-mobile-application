@@ -4,9 +4,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config.dart';
 import 'screens/booking_screen.dart';
 import 'screens/home_screen.dart';
-import 'screens/owner_login_screen.dart';
+import 'screens/profile_screen.dart';
 import 'screens/station_list_screen.dart';
 import 'screens/station_map_screen.dart';
+import 'screens/owner_shell.dart';
 import 'screens/welcome_screen.dart';
 
 Future<void> main() async {
@@ -39,7 +40,8 @@ class WashllyApp extends StatelessWidget {
         StationListScreen.routeName: (_) => const StationListScreen(),
         StationMapScreen.routeName: (_) => const StationMapScreen(),
         BookingScreen.routeName: (_) => const BookingScreen(),
-        OwnerLoginScreen.routeName: (_) => const OwnerLoginScreen(),
+        ProfileScreen.routeName: (_) => const ProfileScreen(),
+        OwnerShell.routeName: (_) => const OwnerShell(),
       },
     );
   }

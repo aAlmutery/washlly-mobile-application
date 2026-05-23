@@ -11,7 +11,7 @@ class BottomNavScaffold extends StatelessWidget {
     '/stations',
     '/map',
     '/booking',
-    '/owner',
+    '/profile',
   ];
 
   const BottomNavScaffold({
@@ -34,7 +34,7 @@ class BottomNavScaffold extends StatelessWidget {
       BottomNavigationBarItem(icon: const Icon(Icons.list), label: loc.bottomStations),
       BottomNavigationBarItem(icon: const Icon(Icons.map), label: loc.bottomMap),
       BottomNavigationBarItem(icon: const Icon(Icons.calendar_today), label: loc.bottomBooking),
-      BottomNavigationBarItem(icon: const Icon(Icons.person), label: loc.bottomOwner),
+      BottomNavigationBarItem(icon: const Icon(Icons.person), label: loc.bottomProfile),
     ];
     return Scaffold(
       appBar: AppBar(title: Text(title)),
