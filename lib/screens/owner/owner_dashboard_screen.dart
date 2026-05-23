@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../models/booking.dart';
-import '../services/supabase_service.dart';
-import '../widgets/bottom_nav_scaffold.dart';
+import '../../models/booking.dart';
+import '../../services/supabase_service.dart';
+import '../../widgets/bottom_nav_scaffold.dart';
 
 class OwnerDashboardScreen extends StatefulWidget {
   static const routeName = '/owner-dashboard';
@@ -46,10 +46,9 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> with Single
   }
 
   void _approveBooking(String bookingId) async {
-    await SupabaseService.instance.ownerApproveBooking(
+    await SupabaseService.instance.ownerManageBooking(
       bookingId: bookingId,
-      stationId: stationId,
-      ownerPhone: ownerPhone,
+      action: 'confirm',
       sessionToken: sessionToken,
     );
     setState(() {
@@ -58,12 +57,10 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> with Single
   }
 
   void _rejectBooking(String bookingId, String? reason) async {
-    await SupabaseService.instance.ownerRejectBooking(
+    await SupabaseService.instance.ownerManageBooking(
       bookingId: bookingId,
-      stationId: stationId,
-      ownerPhone: ownerPhone,
+      action: 'reject',
       sessionToken: sessionToken,
-      reason: reason,
     );
     setState(() {
       _bookingsFuture = _loadBookings();

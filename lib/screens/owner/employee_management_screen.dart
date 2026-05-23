@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../services/supabase_service.dart';
-import '../widgets/bottom_nav_scaffold.dart';
+import '../../services/supabase_service.dart';
+import '../../widgets/bottom_nav_scaffold.dart';
 
 class EmployeeManagementScreen extends StatefulWidget {
   static const routeName = '/employees';

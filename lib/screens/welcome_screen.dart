@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../services/owner_session_service.dart';
 import 'home_screen.dart';
-import 'owner_shell.dart';
+import 'owner/owner_shell.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class WelcomeScreen extends StatefulWidget {

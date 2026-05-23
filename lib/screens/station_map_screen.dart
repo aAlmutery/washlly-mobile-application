@@ -6,7 +6,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../models/station.dart';
 import '../services/supabase_service.dart';
 import '../widgets/bottom_nav_scaffold.dart';
-import 'booking_screen.dart';
+import 'customer/booking_screen.dart';
 
 class StationMapScreen extends StatefulWidget {
   static const routeName = '/map';

@@ -2,12 +2,12 @@
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config.dart';
-import 'screens/booking_screen.dart';
+import 'screens/customer/booking_screen.dart';
 import 'screens/home_screen.dart';
-import 'screens/profile_screen.dart';
+import 'screens/customer/profile_screen.dart';
 import 'screens/station_list_screen.dart';
 import 'screens/station_map_screen.dart';
-import 'screens/owner_shell.dart';
+import 'screens/owner/owner_shell.dart';
 import 'screens/welcome_screen.dart';
 
 Future<void> main() async {

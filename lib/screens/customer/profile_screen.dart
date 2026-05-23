@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import '../models/customer_session.dart';
-import '../services/session_service.dart';
-import '../services/supabase_service.dart';
-import '../widgets/bottom_nav_scaffold.dart';
-import 'owner_login_screen.dart';
+import '../../models/customer_session.dart';
+import '../../services/session_service.dart';
+import '../../services/supabase_service.dart';
+import '../../widgets/bottom_nav_scaffold.dart';
+import 'customer_booking_history_screen.dart';
+import '../owner/owner_login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   static const routeName = '/profile';
@@ -169,6 +170,58 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
+                  // Booking History — only when logged in
+                  if (_session != null) ...[
+                    Card(
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => CustomerBookingHistoryScreen(session: _session!),
+                            ),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 50,
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  color: Colors.green[100],
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Center(
+                                  child: Icon(Icons.history, color: Colors.green, size: 28),
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              const Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'سجل الحجوزات',
+                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                    ),
+                                    SizedBox(height: 4),
+                                    Text(
+                                      'استعرض وتابع جميع حجوزاتك',
+                                      style: TextStyle(color: Colors.grey, fontSize: 13),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Icon(Icons.chevron_right, color: Colors.grey[400]),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                   // Owner Login Option
                   Card(
                     child: InkWell(

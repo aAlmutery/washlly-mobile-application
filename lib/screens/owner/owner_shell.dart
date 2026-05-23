@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import '../models/booking.dart';
-import '../models/owner_session.dart';
-import '../services/owner_session_service.dart';
-import '../services/supabase_service.dart';
-import 'home_screen.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:intl/intl.dart';
+import '../../models/booking.dart';
+import '../../models/owner_session.dart';
+import '../../services/owner_session_service.dart';
+import '../../services/supabase_service.dart';
+import '../home_screen.dart';
 
 class OwnerShell extends StatefulWidget {
   static const routeName = '/owner-shell';
@@ -37,6 +39,8 @@ class _OwnerShellState extends State<OwnerShell> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
+
     if (_loading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
@@ -64,11 +68,11 @@ class _OwnerShellState extends State<OwnerShell> {
         currentIndex: _currentIndex,
         onTap: (i) => setState(() => _currentIndex = i),
         type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'الرئيسية'),
-          BottomNavigationBarItem(icon: Icon(Icons.local_car_wash), label: 'محطتي'),
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: 'الحجوزات'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'ملفي'),
+        items: [
+          BottomNavigationBarItem(icon: const Icon(Icons.dashboard), label: loc.bottomHome),
+          BottomNavigationBarItem(icon: const Icon(Icons.local_car_wash), label: loc.ownerMyStation),
+          BottomNavigationBarItem(icon: const Icon(Icons.calendar_today), label: loc.ownerBookingsTitle),
+          BottomNavigationBarItem(icon: const Icon(Icons.person), label: loc.ownerProfileTitle),
         ],
       ),
     );
@@ -100,6 +104,7 @@ class _OwnerHomeTabState extends State<_OwnerHomeTab> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(title: Text(widget.session.stationName)),
       body: FutureBuilder<List<Map<String, dynamic>>>(
@@ -151,9 +156,9 @@ class _OwnerHomeTabState extends State<_OwnerHomeTab> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                const Text(
-                  'نظرة عامة',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                Text(
+                  loc.ownerOverview,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
                 if (snapshot.connectionState == ConnectionState.waiting)
@@ -163,7 +168,7 @@ class _OwnerHomeTabState extends State<_OwnerHomeTab> {
                     children: [
                       Expanded(
                         child: _StatCard(
-                          label: 'قيد الانتظار',
+                          label: loc.ownerPendingLabel,
                           value: pending.toString(),
                           color: Colors.orange,
                           icon: Icons.hourglass_empty,
@@ -172,7 +177,7 @@ class _OwnerHomeTabState extends State<_OwnerHomeTab> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: _StatCard(
-                          label: 'مؤكدة',
+                          label: loc.ownerConfirmedLabel,
                           value: confirmed.toString(),
                           color: Colors.green,
                           icon: Icons.check_circle,
@@ -182,7 +187,7 @@ class _OwnerHomeTabState extends State<_OwnerHomeTab> {
                   ),
                   const SizedBox(height: 12),
                   _StatCard(
-                    label: 'إجمالي الحجوزات',
+                    label: loc.ownerTotalBookings,
                     value: total.toString(),
                     color: Colors.blue,
                     icon: Icons.calendar_today,
@@ -280,8 +285,9 @@ class _OwnerStationTabState extends State<_OwnerStationTab> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('محطتي')),
+      appBar: AppBar(title: Text(loc.ownerMyStation)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -311,7 +317,7 @@ class _OwnerStationTabState extends State<_OwnerStationTab> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'رقم المحطة: ${widget.session.stationId}',
+                            '${loc.ownerStationIdPrefix}${widget.session.stationId}',
                             style: const TextStyle(color: Colors.grey, fontSize: 12),
                           ),
                         ],
@@ -322,9 +328,9 @@ class _OwnerStationTabState extends State<_OwnerStationTab> {
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
-              'الموظفون',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Text(
+              loc.ownerEmployees,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             FutureBuilder<List<Map<String, dynamic>>>(
@@ -335,10 +341,10 @@ class _OwnerStationTabState extends State<_OwnerStationTab> {
                 }
                 final employees = snapshot.data ?? [];
                 if (employees.isEmpty) {
-                  return const Center(
+                  return Center(
                     child: Padding(
-                      padding: EdgeInsets.all(24),
-                      child: Text('لا يوجد موظفون', style: TextStyle(color: Colors.grey)),
+                      padding: const EdgeInsets.all(24),
+                      child: Text(loc.ownerNoEmployees, style: const TextStyle(color: Colors.grey)),
                     ),
                   );
                 }
@@ -357,7 +363,7 @@ class _OwnerStationTabState extends State<_OwnerStationTab> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
-                                e['role'] ?? 'موظف',
+                                e['role'] ?? loc.ownerDefaultRole,
                                 style: const TextStyle(fontSize: 12),
                               ),
                             ),
@@ -376,6 +382,8 @@ class _OwnerStationTabState extends State<_OwnerStationTab> {
 }
 
 // ─────────────────────────── Bookings Tab ───────────────────────────
+
+enum _TabType { pending, confirmed, done }
 
 class _OwnerBookingsTab extends StatefulWidget {
   final OwnerSession session;
@@ -410,50 +418,185 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
         sessionToken: widget.session.sessionToken,
       );
 
-  void _approve(String bookingId) async {
-    await SupabaseService.instance.ownerApproveBooking(
-      bookingId: bookingId,
-      stationId: widget.session.stationId,
-      ownerPhone: widget.session.ownerPhone,
-      sessionToken: widget.session.sessionToken,
-    );
-    setState(() { _bookingsFuture = _loadBookings(); });
+  void _refresh() => setState(() => _bookingsFuture = _loadBookings());
+
+  Future<void> _complete(String bookingId) async {
+    try {
+      await SupabaseService.instance.ownerUpdateBookingStatus(
+        bookingId: bookingId,
+        stationId: widget.session.stationId,
+        newStatus: 'completed',
+      );
+      _refresh();
+    } catch (e) {
+      if (mounted) {
+        final loc = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${loc.ownerCompleteFailed}$e')),
+        );
+      }
+    }
   }
 
-  void _reject(String bookingId, String? reason) async {
-    await SupabaseService.instance.ownerRejectBooking(
-      bookingId: bookingId,
-      stationId: widget.session.stationId,
-      ownerPhone: widget.session.ownerPhone,
-      sessionToken: widget.session.sessionToken,
-      reason: reason,
+  Future<void> _cancelConfirmed(String bookingId) async {
+    final loc = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(loc.ownerCancelDialogTitle),
+        content: Text(loc.ownerCancelConfirmMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(loc.noBtn),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: Text(loc.ownerCancelConfirmBtn, style: const TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
     );
-    setState(() { _bookingsFuture = _loadBookings(); });
+    if (confirmed != true) return;
+    try {
+      await SupabaseService.instance.ownerUpdateBookingStatus(
+        bookingId: bookingId,
+        stationId: widget.session.stationId,
+        newStatus: 'cancelled',
+      );
+      _refresh();
+    } catch (e) {
+      if (mounted) {
+        final loc2 = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${loc2.ownerCancelFailed}$e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _approve(String bookingId) async {
+    try {
+      await SupabaseService.instance.ownerManageBooking(
+        bookingId: bookingId,
+        action: 'confirm',
+        sessionToken: widget.session.sessionToken,
+      );
+      _refresh();
+    } catch (e) {
+      if (mounted) {
+        final loc = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${loc.ownerApproveFailed}$e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _reject(String bookingId) async {
+    try {
+      await SupabaseService.instance.ownerManageBooking(
+        bookingId: bookingId,
+        action: 'reject',
+        sessionToken: widget.session.sessionToken,
+      );
+      _refresh();
+    } catch (e) {
+      if (mounted) {
+        final loc = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${loc.ownerRejectFailed}$e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _showPostponeDialog(String bookingId, {required bool isPending}) async {
+    final loc = AppLocalizations.of(context)!;
+    DateTime selectedDate = DateTime.now().add(const Duration(days: 1));
+    TimeOfDay selectedTime = const TimeOfDay(hour: 10, minute: 0);
+
+    final date = await showDatePicker(
+      context: context,
+      initialDate: selectedDate,
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 90)),
+      helpText: loc.ownerPostponeDateHelp,
+    );
+    if (date == null || !mounted) return;
+    selectedDate = date;
+
+    final time = await showTimePicker(
+      context: context,
+      initialTime: selectedTime,
+      helpText: loc.ownerPostponeTimeHelp,
+    );
+    if (time == null || !mounted) return;
+    selectedTime = time;
+
+    final dateStr = DateFormat('yyyy-MM-dd').format(selectedDate);
+    final timeStr =
+        '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}';
+
+    try {
+      if (isPending) {
+        await SupabaseService.instance.ownerManageBooking(
+          bookingId: bookingId,
+          action: 'postpone',
+          sessionToken: widget.session.sessionToken,
+          proposedDate: dateStr,
+          proposedTime: timeStr,
+        );
+      } else {
+        await SupabaseService.instance.ownerPostponeConfirmedBooking(
+          bookingId: bookingId,
+          stationId: widget.session.stationId,
+          proposedDate: dateStr,
+          proposedTime: timeStr,
+        );
+      }
+      _refresh();
+      if (mounted) {
+        final loc2 = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(loc2.ownerPostponeSuccess)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        final loc2 = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${loc2.ownerPostponeFailed}$e')),
+        );
+      }
+    }
   }
 
   void _showRejectDialog(String bookingId) {
+    final loc = AppLocalizations.of(context)!;
     final reasonController = TextEditingController();
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('رفض الحجز'),
+        title: Text(loc.ownerRejectDialogTitle),
         content: TextField(
           controller: reasonController,
-          decoration: const InputDecoration(labelText: 'سبب الرفض'),
+          decoration: InputDecoration(labelText: loc.ownerRejectReasonLabel),
           maxLines: 3,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('إلغاء'),
+            child: Text(loc.cancelButton),
           ),
           ElevatedButton(
             onPressed: () {
-              _reject(bookingId, reasonController.text);
+              _reject(bookingId);
               Navigator.pop(ctx);
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('رفض', style: TextStyle(color: Colors.white)),
+            child: Text(loc.ownerRejectBtn, style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -477,12 +620,14 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
     }
   }
 
-  Widget _buildList(List<Map<String, dynamic>> bookings, bool canAct) {
+  Widget _buildList(List<Map<String, dynamic>> bookings, _TabType tabType) {
     if (bookings.isEmpty) {
-      return const Center(
-        child: Text('لا توجد حجوزات', style: TextStyle(color: Colors.grey)),
+      final loc = AppLocalizations.of(context)!;
+      return Center(
+        child: Text(loc.ownerNoBookings, style: const TextStyle(color: Colors.grey)),
       );
     }
+    final loc = AppLocalizations.of(context)!;
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: bookings.length,
@@ -498,7 +643,7 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'حجز #${b.bookingNumber}',
+                      '${loc.ownerBookingNumberPrefix}${b.bookingNumber}',
                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                     ),
                     Container(
@@ -515,30 +660,90 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
                   ],
                 ),
                 const SizedBox(height: 10),
-                Text('العميل: ${b.customerName}'),
-                Text('الهاتف: ${b.customerPhone}'),
+                Text('${loc.ownerCustomerPrefix}${b.customerName}'),
+                Text('${loc.ownerPhonePrefix}${b.customerPhone}'),
                 const SizedBox(height: 6),
-                Text('الخدمة: ${b.serviceName}'),
-                Text('التاريخ: ${b.bookingDate} - ${b.bookingTime}'),
+                Text('${loc.ownerServicePrefix}${b.serviceName}'),
+                Text('${loc.ownerDatePrefix}${b.bookingDate} - ${b.bookingTime}'),
                 const SizedBox(height: 6),
-                Text('السعر: ${b.price ?? 0} دينار'),
-                if (canAct) ...[
+                Text('${loc.ownerPricePrefix}${b.price ?? 0}${loc.ownerCurrencySuffix}'),
+                if (tabType == _TabType.pending) ...[
                   const SizedBox(height: 14),
+                  ElevatedButton.icon(
+                    onPressed: () => _approve(b.id),
+                    icon: const Icon(Icons.check, size: 18),
+                    label: Text(loc.ownerApproveBtn),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(double.infinity, 44),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   Row(
                     children: [
                       Expanded(
-                        child: ElevatedButton(
-                          onPressed: () => _approve(b.id),
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                          child: const Text('قبول', style: TextStyle(color: Colors.white)),
+                        child: ElevatedButton.icon(
+                          onPressed: () => _showRejectDialog(b.id),
+                          icon: const Icon(Icons.close, size: 18),
+                          label: Text(loc.ownerRejectBtn),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 8),
                       Expanded(
-                        child: ElevatedButton(
-                          onPressed: () => _showRejectDialog(b.id),
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                          child: const Text('رفض', style: TextStyle(color: Colors.white)),
+                        child: ElevatedButton.icon(
+                          onPressed: () => _showPostponeDialog(b.id, isPending: true),
+                          icon: const Icon(Icons.schedule, size: 18),
+                          label: Text(loc.ownerPostponeBtn),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                if (tabType == _TabType.confirmed) ...[
+                  const SizedBox(height: 14),
+                  ElevatedButton.icon(
+                    onPressed: () => _complete(b.id),
+                    icon: const Icon(Icons.check_circle_outline, size: 18),
+                    label: Text(loc.ownerDoneBtn),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(double.infinity, 44),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () => _showPostponeDialog(b.id, isPending: false),
+                          icon: const Icon(Icons.schedule, size: 18),
+                          label: Text(loc.ownerPostponeBtn),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () => _cancelConfirmed(b.id),
+                          icon: const Icon(Icons.cancel_outlined, size: 18),
+                          label: Text(loc.cancelButton),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
+                          ),
                         ),
                       ),
                     ],
@@ -554,15 +759,23 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('الحجوزات'),
+        title: Text(loc.ownerBookingsTitle),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _refresh,
+            tooltip: loc.refreshTooltip,
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
-          tabs: const [
-            Tab(text: 'قيد الانتظار'),
-            Tab(text: 'مؤكدة'),
-            Tab(text: 'مكتملة'),
+          tabs: [
+            Tab(text: loc.ownerTabPending),
+            Tab(text: loc.ownerTabConfirmed),
+            Tab(text: loc.ownerTabDone),
           ],
         ),
       ),
@@ -573,7 +786,7 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return Center(child: Text('خطأ: ${snapshot.error}'));
+            return Center(child: Text('${loc.errorPrefix}${snapshot.error}'));
           }
           final all = snapshot.data ?? [];
           final pending = all
@@ -590,9 +803,9 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
           return TabBarView(
             controller: _tabController,
             children: [
-              _buildList(pending, true),
-              _buildList(confirmed, false),
-              _buildList(done, false),
+              _buildList(pending, _TabType.pending),
+              _buildList(confirmed, _TabType.confirmed),
+              _buildList(done, _TabType.done),
             ],
           );
         },
@@ -611,8 +824,9 @@ class _OwnerProfileTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('ملفي الشخصي')),
+      appBar: AppBar(title: Text(loc.ownerProfileTitle)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -661,9 +875,9 @@ class _OwnerProfileTab extends StatelessWidget {
                               color: Colors.blue.shade50,
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Text(
-                              'مالك المحطة',
-                              style: TextStyle(fontSize: 12, color: Colors.blue),
+                            child: Text(
+                              loc.ownerStationOwnerRole,
+                              style: const TextStyle(fontSize: 12, color: Colors.blue),
                             ),
                           ),
                         ],
@@ -681,12 +895,12 @@ class _OwnerProfileTab extends StatelessWidget {
                   showDialog(
                     context: context,
                     builder: (ctx) => AlertDialog(
-                      title: const Text('تسجيل الخروج'),
-                      content: const Text('هل أنت متأكد من تسجيل الخروج؟'),
+                      title: Text(loc.profileLogout),
+                      content: Text(loc.ownerLogoutConfirm),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(ctx),
-                          child: const Text('إلغاء'),
+                          child: Text(loc.cancelButton),
                         ),
                         ElevatedButton(
                           onPressed: () {
@@ -694,9 +908,9 @@ class _OwnerProfileTab extends StatelessWidget {
                             onLogout();
                           },
                           style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                          child: const Text(
-                            'تسجيل الخروج',
-                            style: TextStyle(color: Colors.white),
+                          child: Text(
+                            loc.profileLogout,
+                            style: const TextStyle(color: Colors.white),
                           ),
                         ),
                       ],
@@ -704,7 +918,7 @@ class _OwnerProfileTab extends StatelessWidget {
                   );
                 },
                 icon: const Icon(Icons.logout),
-                label: const Text('تسجيل الخروج'),
+                label: Text(loc.profileLogout),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   foregroundColor: Colors.white,

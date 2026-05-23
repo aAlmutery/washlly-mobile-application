@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import '../models/service_model.dart';
-import '../models/station.dart';
-import '../services/supabase_service.dart';
-import '../widgets/bottom_nav_scaffold.dart';
+import '../../models/service_model.dart';
+import '../../models/station.dart';
+import '../../services/session_service.dart';
+import '../../services/supabase_service.dart';
+import '../../widgets/bottom_nav_scaffold.dart';
 
 class BookingScreen extends StatefulWidget {
   static const routeName = '/booking';
@@ -20,8 +22,6 @@ class _BookingScreenState extends State<BookingScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
-  final _latitudeController = TextEditingController();
-  final _longitudeController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _selectedTime = TimeOfDay(hour: 12, minute: 0);
   List<ServiceModel> _services = [];
@@ -29,11 +29,55 @@ class _BookingScreenState extends State<BookingScreen> {
   bool _loading = false;
   String? _resultMessage;
 
+  Position? _position;
+  bool _loadingLocation = false;
+  String? _locationError;
+
   @override
   void initState() {
     super.initState();
     if (widget.station != null) {
       _loadServices();
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        _fetchLocation();
+        final session = await SessionService.instance.loadCustomerSession();
+        if (mounted && session != null) {
+          _nameController.text = session.customerName;
+          _phoneController.text = session.customerPhone;
+        }
+      });
+    }
+  }
+
+  Future<void> _fetchLocation() async {
+    setState(() { _loadingLocation = true; _locationError = null; });
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        setState(() => _locationError = 'خدمة الموقع معطّلة. يرجى تفعيلها من إعدادات الجهاز.');
+        return;
+      }
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied) {
+        setState(() => _locationError = 'تم رفض إذن الموقع. يرجى منح الإذن للمتابعة.');
+        return;
+      }
+      if (permission == LocationPermission.deniedForever) {
+        setState(() => _locationError = 'تم رفض إذن الموقع بشكل دائم. يرجى تفعيله من إعدادات التطبيق.');
+        return;
+      }
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+      );
+      if (mounted) setState(() => _position = position);
+    } catch (_) {
+      if (mounted) setState(() => _locationError = 'تعذّر تحديد الموقع. يرجى المحاولة مجدداً.');
+    } finally {
+      if (mounted) setState(() => _loadingLocation = false);
     }
   }
 
@@ -133,22 +177,8 @@ class _BookingScreenState extends State<BookingScreen> {
   }
 
   Future<void> _createQuickBooking() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-    final lat = double.tryParse(_latitudeController.text.trim());
-    final lng = double.tryParse(_longitudeController.text.trim());
-    if (lat == null || lng == null) {
-      setState(() {
-        final loc = AppLocalizations.of(context)!;
-        _resultMessage = loc.invalidCoordinates;
-      });
-      return;
-    }
-    setState(() {
-      _loading = true;
-      _resultMessage = null;
-    });
+    if (!_formKey.currentState!.validate() || _position == null) return;
+    setState(() { _loading = true; _resultMessage = null; });
     try {
       final booking = await SupabaseService.instance.createQuickBooking(
         customerName: _nameController.text.trim(),
@@ -156,8 +186,8 @@ class _BookingScreenState extends State<BookingScreen> {
         bookingDate: _formattedDate,
         bookingTime: _formattedTimeIso,
         serviceKind: 'quick',
-        customerLat: lat,
-        customerLng: lng,
+        customerLat: _position!.latitude,
+        customerLng: _position!.longitude,
       );
       setState(() {
         final loc = AppLocalizations.of(context)!;
@@ -169,12 +199,85 @@ class _BookingScreenState extends State<BookingScreen> {
         _resultMessage = '${loc.quickBookingFailedPrefix}$error';
       });
     } finally {
-      if (mounted) {
-        setState(() {
-          _loading = false;
-        });
-      }
+      if (mounted) setState(() => _loading = false);
     }
+  }
+
+  Widget _buildLocationCard() {
+    if (_loadingLocation) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            children: const [
+              SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2)),
+              SizedBox(width: 16),
+              Text('جاري تحديد موقعك...'),
+            ],
+          ),
+        ),
+      );
+    }
+    if (_locationError != null) {
+      return Card(
+        color: Colors.red.shade50,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.location_off, color: Colors.red),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text(_locationError!, style: const TextStyle(color: Colors.red))),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _fetchLocation,
+                      icon: const Icon(Icons.refresh, size: 18),
+                      label: const Text('إعادة المحاولة'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => Geolocator.openAppSettings(),
+                      icon: const Icon(Icons.settings, size: 18),
+                      label: const Text('الإعدادات'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    if (_position != null) {
+      return Card(
+        color: Colors.green.shade50,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+          child: Row(
+            children: const [
+              Icon(Icons.location_on, color: Colors.green, size: 28),
+              SizedBox(width: 12),
+              Text(
+                'تم تحديد موقعك بنجاح',
+                style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 15),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    return const SizedBox.shrink();
   }
 
   @override
@@ -258,22 +361,10 @@ class _BookingScreenState extends State<BookingScreen> {
                 ),
               ],
               if (widget.station == null) ...[
-                TextFormField(
-                  controller: _latitudeController,
-                  decoration: InputDecoration(labelText: loc.latitudeLabel),
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  validator: (value) => value?.trim().isEmpty == true ? loc.locationRequired : null,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _longitudeController,
-                  decoration: InputDecoration(labelText: loc.longitudeLabel),
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  validator: (value) => value?.trim().isEmpty == true ? loc.locationRequired : null,
-                ),
+                _buildLocationCard(),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: _loading ? null : _createQuickBooking,
+                  onPressed: (_loading || _loadingLocation || _position == null) ? null : _createQuickBooking,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     child: Text(_loading ? loc.quickSendingText : loc.quickBookingButton),

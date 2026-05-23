@@ -483,104 +483,83 @@ class SupabaseService {
     return Map<String, dynamic>.from(response.data as Map<String, dynamic>);
   }
 
+  /// Fetch bookings for a station via direct REST (documented in API docs).
   Future<List<Map<String, dynamic>>> ownerGetBookings({
     required String stationId,
     required String ownerPhone,
     required String sessionToken,
   }) async {
-    final response = await client.functions.invoke(
-      'owner-get-bookings',
-      body: {
-        'station_id': stationId,
-        'owner_phone': ownerPhone,
-        'session_token': sessionToken,
-      },
-    );
-
-    if (response.status >= 400) {
-      throw Exception('Function error: ${response.status}');
-    }
-
-    final data = response.data as Map<String, dynamic>;
-    return (data['bookings'] as List<dynamic>?)
-            ?.map((b) => b as Map<String, dynamic>)
-            .toList() ??
-        [];
+    final data = await client
+        .from('bookings')
+        .select('*,services(name,price),stations(name)')
+        .eq('station_id', stationId)
+        .order('created_at', ascending: false);
+    return (data as List<dynamic>).cast<Map<String, dynamic>>();
   }
 
-  Future<Map<String, dynamic>> ownerApproveBooking({
+  /// Confirm, reject, or propose a new time for a booking via owner-manage-booking.
+  /// [action] must be 'confirm', 'reject', or 'postpone'.
+  Future<Map<String, dynamic>> ownerManageBooking({
     required String bookingId,
-    required String stationId,
-    required String ownerPhone,
+    required String action,
     required String sessionToken,
+    String? proposedDate,
+    String? proposedTime,
   }) async {
-    final response = await client.functions.invoke(
-      'owner-approve-booking',
-      body: {
-        'booking_id': bookingId,
-        'station_id': stationId,
-        'owner_phone': ownerPhone,
-        'session_token': sessionToken,
-      },
-    );
+    final body = <String, dynamic>{
+      'booking_id': bookingId,
+      'action': action,
+      if (proposedDate != null) 'booking_date': proposedDate,
+      if (proposedTime != null) 'booking_time': proposedTime,
+    };
 
-    if (response.status >= 400) {
-      throw Exception('Function error: ${response.status}');
+    try {
+      final response = await client.functions.invoke(
+        'owner-manage-booking',
+        body: body,
+        headers: {'Authorization': 'Bearer $sessionToken'},
+      );
+      return Map<String, dynamic>.from(response.data as Map<dynamic, dynamic>);
+    } on FunctionException catch (e) {
+      final details = e.details;
+      String? msg;
+      if (details is Map) {
+        msg = details['error'] as String? ?? details['message'] as String?;
+      }
+      throw Exception(msg ?? 'حدث خطأ غير متوقع (${e.status})');
     }
-
-    return Map<String, dynamic>.from(response.data as Map<String, dynamic>);
   }
 
-  Future<Map<String, dynamic>> ownerRejectBooking({
+  /// Postpone a confirmed booking to pending_customer_approval via direct REST
+  /// (owner-manage-booking only accepts pending/pending_owner_approval).
+  Future<void> ownerPostponeConfirmedBooking({
     required String bookingId,
     required String stationId,
-    required String ownerPhone,
-    required String sessionToken,
-    String? reason,
-  }) async {
-    final response = await client.functions.invoke(
-      'owner-reject-booking',
-      body: {
-        'booking_id': bookingId,
-        'station_id': stationId,
-        'owner_phone': ownerPhone,
-        'session_token': sessionToken,
-        if (reason != null) 'reason': reason,
-      },
-    );
-
-    if (response.status >= 400) {
-      throw Exception('Function error: ${response.status}');
-    }
-
-    return Map<String, dynamic>.from(response.data as Map<String, dynamic>);
-  }
-
-  Future<Map<String, dynamic>> ownerProposeTime({
-    required String bookingId,
-    required String stationId,
-    required String ownerPhone,
-    required String sessionToken,
     required String proposedDate,
     required String proposedTime,
   }) async {
-    final response = await client.functions.invoke(
-      'owner-propose-time',
-      body: {
-        'booking_id': bookingId,
-        'station_id': stationId,
-        'owner_phone': ownerPhone,
-        'session_token': sessionToken,
-        'proposed_date': proposedDate,
-        'proposed_time': proposedTime,
-      },
-    );
+    await client
+        .from('bookings')
+        .update({
+          'status': 'pending_customer_approval',
+          'proposed_date': proposedDate,
+          'proposed_time': proposedTime,
+        })
+        .eq('id', bookingId)
+        .eq('station_id', stationId);
+  }
 
-    if (response.status >= 400) {
-      throw Exception('Function error: ${response.status}');
-    }
-
-    return Map<String, dynamic>.from(response.data as Map<String, dynamic>);
+  /// Update booking status directly (used by owner for confirmed → completed/cancelled).
+  Future<void> ownerUpdateBookingStatus({
+    required String bookingId,
+    required String stationId,
+    required String newStatus,
+  }) async {
+    await client
+        .from('bookings')
+        .update({'status': newStatus})
+        .eq('id', bookingId)
+        .eq('station_id', stationId);
   }
 
   // Timeout and Alert Management

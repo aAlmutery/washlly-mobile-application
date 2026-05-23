@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../models/booking.dart';
-import '../models/customer_notification.dart';
-import '../services/supabase_service.dart';
-import '../widgets/bottom_nav_scaffold.dart';
+import '../../models/booking.dart';
+import '../../models/customer_notification.dart';
+import '../../services/supabase_service.dart';
+import '../../widgets/bottom_nav_scaffold.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class InboxScreen extends StatefulWidget {

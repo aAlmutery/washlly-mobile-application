@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:geolocator/geolocator.dart';
-import '../services/supabase_service.dart';
-import '../widgets/bottom_nav_scaffold.dart';
+import '../../services/session_service.dart';
+import '../../services/supabase_service.dart';
+import '../../widgets/bottom_nav_scaffold.dart';
 
 class QuickBookingScreen extends StatefulWidget {
   static const routeName = '/quick-booking';
@@ -26,7 +28,14 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _fetchLocation());
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      _fetchLocation();
+      final session = await SessionService.instance.loadCustomerSession();
+      if (mounted && session != null) {
+        _nameController.text = session.customerName;
+        _phoneController.text = session.customerPhone;
+      }
+    });
   }
 
   @override
@@ -47,7 +56,10 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
     try {
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        setState(() => _locationError = 'خدمة الموقع معطّلة. يرجى تفعيلها من إعدادات الجهاز.');
+        if (mounted) {
+          final loc = AppLocalizations.of(context)!;
+          setState(() => _locationError = loc.quickLocationDisabled);
+        }
         return;
       }
 
@@ -57,41 +69,51 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
       }
 
       if (permission == LocationPermission.denied) {
-        setState(() => _locationError = 'تم رفض إذن الموقع. يرجى منح الإذن للمتابعة.');
+        if (mounted) {
+          final loc = AppLocalizations.of(context)!;
+          setState(() => _locationError = loc.quickLocationDenied);
+        }
         return;
       }
 
       if (permission == LocationPermission.deniedForever) {
-        setState(() => _locationError = 'تم رفض إذن الموقع بشكل دائم. يرجى تفعيله من إعدادات التطبيق.');
+        if (mounted) {
+          final loc = AppLocalizations.of(context)!;
+          setState(() => _locationError = loc.quickLocationDeniedForever);
+        }
         return;
       }
 
       final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
       );
 
       if (mounted) setState(() => _position = position);
     } catch (e) {
-      if (mounted) setState(() => _locationError = 'تعذّر تحديد الموقع. يرجى المحاولة مجدداً.');
+      if (mounted) {
+        final loc = AppLocalizations.of(context)!;
+        setState(() => _locationError = loc.quickLocationFailed);
+      }
     } finally {
       if (mounted) setState(() => _loadingLocation = false);
     }
   }
 
   Future<void> _submit() async {
+    final loc = AppLocalizations.of(context)!;
     if (_nameController.text.trim().isEmpty ||
         _phoneController.text.trim().isEmpty ||
         _dateController.text.isEmpty ||
         _timeController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('يرجى تعبئة جميع الحقول')),
+        SnackBar(content: Text(loc.quickFillAllFields)),
       );
       return;
     }
 
     if (_position == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('يرجى السماح بالوصول إلى الموقع أولاً')),
+        SnackBar(content: Text(loc.quickAllowLocation)),
       );
       return;
     }
@@ -110,16 +132,18 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
       );
 
       if (mounted) {
+        final loc2 = AppLocalizations.of(context)!;
         final count = result['target_count'] ?? 0;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('تم إرسال طلب الحجز السريع إلى $count محطة')),
+          SnackBar(content: Text('${loc2.quickBookingSentPrefix}$count${loc2.quickBookingSentSuffix}')),
         );
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
+        final loc2 = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('فشل الحجز السريع: $e')),
+          SnackBar(content: Text('${loc2.quickBookingFailedPrefix}$e')),
         );
       }
     } finally {
@@ -129,39 +153,40 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     return BottomNavScaffold(
       currentIndex: 0,
-      title: 'الحجز السريع',
+      title: loc.quickBookingTitle,
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           TextField(
             controller: _nameController,
-            decoration: const InputDecoration(
-              labelText: 'الاسم الكامل',
-              prefixIcon: Icon(Icons.person),
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: loc.fullNameLabel,
+              prefixIcon: const Icon(Icons.person),
+              border: const OutlineInputBorder(),
             ),
             textCapitalization: TextCapitalization.words,
           ),
           const SizedBox(height: 16),
           TextField(
             controller: _phoneController,
-            decoration: const InputDecoration(
-              labelText: 'رقم الهاتف',
-              hintText: '07XXXXXXXXX',
-              prefixIcon: Icon(Icons.phone),
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: loc.quickPhoneLabel,
+              hintText: loc.quickPhoneHint,
+              prefixIcon: const Icon(Icons.phone),
+              border: const OutlineInputBorder(),
             ),
             keyboardType: TextInputType.phone,
           ),
           const SizedBox(height: 16),
           TextField(
             controller: _dateController,
-            decoration: const InputDecoration(
-              labelText: 'التاريخ',
-              prefixIcon: Icon(Icons.calendar_today),
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: loc.quickDateLabel,
+              prefixIcon: const Icon(Icons.calendar_today),
+              border: const OutlineInputBorder(),
             ),
             readOnly: true,
             onTap: () async {
@@ -179,10 +204,10 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
           const SizedBox(height: 16),
           TextField(
             controller: _timeController,
-            decoration: const InputDecoration(
-              labelText: 'الوقت',
-              prefixIcon: Icon(Icons.access_time),
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: loc.quickTimeLabel,
+              prefixIcon: const Icon(Icons.access_time),
+              border: const OutlineInputBorder(),
             ),
             readOnly: true,
             onTap: () async {
@@ -191,7 +216,9 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
                 initialTime: TimeOfDay.now(),
               );
               if (time != null) {
-                _timeController.text = time.format(context);
+                final h = time.hour.toString().padLeft(2, '0');
+                final m = time.minute.toString().padLeft(2, '0');
+                _timeController.text = '$h:$m';
               }
             },
           ),
@@ -216,7 +243,7 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
                     width: 20,
                     child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                   )
-                : const Text('أنشئ حجز سريع', style: TextStyle(fontSize: 16)),
+                : Text(loc.quickBookingButton, style: const TextStyle(fontSize: 16)),
           ),
         ],
       ),
@@ -239,19 +266,21 @@ class _LocationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
+
     if (loading) {
       return Card(
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Row(
-            children: const [
-              SizedBox(
+            children: [
+              const SizedBox(
                 width: 22,
                 height: 22,
                 child: CircularProgressIndicator(strokeWidth: 2),
               ),
-              SizedBox(width: 16),
-              Text('جاري تحديد موقعك...'),
+              const SizedBox(width: 16),
+              Text(loc.quickLocationDetecting),
             ],
           ),
         ),
@@ -283,7 +312,7 @@ class _LocationCard extends StatelessWidget {
                     child: OutlinedButton.icon(
                       onPressed: onRetry,
                       icon: const Icon(Icons.refresh, size: 18),
-                      label: const Text('إعادة المحاولة'),
+                      label: Text(loc.quickLocationRetry),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -291,7 +320,7 @@ class _LocationCard extends StatelessWidget {
                     child: OutlinedButton.icon(
                       onPressed: () => Geolocator.openAppSettings(),
                       icon: const Icon(Icons.settings, size: 18),
-                      label: const Text('الإعدادات'),
+                      label: Text(loc.quickLocationSettings),
                     ),
                   ),
                 ],
@@ -308,12 +337,12 @@ class _LocationCard extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
           child: Row(
-            children: const [
-              Icon(Icons.location_on, color: Colors.green, size: 28),
-              SizedBox(width: 12),
+            children: [
+              const Icon(Icons.location_on, color: Colors.green, size: 28),
+              const SizedBox(width: 12),
               Text(
-                'تم تحديد موقعك بنجاح',
-                style: TextStyle(
+                loc.quickLocationSuccess,
+                style: const TextStyle(
                   color: Colors.green,
                   fontWeight: FontWeight.bold,
                   fontSize: 15,

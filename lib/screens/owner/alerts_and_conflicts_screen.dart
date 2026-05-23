@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../models/booking_alert.dart';
-import '../services/supabase_service.dart';
-import '../widgets/bottom_nav_scaffold.dart';
+import '../../models/booking_alert.dart';
+import '../../services/supabase_service.dart';
+import '../../widgets/bottom_nav_scaffold.dart';
 
 class AlertsAndConflictsScreen extends StatefulWidget {
   static const routeName = '/alerts';

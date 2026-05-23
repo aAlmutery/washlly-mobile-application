@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../widgets/bottom_nav_scaffold.dart';
-import 'booking_screen.dart';
-import 'owner_login_screen.dart';
+import 'customer/booking_screen.dart';
+import 'owner/owner_login_screen.dart';
 import 'station_list_screen.dart';
 import 'station_map_screen.dart';
 

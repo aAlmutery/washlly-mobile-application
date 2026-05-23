@@ -47,7 +47,7 @@ class Booking {
       bookingDate: json['booking_date'] as String,
       bookingTime: json['booking_time'] as String,
       status: json['status'] as String,
-      price: (json['services'] as Map?)?['price'] as double?,
+      price: ((json['services'] as Map?)?['price'] as num?)?.toDouble(),
       customerRating: json['customer_rating'] as int?,
       ratedAt: json['rated_at'] != null ? DateTime.parse(json['rated_at']) : null,
       proposedDate: json['proposed_date'] as String?,
