@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_text_styles.dart';
 import '../widgets/bottom_nav_scaffold.dart';
 import 'customer/booking_screen.dart';
 import 'customer/profile_screen.dart';
@@ -23,18 +26,20 @@ class HomeScreen extends StatelessWidget {
           children: [
             Container(
               width: double.infinity,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Colors.blue.shade800, Colors.blue.shade600],
+                  colors: [AppColors.primaryDark, AppColors.primaryLight],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(32),
-                  bottomRight: Radius.circular(32),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(AppSpacing.radiusXl),
+                  bottomRight: Radius.circular(AppSpacing.radiusXl),
                 ),
               ),
-              padding: const EdgeInsets.fromLTRB(24, 28, 24, 32),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg, 28, AppSpacing.lg, AppSpacing.xl,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -46,25 +51,21 @@ class HomeScreen extends StatelessWidget {
                           children: [
                             Text(
                               loc.welcomeTitle,
-                              style: const TextStyle(
+                              style: AppTextStyles.headlineMedium.copyWith(
                                 color: Colors.white,
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
                               ),
                             ),
-                            const SizedBox(height: 10),
+                            const SizedBox(height: AppSpacing.sm),
                             Text(
                               loc.welcomeSubtitle,
-                              style: const TextStyle(
+                              style: AppTextStyles.bodyLarge.copyWith(
                                 color: Colors.white70,
-                                fontSize: 16,
-                                height: 1.6,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppSpacing.sm),
                       Container(
                         width: 70,
                         height: 70,
@@ -76,7 +77,7 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppSpacing.lg),
                   Row(
                     children: [
                       _HomeStatCard(
@@ -84,7 +85,7 @@ class HomeScreen extends StatelessWidget {
                         label: loc.nearestStationLabel,
                         value: loc.nearestStationValue,
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppSpacing.sm),
                       _HomeStatCard(
                         icon: Icons.support_agent,
                         label: loc.supportLabel,
@@ -96,59 +97,53 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.lg,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    loc.startNow,
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
+                  Text(loc.startNow, style: AppTextStyles.titleLarge),
+                  const SizedBox(height: AppSpacing.md),
                   Wrap(
-                    runSpacing: 12,
-                    spacing: 12,
+                    runSpacing: AppSpacing.sm,
+                    spacing: AppSpacing.sm,
                     children: [
                       _ActionCard(
                         title: loc.actionStationsTitle,
                         subtitle: loc.actionStationsSubtitle,
                         icon: Icons.list_alt,
-                        color: Colors.indigo,
+                        color: const Color(0xFF3949AB), // indigo
                         onTap: () => Navigator.pushReplacementNamed(context, StationListScreen.routeName),
                       ),
                       _ActionCard(
                         title: loc.actionMapTitle,
                         subtitle: loc.actionMapSubtitle,
                         icon: Icons.map,
-                        color: Colors.teal,
+                        color: const Color(0xFF00897B), // teal
                         onTap: () => Navigator.pushReplacementNamed(context, StationMapScreen.routeName),
                       ),
                       _ActionCard(
                         title: loc.actionQuickBookingTitle,
                         subtitle: loc.actionQuickBookingSubtitle,
                         icon: Icons.calendar_today,
-                        color: Colors.orange,
+                        color: AppColors.warning,
                         onTap: () => Navigator.pushReplacementNamed(context, BookingScreen.routeName),
                       ),
                       _ActionCard(
                         title: loc.bottomProfile,
                         subtitle: loc.actionOwnerLoginSubtitle,
                         icon: Icons.account_circle,
-                        color: Colors.deepPurple,
+                        color: AppColors.statusPendingCustomer,
                         onTap: () => Navigator.pushReplacementNamed(context, ProfileScreen.routeName),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
-                  Text(
-                    loc.howItWorksTitle,
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    loc.howItWorksSteps,
-                    style: const TextStyle(fontSize: 16, height: 1.6),
-                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  Text(loc.howItWorksTitle, style: AppTextStyles.titleLarge),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(loc.howItWorksSteps, style: AppTextStyles.bodyLarge),
                 ],
               ),
             ),
@@ -174,10 +169,10 @@ class _HomeStatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: Colors.white.withAlpha((0.18 * 255).round()),
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         ),
         child: Row(
           children: [
@@ -186,18 +181,27 @@ class _HomeStatCard extends StatelessWidget {
               height: 42,
               decoration: BoxDecoration(
                 color: Colors.white24,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
               ),
               child: Icon(icon, color: Colors.white, size: 24),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12)),
-                  const SizedBox(height: 6),
-                  Text(value, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                  Text(
+                    label,
+                    style: AppTextStyles.labelSmall.copyWith(color: Colors.white70),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    value,
+                    style: AppTextStyles.bodyLarge.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -230,10 +234,10 @@ class _ActionCard extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             color: color,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
             boxShadow: [
               BoxShadow(
                 color: color.withAlpha((0.3 * 255).round()),
@@ -250,14 +254,25 @@ class _ActionCard extends StatelessWidget {
                 height: 44,
                 decoration: BoxDecoration(
                   color: Colors.white.withAlpha((0.2 * 255).round()),
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 ),
                 child: Icon(icon, color: Colors.white, size: 26),
               ),
-              const SizedBox(height: 18),
-              Text(title, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              Text(subtitle, style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.4)),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                title,
+                style: AppTextStyles.bodyLarge.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                subtitle,
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: Colors.white70,
+                ),
+              ),
             ],
           ),
         ),

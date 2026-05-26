@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 class Booking {
   final String id;
   final int bookingNumber;
@@ -15,6 +17,42 @@ class Booking {
   final String? proposedDate;
   final String? proposedTime;
   final DateTime createdAt;
+
+  Color get statusColor {
+    switch (status) {
+      case 'pending':
+      case 'pending_owner_approval':
+        return Colors.orange;
+      case 'pending_customer_approval':
+        return Colors.deepPurple;
+      case 'confirmed':
+        return Colors.green;
+      case 'completed':
+        return Colors.blue;
+      case 'cancelled':
+        return Colors.grey;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String get statusLabel {
+    switch (status) {
+      case 'pending':
+      case 'pending_owner_approval':
+        return 'Pending';
+      case 'pending_customer_approval':
+        return 'Pending your response';
+      case 'confirmed':
+        return 'Confirmed';
+      case 'completed':
+        return 'Completed';
+      case 'cancelled':
+        return 'Cancelled';
+      default:
+        return status;
+    }
+  }
 
   Booking({
     required this.id,

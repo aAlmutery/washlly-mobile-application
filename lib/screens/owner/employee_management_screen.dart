@@ -26,7 +26,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
-  Set<String> _selectedPermissions = {};
+  final Set<String> _selectedPermissions = {};
 
   final List<Map<String, String>> _availablePermissions = [
     {'id': 'view_bookings', 'label': 'View Bookings'},
@@ -117,14 +117,14 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
   Future<void> _removeEmployee(String employeeId) async {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Remove Employee'),
         content: const Text('Are you sure you want to remove this employee?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () async {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               try {
                 await SupabaseService.instance.client
                     .from('employees')

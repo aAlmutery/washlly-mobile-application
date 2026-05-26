@@ -6,6 +6,10 @@ import '../../models/owner_session.dart';
 import '../../models/service_model.dart';
 import '../../services/owner_session_service.dart';
 import '../../services/supabase_service.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
+import '../../theme/app_text_styles.dart';
+import '../../widgets/status_badge.dart';
 import '../home_screen.dart';
 
 class OwnerShell extends StatefulWidget {
@@ -20,6 +24,7 @@ class _OwnerShellState extends State<OwnerShell> {
   int _currentIndex = 0;
   OwnerSession? _session;
   bool _loading = true;
+  late Future<List<Map<String, dynamic>>> _bookingsFuture;
 
   @override
   void initState() {
@@ -29,7 +34,29 @@ class _OwnerShellState extends State<OwnerShell> {
 
   Future<void> _loadSession() async {
     final session = await OwnerSessionService.instance.loadOwnerSession();
-    if (mounted) setState(() { _session = session; _loading = false; });
+    if (mounted) {
+      setState(() {
+        _session = session;
+        _loading = false;
+      });
+      if (session != null) {
+        _bookingsFuture = _fetchBookings(session);
+      }
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> _fetchBookings(OwnerSession session) =>
+      SupabaseService.instance.ownerGetBookings(
+        stationId: session.stationId,
+        ownerPhone: session.ownerPhone,
+        sessionToken: session.sessionToken,
+      );
+
+  void _refreshBookings() {
+    if (_session == null) return;
+    setState(() {
+      _bookingsFuture = _fetchBookings(_session!);
+    });
   }
 
   void _onLogout() async {
@@ -57,9 +84,13 @@ class _OwnerShellState extends State<OwnerShell> {
 
     final session = _session!;
     final bodies = <Widget>[
-      _OwnerHomeTab(session: session),
+      _OwnerHomeTab(session: session, bookingsFuture: _bookingsFuture),
       _OwnerStationTab(session: session),
-      _OwnerBookingsTab(session: session),
+      _OwnerBookingsTab(
+        session: session,
+        bookingsFuture: _bookingsFuture,
+        onRefresh: _refreshBookings,
+      ),
       _OwnerProfileTab(session: session, onLogout: _onLogout),
     ];
 
@@ -82,34 +113,19 @@ class _OwnerShellState extends State<OwnerShell> {
 
 // ─────────────────────────── Home Tab ───────────────────────────
 
-class _OwnerHomeTab extends StatefulWidget {
+class _OwnerHomeTab extends StatelessWidget {
   final OwnerSession session;
-  const _OwnerHomeTab({required this.session});
+  final Future<List<Map<String, dynamic>>> bookingsFuture;
 
-  @override
-  State<_OwnerHomeTab> createState() => _OwnerHomeTabState();
-}
-
-class _OwnerHomeTabState extends State<_OwnerHomeTab> {
-  late Future<List<Map<String, dynamic>>> _statsFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _statsFuture = SupabaseService.instance.ownerGetBookings(
-      stationId: widget.session.stationId,
-      ownerPhone: widget.session.ownerPhone,
-      sessionToken: widget.session.sessionToken,
-    );
-  }
+  const _OwnerHomeTab({required this.session, required this.bookingsFuture});
 
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: Text(widget.session.stationName)),
+      appBar: AppBar(title: Text(session.stationName)),
       body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _statsFuture,
+        future: bookingsFuture,
         builder: (context, snapshot) {
           final bookings = snapshot.data ?? [];
           final pending = bookings.where((b) =>
@@ -125,29 +141,25 @@ class _OwnerHomeTabState extends State<_OwnerHomeTab> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Card(
-                  color: Colors.blue.shade800,
+                  color: AppColors.primary,
                   child: Padding(
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(AppSpacing.lg),
                     child: Row(
                       children: [
                         const Icon(Icons.local_car_wash, color: Colors.white, size: 40),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                widget.session.stationName,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                session.stationName,
+                                style: AppTextStyles.titleLarge.copyWith(color: Colors.white),
                               ),
-                              const SizedBox(height: 4),
+                              const SizedBox(height: AppSpacing.xs),
                               Text(
-                                widget.session.ownerPhone,
-                                style: const TextStyle(color: Colors.white70, fontSize: 14),
+                                session.ownerPhone,
+                                style: AppTextStyles.bodyMedium.copyWith(color: Colors.white70),
                               ),
                             ],
                           ),
@@ -156,11 +168,8 @@ class _OwnerHomeTabState extends State<_OwnerHomeTab> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
-                Text(
-                  loc.ownerOverview,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
+                const SizedBox(height: AppSpacing.lg),
+                Text(loc.ownerOverview, style: AppTextStyles.titleMedium),
                 const SizedBox(height: 12),
                 if (snapshot.connectionState == ConnectionState.waiting)
                   const Center(child: CircularProgressIndicator())
@@ -171,26 +180,26 @@ class _OwnerHomeTabState extends State<_OwnerHomeTab> {
                         child: _StatCard(
                           label: loc.ownerPendingLabel,
                           value: pending.toString(),
-                          color: Colors.orange,
+                          color: AppColors.statusPending,
                           icon: Icons.hourglass_empty,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppSpacing.sm),
                       Expanded(
                         child: _StatCard(
                           label: loc.ownerConfirmedLabel,
                           value: confirmed.toString(),
-                          color: Colors.green,
+                          color: AppColors.statusConfirmed,
                           icon: Icons.check_circle,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.sm),
                   _StatCard(
                     label: loc.ownerTotalBookings,
                     value: total.toString(),
-                    color: Colors.blue,
+                    color: AppColors.primary,
                     icon: Icons.calendar_today,
                   ),
                 ],
@@ -220,30 +229,26 @@ class _StatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(AppSpacing.sm),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
               ),
               child: Icon(icon, color: color, size: 28),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.sm),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   value,
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
+                  style: AppTextStyles.headlineMedium.copyWith(color: color),
                 ),
-                Text(label, style: const TextStyle(fontSize: 13, color: Colors.grey)),
+                Text(label, style: AppTextStyles.bodySmall),
               ],
             ),
           ],
@@ -371,36 +376,33 @@ class _OwnerStationTabState extends State<_OwnerStationTab> {
           children: [
             Card(
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppSpacing.md),
                 child: Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(AppSpacing.sm),
                       decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
-                        borderRadius: BorderRadius.circular(8),
+                        color: AppColors.primarySurface,
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                       ),
-                      child: Icon(Icons.local_car_wash, color: Colors.blue.shade800, size: 32),
+                      child: const Icon(Icons.local_car_wash, color: AppColors.primary, size: 32),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Text(
                         widget.session.stationName,
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: AppTextStyles.titleMedium,
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.lg),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  loc.ownerMyServices,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
+                Text(loc.ownerMyServices, style: AppTextStyles.titleMedium),
                 ElevatedButton.icon(
                   onPressed: _showAddServiceDialog,
                   icon: const Icon(Icons.add, size: 18),
@@ -419,8 +421,11 @@ class _OwnerStationTabState extends State<_OwnerStationTab> {
                 if (services.isEmpty) {
                   return Center(
                     child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Text(loc.ownerNoServices, style: const TextStyle(color: Colors.grey)),
+                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      child: Text(
+                        loc.ownerNoServices,
+                        style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+                      ),
                     ),
                   );
                 }
@@ -428,20 +433,23 @@ class _OwnerStationTabState extends State<_OwnerStationTab> {
                   children: services.map((s) => Card(
                     child: ListTile(
                       leading: Container(
-                        padding: const EdgeInsets.all(8),
+                        padding: const EdgeInsets.all(AppSpacing.sm),
                         decoration: BoxDecoration(
-                          color: Colors.blue.shade50,
-                          borderRadius: BorderRadius.circular(8),
+                          color: AppColors.primarySurface,
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                         ),
-                        child: Icon(Icons.build_circle_outlined, color: Colors.blue.shade700),
+                        child: const Icon(Icons.build_circle_outlined, color: AppColors.primary),
                       ),
-                      title: Text(s.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      title: Text(s.name, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold)),
                       subtitle: s.durationMinutes != null
-                          ? Text('${s.durationMinutes} ${loc.ownerServiceDurationSuffix}')
+                          ? Text('${s.durationMinutes} ${loc.ownerServiceDurationSuffix}', style: AppTextStyles.bodySmall)
                           : null,
                       trailing: Text(
                         '${s.price}${loc.ownerCurrencySuffix}',
-                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green, fontSize: 15),
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.success,
+                        ),
                       ),
                     ),
                   )).toList(),
@@ -461,7 +469,14 @@ enum _TabType { pending, confirmed, done }
 
 class _OwnerBookingsTab extends StatefulWidget {
   final OwnerSession session;
-  const _OwnerBookingsTab({required this.session});
+  final Future<List<Map<String, dynamic>>> bookingsFuture;
+  final VoidCallback onRefresh;
+
+  const _OwnerBookingsTab({
+    required this.session,
+    required this.bookingsFuture,
+    required this.onRefresh,
+  });
 
   @override
   State<_OwnerBookingsTab> createState() => _OwnerBookingsTabState();
@@ -470,13 +485,12 @@ class _OwnerBookingsTab extends StatefulWidget {
 class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  late Future<List<Map<String, dynamic>>> _bookingsFuture;
+  List<Map<String, dynamic>>? _cachedBookings;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _bookingsFuture = _loadBookings();
   }
 
   @override
@@ -485,14 +499,7 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
     super.dispose();
   }
 
-  Future<List<Map<String, dynamic>>> _loadBookings() =>
-      SupabaseService.instance.ownerGetBookings(
-        stationId: widget.session.stationId,
-        ownerPhone: widget.session.ownerPhone,
-        sessionToken: widget.session.sessionToken,
-      );
-
-  void _refresh() => setState(() { _bookingsFuture = _loadBookings(); });
+  void _refresh() => widget.onRefresh();
 
   Future<void> _complete(String bookingId) async {
     try {
@@ -737,24 +744,6 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
     }
   }
 
-  Color _statusColor(String status) {
-    switch (status) {
-      case 'pending':
-      case 'pending_owner_approval':
-        return Colors.orange;
-      case 'pending_customer_approval':
-        return Colors.deepPurple;
-      case 'confirmed':
-        return Colors.green;
-      case 'completed':
-        return Colors.blue;
-      case 'cancelled':
-        return Colors.grey;
-      default:
-        return Colors.grey;
-    }
-  }
-
   Widget _buildList(List<Map<String, dynamic>> bookings, _TabType tabType) {
     final loc = AppLocalizations.of(context)!;
     if (bookings.isEmpty) {
@@ -767,13 +756,12 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
       itemCount: bookings.length,
       itemBuilder: (context, index) {
         final b = Booking.fromJson(bookings[index]);
-        final statusColor = _statusColor(b.status);
         final isAwaitingCustomer = b.status == 'pending_customer_approval';
 
         return Card(
-          margin: const EdgeInsets.only(bottom: 12),
+          margin: const EdgeInsets.only(bottom: AppSpacing.sm),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.md),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -783,59 +771,47 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
                   children: [
                     Text(
                       '${loc.ownerBookingNumberPrefix}${b.bookingNumber}',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold),
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: statusColor.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: statusColor.withValues(alpha: 0.4)),
-                      ),
-                      child: Text(
-                        _ownerStatusLabel(b.status, loc),
-                        style: TextStyle(
-                          color: statusColor,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                    StatusBadge(
+                      status: b.status,
+                      label: _ownerStatusLabel(b.status, loc),
                     ),
                   ],
                 ),
-                const Divider(height: 20),
+                const Divider(height: AppSpacing.lg),
 
                 // Customer info
                 _OwnerInfoRow(icon: Icons.person, text: '${loc.ownerCustomerPrefix}${b.customerName}'),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppSpacing.xs),
                 _OwnerInfoRow(icon: Icons.phone, text: '${loc.ownerPhonePrefix}${b.customerPhone}'),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppSpacing.xs),
                 _OwnerInfoRow(icon: Icons.build_circle_outlined, text: '${loc.ownerServicePrefix}${b.serviceName}'),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppSpacing.xs),
                 _OwnerInfoRow(icon: Icons.calendar_today, text: '${loc.ownerDatePrefix}${b.bookingDate}  ${b.bookingTime}'),
                 if (b.price != null) ...[
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppSpacing.xs),
                   _OwnerInfoRow(icon: Icons.attach_money, text: '${loc.ownerPricePrefix}${b.price!.toStringAsFixed(0)}${loc.ownerCurrencySuffix}'),
                 ],
 
                 // Proposed time (shown when owner postponed and waiting for customer)
                 if (b.proposedDate != null && b.proposedTime != null) ...[
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.sm),
                   Container(
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(AppSpacing.sm),
                     decoration: BoxDecoration(
-                      color: Colors.deepPurple.withValues(alpha: 0.07),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.deepPurple.withValues(alpha: 0.3)),
+                      color: AppColors.statusPendingCustomer.withValues(alpha: 0.07),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                      border: Border.all(color: AppColors.statusPendingCustomer.withValues(alpha: 0.3)),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.schedule, size: 16, color: Colors.deepPurple),
-                        const SizedBox(width: 8),
+                        const Icon(Icons.schedule, size: 16, color: AppColors.statusPendingCustomer),
+                        const SizedBox(width: AppSpacing.sm),
                         Expanded(
                           child: Text(
                             '${loc.ownerProposedTimeLabel}${b.proposedDate}  ${b.proposedTime}',
-                            style: const TextStyle(color: Colors.deepPurple, fontSize: 13),
+                            style: AppTextStyles.bodySmall.copyWith(color: AppColors.statusPendingCustomer),
                           ),
                         ),
                       ],
@@ -845,21 +821,24 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
 
                 // Awaiting customer note
                 if (isAwaitingCustomer) ...[
-                  const SizedBox(height: 10),
+                  const SizedBox(height: AppSpacing.sm),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                      vertical: AppSpacing.sm,
+                    ),
                     decoration: BoxDecoration(
-                      color: Colors.deepPurple.withValues(alpha: 0.07),
-                      borderRadius: BorderRadius.circular(8),
+                      color: AppColors.statusPendingCustomer.withValues(alpha: 0.07),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.hourglass_top, size: 16, color: Colors.deepPurple),
-                        const SizedBox(width: 8),
+                        const Icon(Icons.hourglass_top, size: 16, color: AppColors.statusPendingCustomer),
+                        const SizedBox(width: AppSpacing.sm),
                         Expanded(
                           child: Text(
                             loc.ownerAwaitingCustomerNote,
-                            style: const TextStyle(color: Colors.deepPurple, fontSize: 13),
+                            style: AppTextStyles.bodySmall.copyWith(color: AppColors.statusPendingCustomer),
                           ),
                         ),
                       ],
@@ -869,18 +848,18 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
 
                 // Actions for pending (only pending / pending_owner_approval — NOT pending_customer_approval)
                 if (tabType == _TabType.pending && !isAwaitingCustomer) ...[
-                  const SizedBox(height: 14),
+                  const SizedBox(height: AppSpacing.sm),
                   ElevatedButton.icon(
                     onPressed: () => _approve(b.id),
                     icon: const Icon(Icons.check, size: 18),
                     label: Text(loc.ownerApproveBtn),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
+                      backgroundColor: AppColors.success,
                       foregroundColor: Colors.white,
                       minimumSize: const Size(double.infinity, 44),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.sm),
                   Row(
                     children: [
                       Expanded(
@@ -889,19 +868,19 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
                           icon: const Icon(Icons.close, size: 18),
                           label: Text(loc.ownerRejectBtn),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
+                            backgroundColor: AppColors.error,
                             foregroundColor: Colors.white,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppSpacing.sm),
                       Expanded(
                         child: ElevatedButton.icon(
                           onPressed: () => _showPostponeDialog(b),
                           icon: const Icon(Icons.schedule, size: 18),
                           label: Text(loc.ownerPostponeBtn),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange,
+                            backgroundColor: AppColors.warning,
                             foregroundColor: Colors.white,
                           ),
                         ),
@@ -912,18 +891,18 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
 
                 // Actions for confirmed
                 if (tabType == _TabType.confirmed) ...[
-                  const SizedBox(height: 14),
+                  const SizedBox(height: AppSpacing.sm),
                   ElevatedButton.icon(
                     onPressed: () => _complete(b.id),
                     icon: const Icon(Icons.check_circle_outline, size: 18),
                     label: Text(loc.ownerDoneBtn),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
+                      backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       minimumSize: const Size(double.infinity, 44),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.sm),
                   Row(
                     children: [
                       Expanded(
@@ -932,19 +911,19 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
                           icon: const Icon(Icons.schedule, size: 18),
                           label: Text(loc.ownerPostponeBtn),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange,
+                            backgroundColor: AppColors.warning,
                             foregroundColor: Colors.white,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppSpacing.sm),
                       Expanded(
                         child: ElevatedButton.icon(
                           onPressed: () => _cancelConfirmed(b.id),
                           icon: const Icon(Icons.cancel_outlined, size: 18),
                           label: Text(loc.cancelButton),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
+                            backgroundColor: AppColors.error,
                             foregroundColor: Colors.white,
                           ),
                         ),
@@ -983,15 +962,19 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
         ),
       ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _bookingsFuture,
+        future: widget.bookingsFuture,
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+          if (snapshot.hasData) {
+            _cachedBookings = snapshot.data;
+          }
+          if (snapshot.connectionState == ConnectionState.waiting &&
+              _cachedBookings == null) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (snapshot.hasError) {
+          if (snapshot.hasError && _cachedBookings == null) {
             return Center(child: Text('${loc.errorPrefix}${snapshot.error}'));
           }
-          final all = snapshot.data ?? [];
+          final all = _cachedBookings ?? [];
           final pending = all
               .where((b) =>
                   b['status'] == 'pending' ||
@@ -1003,12 +986,20 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
               .where((b) => b['status'] == 'completed' || b['status'] == 'cancelled')
               .toList();
 
-          return TabBarView(
-            controller: _tabController,
+          return Column(
             children: [
-              _buildList(pending, _TabType.pending),
-              _buildList(confirmed, _TabType.confirmed),
-              _buildList(done, _TabType.done),
+              if (snapshot.connectionState == ConnectionState.waiting)
+                const LinearProgressIndicator(),
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildList(pending, _TabType.pending),
+                    _buildList(confirmed, _TabType.confirmed),
+                    _buildList(done, _TabType.done),
+                  ],
+                ),
+              ),
             ],
           );
         },
@@ -1037,50 +1028,47 @@ class _OwnerProfileTab extends StatelessWidget {
           children: [
             Card(
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppSpacing.md),
                 child: Row(
                   children: [
                     Container(
                       width: 60,
                       height: 60,
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade800,
+                      decoration: const BoxDecoration(
+                        color: AppColors.primary,
                         shape: BoxShape.circle,
                       ),
                       child: const Center(
                         child: Icon(Icons.business, size: 32, color: Colors.white),
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             session.stationName,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
+                            style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: AppSpacing.xs),
                           Text(
                             session.ownerPhone,
-                            style: const TextStyle(color: Colors.grey),
+                            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
                           ),
-                          const SizedBox(height: 6),
+                          const SizedBox(height: AppSpacing.sm),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
+                              horizontal: AppSpacing.sm,
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.blue.shade50,
-                              borderRadius: BorderRadius.circular(12),
+                              color: AppColors.primarySurface,
+                              borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
                             ),
                             child: Text(
                               loc.ownerStationOwnerRole,
-                              style: const TextStyle(fontSize: 12, color: Colors.blue),
+                              style: AppTextStyles.labelSmall.copyWith(color: AppColors.primary),
                             ),
                           ),
                         ],
@@ -1090,7 +1078,7 @@ class _OwnerProfileTab extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: AppSpacing.xl),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
@@ -1110,7 +1098,7 @@ class _OwnerProfileTab extends StatelessWidget {
                             Navigator.pop(ctx);
                             onLogout();
                           },
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                          style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
                           child: Text(
                             loc.profileLogout,
                             style: const TextStyle(color: Colors.white),
@@ -1123,9 +1111,9 @@ class _OwnerProfileTab extends StatelessWidget {
                 icon: const Icon(Icons.logout),
                 label: Text(loc.profileLogout),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
+                  backgroundColor: AppColors.error,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
                 ),
               ),
             ),
@@ -1147,9 +1135,9 @@ class _OwnerInfoRow extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 16, color: Colors.grey),
-        const SizedBox(width: 8),
-        Expanded(child: Text(text, style: const TextStyle(fontSize: 14))),
+        Icon(icon, size: 16, color: AppColors.textSecondary),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(child: Text(text, style: AppTextStyles.bodyMedium)),
       ],
     );
   }

@@ -1,5 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../services/realtime_notification_service.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_text_styles.dart';
 
 class RealtimeNotificationBadge extends StatefulWidget {
   final String customerPhone;
@@ -17,7 +21,7 @@ class RealtimeNotificationBadge extends StatefulWidget {
 
 class _RealtimeNotificationBadgeState extends State<RealtimeNotificationBadge> {
   int _unreadCount = 0;
-  late Stream<Map<String, dynamic>> _notificationStream;
+  StreamSubscription<Map<String, dynamic>>? _subscription;
 
   @override
   void initState() {
@@ -30,17 +34,17 @@ class _RealtimeNotificationBadgeState extends State<RealtimeNotificationBadge> {
       await RealtimeNotificationService.instance
           .subscribeToCustomerNotifications(widget.customerPhone);
 
-      _notificationStream = RealtimeNotificationService.instance.notificationStream;
-
-      _notificationStream.listen((notification) {
-        if (mounted) {
-          setState(() => _unreadCount++);
-          widget.onNotificationReceived();
-          _showNotificationSnackbar(notification);
-        }
-      });
+      _subscription = RealtimeNotificationService.instance.notificationStream.listen(
+        (notification) {
+          if (mounted) {
+            setState(() => _unreadCount++);
+            widget.onNotificationReceived();
+            _showNotificationSnackbar(notification);
+          }
+        },
+      );
     } catch (e) {
-      print('Error initializing notifications: $e');
+      debugPrint('Error initializing notifications: $e');
     }
   }
 
@@ -54,22 +58,31 @@ class _RealtimeNotificationBadgeState extends State<RealtimeNotificationBadge> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-            if (body.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Text(body),
+            Text(
+              title as String,
+              style: AppTextStyles.bodyMedium.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            if ((body as String).isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                body,
+                style: AppTextStyles.bodySmall.copyWith(color: Colors.white70),
+              ),
             ],
           ],
         ),
         duration: const Duration(seconds: 4),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.blue[800],
+        backgroundColor: AppColors.primary,
       ),
     );
   }
 
   @override
   void dispose() {
+    _subscription?.cancel();
     RealtimeNotificationService.instance.unsubscribe();
     super.dispose();
   }
@@ -86,8 +99,8 @@ class _RealtimeNotificationBadgeState extends State<RealtimeNotificationBadge> {
             child: Container(
               padding: const EdgeInsets.all(2),
               decoration: BoxDecoration(
-                color: Colors.red,
-                borderRadius: BorderRadius.circular(10),
+                color: AppColors.error,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
               ),
               constraints: const BoxConstraints(
                 minWidth: 18,
@@ -95,9 +108,8 @@ class _RealtimeNotificationBadgeState extends State<RealtimeNotificationBadge> {
               ),
               child: Text(
                 _unreadCount > 99 ? '99+' : '$_unreadCount',
-                style: const TextStyle(
+                style: AppTextStyles.labelSmall.copyWith(
                   color: Colors.white,
-                  fontSize: 12,
                   fontWeight: FontWeight.bold,
                 ),
                 textAlign: TextAlign.center,
@@ -124,6 +136,8 @@ class RealtimeBookingUpdates extends StatefulWidget {
 }
 
 class _RealtimeBookingUpdatesState extends State<RealtimeBookingUpdates> {
+  StreamSubscription<Map<String, dynamic>>? _subscription;
+
   @override
   void initState() {
     super.initState();
@@ -135,18 +149,21 @@ class _RealtimeBookingUpdatesState extends State<RealtimeBookingUpdates> {
       await RealtimeNotificationService.instance
           .subscribeToBookingUpdates(widget.bookingId);
 
-      RealtimeNotificationService.instance.notificationStream.listen((update) {
-        if (mounted && update['booking_id'] == widget.bookingId) {
-          widget.onUpdate(update);
-        }
-      });
+      _subscription = RealtimeNotificationService.instance.notificationStream.listen(
+        (update) {
+          if (mounted) {
+            widget.onUpdate(update);
+          }
+        },
+      );
     } catch (e) {
-      print('Error subscribing to booking updates: $e');
+      debugPrint('Error subscribing to booking updates: $e');
     }
   }
 
   @override
   void dispose() {
+    _subscription?.cancel();
     RealtimeNotificationService.instance.unsubscribe();
     super.dispose();
   }

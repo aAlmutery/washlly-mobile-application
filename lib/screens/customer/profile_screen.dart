@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../models/customer_session.dart';
-import '../../services/session_service.dart';
 import '../../services/supabase_service.dart';
+import '../../state/customer_session_notifier.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
+import '../../theme/app_text_styles.dart';
 import '../../widgets/bottom_nav_scaffold.dart';
 import 'customer_booking_history_screen.dart';
 import '../owner/owner_login_screen.dart';
@@ -10,31 +13,18 @@ import '../owner/owner_login_screen.dart';
 class ProfileScreen extends StatefulWidget {
   static const routeName = '/profile';
 
-  const ProfileScreen({super.key});
+  final CustomerSessionNotifier sessionNotifier;
+
+  const ProfileScreen({super.key, required this.sessionNotifier});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  CustomerSession? _session;
-  bool _loadingSession = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadSession();
-  }
-
-  Future<void> _loadSession() async {
-    final session = await SessionService.instance.loadCustomerSession();
-    if (mounted) setState(() { _session = session; _loadingSession = false; });
-  }
-
   Future<void> _logout() async {
-    await SessionService.instance.clearCustomerSession();
+    await widget.sessionNotifier.logout();
     if (mounted) {
-      setState(() => _session = null);
       final loc = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(loc.profileLogoutSuccess)),
@@ -50,13 +40,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) => _CustomerLoginSheet(
-        onSuccess: (session) {
+        onSuccess: (session) async {
           Navigator.pop(ctx);
-          setState(() => _session = session);
-          final loc = AppLocalizations.of(context)!;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(loc.customerLoginSuccess)),
-          );
+          await widget.sessionNotifier.save(session);
+          if (mounted) {
+            final loc = AppLocalizations.of(context)!;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(loc.customerLoginSuccess)),
+            );
+          }
         },
       ),
     );
@@ -65,11 +57,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
+    final notifier = widget.sessionNotifier;
 
     return BottomNavScaffold(
       currentIndex: 4,
       title: loc.bottomProfile,
-      body: _loadingSession
+      body: !notifier.loaded
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
@@ -77,36 +70,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // User Profile Card
-                  if (_session != null)
+                  if (notifier.session != null)
                     Card(
                       child: Padding(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(AppSpacing.md),
                         child: Row(
                           children: [
                             Container(
                               width: 60,
                               height: 60,
-                              decoration: BoxDecoration(
-                                color: Colors.blue[200],
+                              decoration: const BoxDecoration(
+                                color: AppColors.primaryLight,
                                 shape: BoxShape.circle,
                               ),
                               child: const Center(
                                 child: Icon(Icons.person, size: 32, color: Colors.white),
                               ),
                             ),
-                            const SizedBox(width: 16),
+                            const SizedBox(width: AppSpacing.md),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    _session!.customerName,
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                    notifier.session!.customerName,
+                                    style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold),
                                   ),
-                                  const SizedBox(height: 4),
+                                  const SizedBox(height: AppSpacing.xs),
                                   Text(
-                                    _session!.customerPhone,
-                                    style: const TextStyle(color: Colors.grey),
+                                    notifier.session!.customerPhone,
+                                    style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
                                   ),
                                 ],
                               ),
@@ -117,335 +110,152 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     )
                   else
                     Card(
-                      color: Colors.blue[50],
+                      color: AppColors.primarySurface,
                       child: Padding(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(AppSpacing.md),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
                               children: [
-                                const Icon(Icons.person_outline, size: 40, color: Colors.blue),
-                                const SizedBox(width: 16),
+                                const Icon(Icons.person_outline, size: 40, color: AppColors.primary),
+                                const SizedBox(width: AppSpacing.md),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         loc.welcomeTitle,
-                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                        style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold),
                                       ),
-                                      const SizedBox(height: 4),
+                                      const SizedBox(height: AppSpacing.xs),
                                       Text(
                                         loc.profileLoginPrompt,
-                                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                                        style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
                                       ),
                                     ],
                                   ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: AppSpacing.md),
                             SizedBox(
                               width: double.infinity,
                               child: ElevatedButton(
                                 onPressed: _openLoginSheet,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.blue,
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
-                                ),
-                                child: Text(
-                                  loc.profileLoginButton,
-                                  style: const TextStyle(color: Colors.white),
-                                ),
+                                child: Text(loc.profileLoginButton),
                               ),
                             ),
                           ],
                         ),
                       ),
                     ),
-                  const SizedBox(height: 32),
-                  Text(
-                    loc.profileOptionsTitle,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.xl),
+                  Text(loc.profileOptionsTitle, style: AppTextStyles.titleMedium),
+                  const SizedBox(height: AppSpacing.md),
                   // Booking History — only when logged in
-                  if (_session != null) ...[
-                    Card(
-                      child: InkWell(
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => CustomerBookingHistoryScreen(session: _session!),
-                            ),
-                          );
-                        },
-                        borderRadius: BorderRadius.circular(8),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 50,
-                                height: 50,
-                                decoration: BoxDecoration(
-                                  color: Colors.green[100],
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Center(
-                                  child: Icon(Icons.history, color: Colors.green, size: 28),
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              const Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'سجل الحجوزات',
-                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                                    ),
-                                    SizedBox(height: 4),
-                                    Text(
-                                      'استعرض وتابع جميع حجوزاتك',
-                                      style: TextStyle(color: Colors.grey, fontSize: 13),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Icon(Icons.chevron_right, color: Colors.grey[400]),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                  // Owner Login Option
-                  Card(
-                    child: InkWell(
+                  if (notifier.session != null) ...[
+                    _ProfileOptionCard(
+                      iconData: Icons.history,
+                      iconColor: AppColors.success,
+                      iconBackground: AppColors.successSurface,
+                      title: loc.bookingHistoryTitle,
+                      subtitle: loc.bookingHistorySubtitle,
                       onTap: () {
                         Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const OwnerLoginScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => CustomerBookingHistoryScreen(session: notifier.session!),
+                          ),
                         );
                       },
-                      borderRadius: BorderRadius.circular(8),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 50,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                color: Colors.blue[100],
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Center(
-                                child: Icon(Icons.business, color: Colors.blue, size: 28),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    loc.actionOwnerLoginTitle,
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    loc.profileOwnerLoginDesc,
-                                    style: const TextStyle(color: Colors.grey, fontSize: 13),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Icon(Icons.chevron_right, color: Colors.grey[400]),
-                          ],
-                        ),
-                      ),
                     ),
+                    const SizedBox(height: AppSpacing.sm),
+                  ],
+                  // Owner Login Option
+                  _ProfileOptionCard(
+                    iconData: Icons.business,
+                    iconColor: AppColors.primary,
+                    iconBackground: AppColors.primarySurface,
+                    title: loc.actionOwnerLoginTitle,
+                    subtitle: loc.profileOwnerLoginDesc,
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const OwnerLoginScreen()),
+                      );
+                    },
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.sm),
                   // Settings Option
-                  Card(
-                    child: InkWell(
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(loc.profileSettingsComingSoon)),
-                        );
-                      },
-                      borderRadius: BorderRadius.circular(8),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 50,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                color: Colors.blue[100],
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Center(
-                                child: Icon(Icons.settings, color: Colors.blue, size: 28),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    loc.profileAccountSettings,
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    loc.profileAccountSettingsDesc,
-                                    style: const TextStyle(color: Colors.grey, fontSize: 13),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Icon(Icons.chevron_right, color: Colors.grey[400]),
-                          ],
-                        ),
-                      ),
-                    ),
+                  _ProfileOptionCard(
+                    iconData: Icons.settings,
+                    iconColor: AppColors.primary,
+                    iconBackground: AppColors.primarySurface,
+                    title: loc.profileAccountSettings,
+                    subtitle: loc.profileAccountSettingsDesc,
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(loc.profileSettingsComingSoon)),
+                      );
+                    },
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.sm),
                   // Help Option
-                  Card(
-                    child: InkWell(
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(loc.profileSupportComingSoon)),
-                        );
-                      },
-                      borderRadius: BorderRadius.circular(8),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 50,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                color: Colors.blue[100],
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Center(
-                                child: Icon(Icons.help, color: Colors.blue, size: 28),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    loc.profileHelpSupport,
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    loc.profileHelpSupportDesc,
-                                    style: const TextStyle(color: Colors.grey, fontSize: 13),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Icon(Icons.chevron_right, color: Colors.grey[400]),
-                          ],
-                        ),
-                      ),
-                    ),
+                  _ProfileOptionCard(
+                    iconData: Icons.help,
+                    iconColor: AppColors.primary,
+                    iconBackground: AppColors.primarySurface,
+                    title: loc.profileHelpSupport,
+                    subtitle: loc.profileHelpSupportDesc,
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(loc.profileSupportComingSoon)),
+                      );
+                    },
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.sm),
                   // About Option
-                  Card(
-                    child: InkWell(
-                      onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) {
-                            final dlgLoc = AppLocalizations.of(context)!;
-                            return AlertDialog(
-                              title: Text(dlgLoc.profileAboutTitle),
-                              content: SingleChildScrollView(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      dlgLoc.profileAboutAppName,
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(dlgLoc.profileVersion),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      dlgLoc.profileAboutContent,
-                                      style: const TextStyle(fontSize: 14),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              actions: [
-                                ElevatedButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: Text(dlgLoc.profileClose),
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      },
-                      borderRadius: BorderRadius.circular(8),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 50,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                color: Colors.blue[100],
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Center(
-                                child: Icon(Icons.info, color: Colors.blue, size: 28),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
+                  _ProfileOptionCard(
+                    iconData: Icons.info,
+                    iconColor: AppColors.primary,
+                    iconBackground: AppColors.primarySurface,
+                    title: loc.profileAboutTitle,
+                    subtitle: loc.profileAboutDesc,
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          final dlgLoc = AppLocalizations.of(context)!;
+                          return AlertDialog(
+                            title: Text(dlgLoc.profileAboutTitle),
+                            content: SingleChildScrollView(
                               child: Column(
+                                mainAxisSize: MainAxisSize.min,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    loc.profileAboutTitle,
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                    dlgLoc.profileAboutAppName,
+                                    style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold),
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    loc.profileAboutDesc,
-                                    style: const TextStyle(color: Colors.grey, fontSize: 13),
-                                  ),
+                                  const SizedBox(height: AppSpacing.sm),
+                                  Text(dlgLoc.profileVersion, style: AppTextStyles.bodyMedium),
+                                  const SizedBox(height: AppSpacing.sm),
+                                  Text(dlgLoc.profileAboutContent, style: AppTextStyles.bodyMedium),
                                 ],
                               ),
                             ),
-                            Icon(Icons.chevron_right, color: Colors.grey[400]),
-                          ],
-                        ),
-                      ),
-                    ),
+                            actions: [
+                              ElevatedButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: Text(dlgLoc.profileClose),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
                   ),
-                  const SizedBox(height: 24),
-                  if (_session != null)
+                  const SizedBox(height: AppSpacing.lg),
+                  if (notifier.session != null)
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
@@ -453,15 +263,76 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         icon: const Icon(Icons.logout),
                         label: Text(loc.profileLogout),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
+                          backgroundColor: AppColors.error,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
                         ),
                       ),
                     ),
                 ],
               ),
             ),
+    );
+  }
+}
+
+// ---------- Reusable profile option row card ----------
+
+class _ProfileOptionCard extends StatelessWidget {
+  final IconData iconData;
+  final Color iconColor;
+  final Color iconBackground;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _ProfileOptionCard({
+    required this.iconData,
+    required this.iconColor,
+    required this.iconBackground,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Row(
+            children: [
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: iconBackground,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                ),
+                child: Center(child: Icon(iconData, color: iconColor, size: 28)),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(subtitle, style: AppTextStyles.bodySmall),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, color: AppColors.textDisabled),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -522,7 +393,6 @@ class _CustomerLoginSheetState extends State<_CustomerLoginSheet> {
         sessionToken: result['session_token'] as String,
         expiresAt: DateTime.parse(result['expires_at'] as String),
       );
-      await SessionService.instance.saveCustomerSession(session);
       widget.onSuccess(session);
     } catch (e) {
       setState(() { _error = e.toString(); _loading = false; });
@@ -557,10 +427,10 @@ class _CustomerLoginSheetState extends State<_CustomerLoginSheet> {
             enabled: !_requiresName,
           ),
           if (_requiresName) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.md),
             Text(
               loc.customerNameRequiredPrompt,
-              style: TextStyle(color: Colors.blue[700], fontSize: 13),
+              style: AppTextStyles.bodySmall.copyWith(color: AppColors.primary),
             ),
             const SizedBox(height: 8),
             TextField(
@@ -575,16 +445,17 @@ class _CustomerLoginSheetState extends State<_CustomerLoginSheet> {
             ),
           ],
           if (_error != null) ...[
-            const SizedBox(height: 12),
-            Text(_error!, style: const TextStyle(color: Colors.red, fontSize: 13)),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              _error!,
+              style: AppTextStyles.bodySmall.copyWith(color: AppColors.error),
+            ),
           ],
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.lg),
           ElevatedButton(
             onPressed: _loading ? null : _submit,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 14),
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
             ),
             child: _loading
                 ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))

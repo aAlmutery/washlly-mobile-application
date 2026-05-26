@@ -3,12 +3,18 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../services/owner_session_service.dart';
+import '../state/customer_session_notifier.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_text_styles.dart';
 import 'home_screen.dart';
 import 'owner/owner_shell.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class WelcomeScreen extends StatefulWidget {
-  const WelcomeScreen({super.key});
+  final CustomerSessionNotifier sessionNotifier;
+
+  const WelcomeScreen({super.key, required this.sessionNotifier});
 
   @override
   State<WelcomeScreen> createState() => _WelcomeScreenState();
@@ -43,30 +49,33 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.xl,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 24),
+              const SizedBox(height: AppSpacing.lg),
               Text(
                 AppLocalizations.of(context)!.welcomeTitle,
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue.shade900,
+                style: AppTextStyles.displayLarge.copyWith(
+                  color: AppColors.primaryDark,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.md),
               Text(
                 AppLocalizations.of(context)!.welcomeSubtitle,
-                style: const TextStyle(fontSize: 18, height: 1.6),
+                style: AppTextStyles.titleMedium.copyWith(
+                  fontWeight: FontWeight.normal,
+                ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: AppSpacing.xl),
               Text(
                 AppLocalizations.of(context)!.welcomeFeaturesTitle,
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: AppTextStyles.titleLarge,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.md),
               _FeatureItem(text: AppLocalizations.of(context)!.featureMap),
               _FeatureItem(text: AppLocalizations.of(context)!.featureServices),
               _FeatureItem(text: AppLocalizations.of(context)!.featureQuickBooking),
@@ -91,14 +100,14 @@ class _FeatureItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm + 4),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.check_circle, color: Colors.blueAccent, size: 20),
-          const SizedBox(width: 12),
+          const Icon(Icons.check_circle, color: AppColors.primary, size: 20),
+          const SizedBox(width: AppSpacing.sm + 4),
           Expanded(
-            child: Text(text, style: const TextStyle(fontSize: 16, height: 1.5)),
+            child: Text(text, style: AppTextStyles.bodyLarge),
           ),
         ],
       ),

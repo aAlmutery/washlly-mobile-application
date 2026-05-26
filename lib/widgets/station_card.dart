@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/station.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_text_styles.dart';
 
 class StationCard extends StatelessWidget {
   final Station station;
@@ -10,22 +13,23 @@ class StationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      elevation: 3,
       child: InkWell(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.md),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(station.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              Text(station.address, style: const TextStyle(fontSize: 14)),
+              Text(station.name, style: AppTextStyles.titleMedium),
+              const SizedBox(height: AppSpacing.sm),
+              Text(station.address, style: AppTextStyles.bodyMedium),
               if (station.detailedAddress != null) ...[
-                const SizedBox(height: 6),
-                Text(station.detailedAddress!, style: const TextStyle(fontSize: 12, color: Colors.black54)),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  station.detailedAddress!,
+                  style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                ),
               ],
             ],
           ),

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:async';
 
@@ -11,11 +12,16 @@ class RealtimeNotificationService {
 
   Timer? _pollingTimer;
   bool _isConnected = false;
+  int _subscriberCount = 0;
+  DateTime? _lastPolledAt;
+  String? _lastBookingStatus;
 
   Stream<Map<String, dynamic>> get notificationStream => _notificationController.stream;
 
   Future<void> subscribeToCustomerNotifications(String customerPhone) async {
-    // Start polling for new notifications every 5 seconds
+    _subscriberCount++;
+    _lastPolledAt = DateTime.now();
+    _pollingTimer?.cancel();
     _pollingTimer = Timer.periodic(const Duration(seconds: 5), (_) async {
       await _pollForNotifications(customerPhone);
     });
@@ -23,7 +29,9 @@ class RealtimeNotificationService {
   }
 
   Future<void> subscribeToStationNotifications(String stationId) async {
-    // Start polling for station notifications
+    _subscriberCount++;
+    _lastPolledAt = DateTime.now();
+    _pollingTimer?.cancel();
     _pollingTimer = Timer.periodic(const Duration(seconds: 5), (_) async {
       await _pollForStationNotifications(stationId);
     });
@@ -31,7 +39,9 @@ class RealtimeNotificationService {
   }
 
   Future<void> subscribeToBookingUpdates(String bookingId) async {
-    // Start polling for booking updates
+    _subscriberCount++;
+    _lastBookingStatus = null;
+    _pollingTimer?.cancel();
     _pollingTimer = Timer.periodic(const Duration(seconds: 5), (_) async {
       await _pollForBookingUpdates(bookingId);
     });
@@ -40,39 +50,55 @@ class RealtimeNotificationService {
 
   Future<void> _pollForNotifications(String customerPhone) async {
     try {
-      final data = await _client
+      final lastPolled = _lastPolledAt;
+      var filterQuery = _client
           .from('customer_notifications')
           .select('*')
-          .eq('customer_phone', customerPhone)
+          .eq('customer_phone', customerPhone);
+
+      if (lastPolled != null) {
+        filterQuery = filterQuery.gt('created_at', lastPolled.toIso8601String());
+      }
+
+      final data = await filterQuery
           .order('created_at', ascending: false)
           .limit(10);
 
       if (data.isNotEmpty) {
+        _lastPolledAt = DateTime.now();
         for (final notification in data) {
           _notificationController.add(notification);
         }
       }
     } catch (e) {
-      print('Error polling notifications: $e');
+      debugPrint('Error polling notifications: $e');
     }
   }
 
   Future<void> _pollForStationNotifications(String stationId) async {
     try {
-      final data = await _client
+      final lastPolled = _lastPolledAt;
+      var filterQuery = _client
           .from('station_notifications')
           .select('*')
-          .eq('station_id', stationId)
+          .eq('station_id', stationId);
+
+      if (lastPolled != null) {
+        filterQuery = filterQuery.gt('created_at', lastPolled.toIso8601String());
+      }
+
+      final data = await filterQuery
           .order('created_at', ascending: false)
           .limit(10);
 
       if (data.isNotEmpty) {
+        _lastPolledAt = DateTime.now();
         for (final notification in data) {
           _notificationController.add(notification);
         }
       }
     } catch (e) {
-      print('Error polling station notifications: $e');
+      debugPrint('Error polling station notifications: $e');
     }
   }
 
@@ -84,19 +110,32 @@ class RealtimeNotificationService {
           .eq('id', bookingId)
           .single();
 
-      _notificationController.add(data);
+      final currentStatus = data['status'] as String?;
+      if (currentStatus != _lastBookingStatus) {
+        _lastBookingStatus = currentStatus;
+        _notificationController.add(data);
+      }
     } catch (e) {
-      print('Error polling booking updates: $e');
+      debugPrint('Error polling booking updates: $e');
     }
   }
 
   Future<void> unsubscribe() async {
-    _pollingTimer?.cancel();
-    _isConnected = false;
+    _subscriberCount = (_subscriberCount - 1).clamp(0, _subscriberCount);
+    if (_subscriberCount <= 0) {
+      _pollingTimer?.cancel();
+      _pollingTimer = null;
+      _isConnected = false;
+      _lastPolledAt = null;
+      _lastBookingStatus = null;
+    }
   }
 
   void dispose() {
-    unsubscribe();
+    _subscriberCount = 0;
+    _pollingTimer?.cancel();
+    _pollingTimer = null;
+    _isConnected = false;
     _notificationController.close();
   }
 

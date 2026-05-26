@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import '../models/station.dart';
 import '../services/supabase_service.dart';
+import '../theme/app_spacing.dart';
 import '../widgets/bottom_nav_scaffold.dart';
 import '../widgets/station_card.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -108,9 +109,12 @@ class _StationListScreenState extends State<StationListScreen> {
         _isLoadingMore = false;
       });
     } catch (e) {
-      setState(() {
-        _isLoadingMore = false;
-      });
+      if (mounted) {
+        setState(() => _isLoadingMore = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${AppLocalizations.of(context)!.errorPrefix}$e')),
+        );
+      }
     }
   }
 
@@ -200,7 +204,7 @@ class _StationListScreenState extends State<StationListScreen> {
       },
     );
 
-    if (selected != null || _selectedService != selected) {
+    if (selected != _selectedService) {
       setState(() {
         _selectedService = selected;
       });
@@ -346,6 +350,7 @@ class _StationListScreenState extends State<StationListScreen> {
                             onTap: _openServicePicker,
                             child: AbsorbPointer(
                               child: TextFormField(
+                                  key: ValueKey(_selectedService),
                                   decoration: InputDecoration(
                                     labelText: loc.serviceLabel,
                                     prefixIcon: const Icon(Icons.room_service),
@@ -354,9 +359,7 @@ class _StationListScreenState extends State<StationListScreen> {
                                       _selectedService == null ? Icons.arrow_drop_down : Icons.clear,
                                     ),
                                   ),
-                                  controller: TextEditingController(
-                                    text: _selectedService ?? loc.allServices,
-                                  ),
+                                  initialValue: _selectedService ?? loc.allServices,
                                   readOnly: true,
                                 ),
                             ),
@@ -413,15 +416,18 @@ class _StationListScreenState extends State<StationListScreen> {
 
   Widget _buildLoadingSkeleton() {
     return ListView.separated(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
       itemCount: 5,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
       itemBuilder: (context, index) {
         return Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             color: Colors.grey.shade200,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -431,19 +437,19 @@ class _StationListScreenState extends State<StationListScreen> {
                 height: 18,
                 decoration: BoxDecoration(
                   color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.sm),
               Container(
                 width: 150,
                 height: 14,
                 decoration: BoxDecoration(
                   color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: AppSpacing.sm),
               Row(
                 children: [
                   Expanded(
@@ -451,17 +457,17 @@ class _StationListScreenState extends State<StationListScreen> {
                       height: 14,
                       decoration: BoxDecoration(
                         color: Colors.grey.shade300,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Container(
                       height: 14,
                       decoration: BoxDecoration(
                         color: Colors.grey.shade300,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                       ),
                     ),
                   ),

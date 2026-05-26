@@ -6,7 +6,11 @@ import '../../models/service_model.dart';
 import '../../models/station.dart';
 import '../../services/session_service.dart';
 import '../../services/supabase_service.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
+import '../../theme/app_text_styles.dart';
 import '../../widgets/bottom_nav_scaffold.dart';
+import '../../widgets/realtime_notifications_widget.dart';
 
 class BookingScreen extends StatefulWidget {
   static const routeName = '/booking';
@@ -28,6 +32,7 @@ class _BookingScreenState extends State<BookingScreen> {
   ServiceModel? _selectedService;
   bool _loading = false;
   String? _resultMessage;
+  String? _createdBookingId;
 
   Position? _position;
   bool _loadingLocation = false;
@@ -173,6 +178,7 @@ class _BookingScreenState extends State<BookingScreen> {
       setState(() {
         final loc = AppLocalizations.of(context)!;
         _resultMessage = '${loc.bookingCreated} #${booking['bookingNumber']}';
+        _createdBookingId = booking['id'] as String?;
       });
     } catch (error) {
       setState(() {
@@ -234,21 +240,26 @@ class _BookingScreenState extends State<BookingScreen> {
     }
     if (_locationError != null) {
       return Card(
-        color: Colors.red.shade50,
+        color: AppColors.errorSurface,
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.md),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.location_off, color: Colors.red),
-                  const SizedBox(width: 12),
-                  Expanded(child: Text(_locationError!, style: const TextStyle(color: Colors.red))),
+                  const Icon(Icons.location_off, color: AppColors.error),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      _locationError!,
+                      style: AppTextStyles.bodyMedium.copyWith(color: AppColors.error),
+                    ),
+                  ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.sm),
               Row(
                 children: [
                   Expanded(
@@ -258,7 +269,7 @@ class _BookingScreenState extends State<BookingScreen> {
                       label: Text(loc.quickLocationRetry),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () => Geolocator.openAppSettings(),
@@ -275,16 +286,22 @@ class _BookingScreenState extends State<BookingScreen> {
     }
     if (_position != null) {
       return Card(
-        color: Colors.green.shade50,
+        color: AppColors.successSurface,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.md,
+          ),
           child: Row(
             children: [
-              const Icon(Icons.location_on, color: Colors.green, size: 28),
-              const SizedBox(width: 12),
+              const Icon(Icons.location_on, color: AppColors.success, size: 28),
+              const SizedBox(width: AppSpacing.sm),
               Text(
                 loc.quickLocationSuccess,
-                style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 15),
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.success,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
@@ -308,10 +325,13 @@ class _BookingScreenState extends State<BookingScreen> {
           child: ListView(
             children: [
               if (widget.station != null) ...[
-                Text('${loc.stationLabelPrefix}${widget.station!.name}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                const SizedBox(height: 8),
-                Text(widget.station!.address),
-                const SizedBox(height: 16),
+                Text(
+                  '${loc.stationLabelPrefix}${widget.station!.name}',
+                  style: AppTextStyles.titleMedium,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(widget.station!.address, style: AppTextStyles.bodyMedium),
+                const SizedBox(height: AppSpacing.md),
               ],
               TextFormField(
                 controller: _nameController,
@@ -386,10 +406,25 @@ class _BookingScreenState extends State<BookingScreen> {
                 ),
               ],
               const SizedBox(height: 20),
+              if (_createdBookingId != null)
+                RealtimeBookingUpdates(
+                  bookingId: _createdBookingId!,
+                  onUpdate: (update) {
+                    if (mounted) {
+                      final newStatus = update['status'] as String?;
+                      if (newStatus != null) {
+                        setState(() {
+                          final loc = AppLocalizations.of(context)!;
+                          _resultMessage = '${loc.bookingCreated} — $newStatus';
+                        });
+                      }
+                    }
+                  },
+                ),
               if (_resultMessage != null)
                 Text(
                   _resultMessage!,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.w500),
                 ),
             ],
           ),

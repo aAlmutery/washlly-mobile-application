@@ -243,5 +243,7 @@
   "ownerStatusCompleted": "مكتمل",
   "ownerStatusCancelled": "ملغي",
   "ownerProposedTimeLabel": "الوقت المقترح: ",
-  "ownerAwaitingCustomerNote": "بانتظار قبول العميل للموعد الجديد"
+  "ownerAwaitingCustomerNote": "بانتظار قبول العميل للموعد الجديد",
+  "bookingHistoryTitle": "سجل الحجوزات",
+  "bookingHistorySubtitle": "استعرض وتابع جميع حجوزاتك"
 }

@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../models/booking.dart';
 import '../../models/customer_notification.dart';
+import '../../services/session_service.dart';
 import '../../services/supabase_service.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
+import '../../theme/app_text_styles.dart';
 import '../../widgets/bottom_nav_scaffold.dart';
+import '../../widgets/status_badge.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class InboxScreen extends StatefulWidget {
@@ -17,17 +22,24 @@ class InboxScreen extends StatefulWidget {
 class _InboxScreenState extends State<InboxScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   late Future<Map<String, dynamic>> _inboxFuture;
-  late String customerPhone;
-  late String sessionToken;
+  String customerPhone = '';
+  String sessionToken = '';
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    // TODO: Get customer phone and session token from local storage or provider
-    customerPhone = '';
-    sessionToken = '';
-    _inboxFuture = _loadInbox();
+    _inboxFuture = _initAndLoadInbox();
+  }
+
+  Future<Map<String, dynamic>> _initAndLoadInbox() async {
+    final session = await SessionService.instance.loadCustomerSession();
+    if (session == null) {
+      return {'notifications': [], 'bookings': []};
+    }
+    customerPhone = session.customerPhone;
+    sessionToken = session.sessionToken;
+    return _loadInbox();
   }
 
   @override
@@ -49,9 +61,11 @@ class _InboxScreenState extends State<InboxScreen> with SingleTickerProviderStat
       sessionToken: sessionToken,
       notificationId: notificationId,
     );
-    setState(() {
-      _inboxFuture = _loadInbox();
-    });
+    if (mounted) {
+      setState(() {
+        _inboxFuture = _initAndLoadInbox();
+      });
+    }
   }
 
   @override
@@ -59,6 +73,7 @@ class _InboxScreenState extends State<InboxScreen> with SingleTickerProviderStat
     return BottomNavScaffold(
       currentIndex: 2,
       title: 'Inbox',
+      notificationPhone: customerPhone.isNotEmpty ? customerPhone : null,
       body: FutureBuilder<Map<String, dynamic>>(
         future: _inboxFuture,
         builder: (context, snapshot) {
@@ -97,7 +112,7 @@ class _InboxScreenState extends State<InboxScreen> with SingleTickerProviderStat
                     notifications.isEmpty
                         ? const Center(child: Text('No notifications'))
                         : ListView.builder(
-                            padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.all(AppSpacing.md),
                             itemCount: notifications.length,
                             itemBuilder: (context, index) {
                               final notif = notifications[index];
@@ -108,13 +123,17 @@ class _InboxScreenState extends State<InboxScreen> with SingleTickerProviderStat
                                   }
                                 },
                                 child: Card(
-                                  color: notif.isRead ? Colors.white : Colors.blue[50],
+                                  color: notif.isRead ? null : AppColors.primarySurface,
                                   child: ListTile(
-                                    title: Text(notif.title,
-                                        style: const TextStyle(fontWeight: FontWeight.bold)),
-                                    subtitle: Text(notif.body),
-                                    trailing: !notif.isRead ? const Icon(Icons.circle, color: Colors.blue, size: 12) : null,
-                                    contentPadding: const EdgeInsets.all(16),
+                                    title: Text(
+                                      notif.title,
+                                      style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold),
+                                    ),
+                                    subtitle: Text(notif.body, style: AppTextStyles.bodySmall),
+                                    trailing: !notif.isRead
+                                        ? const Icon(Icons.circle, color: AppColors.primary, size: 12)
+                                        : null,
+                                    contentPadding: const EdgeInsets.all(AppSpacing.md),
                                   ),
                                 ),
                               );
@@ -142,78 +161,51 @@ class _InboxScreenState extends State<InboxScreen> with SingleTickerProviderStat
   }
 
   Widget _buildBookingCard(BuildContext context, Booking booking, AppLocalizations? loc) {
-    Color statusColor;
-    String statusLabel;
-
-    switch (booking.status) {
-      case 'confirmed':
-        statusColor = Colors.green;
-        statusLabel = 'Confirmed';
-        break;
-      case 'pending':
-      case 'pending_owner_approval':
-      case 'pending_customer_approval':
-        statusColor = Colors.orange;
-        statusLabel = 'Pending';
-        break;
-      case 'completed':
-        statusColor = Colors.blue;
-        statusLabel = 'Completed';
-        break;
-      case 'cancelled':
-        statusColor = Colors.red;
-        statusLabel = 'Cancelled';
-        break;
-      default:
-        statusColor = Colors.grey;
-        statusLabel = booking.status;
-    }
+    final statusLabel = booking.statusLabel;
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Booking #${booking.bookingNumber}',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: statusColor, borderRadius: BorderRadius.circular(20)),
-                  child: Text(statusLabel, style: const TextStyle(color: Colors.white, fontSize: 12)),
+                Text(
+                  'Booking #${booking.bookingNumber}',
+                  style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold),
                 ),
+                StatusBadge(status: booking.status, label: statusLabel),
               ],
             ),
-            const SizedBox(height: 12),
-            Text('${booking.stationName}', style: const TextStyle(fontWeight: FontWeight.bold)),
-            Text('${booking.serviceName}'),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
+            Text(booking.stationName, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold)),
+            Text(booking.serviceName, style: AppTextStyles.bodyMedium),
+            const SizedBox(height: AppSpacing.sm),
             Row(
               children: [
-                const Icon(Icons.calendar_today, size: 16),
-                const SizedBox(width: 8),
-                Text('${booking.bookingDate} at ${booking.bookingTime}'),
+                const Icon(Icons.calendar_today, size: 16, color: AppColors.textSecondary),
+                const SizedBox(width: AppSpacing.sm),
+                Text('${booking.bookingDate} at ${booking.bookingTime}', style: AppTextStyles.bodyMedium),
               ],
             ),
             if (booking.price != null) ...[
-              const SizedBox(height: 8),
-              Text('Price: ${booking.price} IQD'),
+              const SizedBox(height: AppSpacing.sm),
+              Text('Price: ${booking.price} IQD', style: AppTextStyles.bodyMedium),
             ],
             if (booking.customerRating != null) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Row(
                 children: [
                   const Icon(Icons.star, size: 16, color: Colors.amber),
-                  const SizedBox(width: 8),
-                  Text('Rating: ${booking.customerRating}/5'),
+                  const SizedBox(width: AppSpacing.sm),
+                  Text('Rating: ${booking.customerRating}/5', style: AppTextStyles.bodyMedium),
                 ],
               ),
             ],
             if (booking.status == 'confirmed' && booking.customerRating == null) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.sm),
               ElevatedButton(
                 onPressed: () => _showRatingDialog(context, booking),
                 child: const Text('Rate'),
@@ -256,15 +248,17 @@ class _InboxScreenState extends State<InboxScreen> with SingleTickerProviderStat
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           ElevatedButton(
-            onPressed: () {
-              SupabaseService.instance.customerSubmitRating(
-                bookingId: booking.id,
-                customerPhone: customerPhone,
-                sessionToken: sessionToken,
-                rating: rating,
-              );
+            onPressed: () async {
               Navigator.pop(context);
-              setState(() => _inboxFuture = _loadInbox());
+              try {
+                await SupabaseService.instance.customerSubmitRating(
+                  bookingId: booking.id,
+                  customerPhone: customerPhone,
+                  sessionToken: sessionToken,
+                  rating: rating,
+                );
+              } catch (_) {}
+              if (mounted) setState(() => _inboxFuture = _initAndLoadInbox());
             },
             child: const Text('Submit'),
           ),

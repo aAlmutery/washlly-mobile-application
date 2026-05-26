@@ -3,6 +3,18 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../models/booking.dart';
 import '../../models/customer_session.dart';
 import '../../services/supabase_service.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
+import '../../theme/app_text_styles.dart';
+import '../../widgets/status_badge.dart';
+
+/// Returns true when a booking with [status] can still be cancelled by the customer.
+/// Extracted as a top-level function so it can be unit-tested independently.
+bool canCancelBooking(String status) =>
+    status == 'pending' ||
+    status == 'pending_owner_approval' ||
+    status == 'confirmed';
+// Note: pending_customer_approval is handled by the dedicated Reject New Time button.
 
 class CustomerBookingHistoryScreen extends StatefulWidget {
   final CustomerSession session;
@@ -17,6 +29,7 @@ class CustomerBookingHistoryScreen extends StatefulWidget {
 class _CustomerBookingHistoryScreenState
     extends State<CustomerBookingHistoryScreen> {
   late Future<List<Map<String, dynamic>>> _bookingsFuture;
+  List<Map<String, dynamic>>? _cachedData;
 
   @override
   void initState() {
@@ -256,28 +269,7 @@ class _CustomerBookingHistoryScreenState
     }
   }
 
-  Color _statusColor(String status) {
-    switch (status) {
-      case 'pending':
-      case 'pending_owner_approval':
-      case 'pending_customer_approval':
-        return Colors.orange;
-      case 'confirmed':
-        return Colors.blue;
-      case 'completed':
-        return Colors.green;
-      case 'cancelled':
-        return Colors.grey;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  bool _canCancel(String status) =>
-      status == 'pending' ||
-      status == 'pending_owner_approval' ||
-      status == 'confirmed';
-  // pending_customer_approval is handled by the dedicated Reject New Time button
+  bool _canCancel(String status) => canCancelBooking(status);
 
   @override
   Widget build(BuildContext context) {
@@ -296,30 +288,35 @@ class _CustomerBookingHistoryScreenState
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _bookingsFuture,
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+          if (snapshot.hasData) {
+            _cachedData = snapshot.data;
+          }
+
+          if (snapshot.connectionState == ConnectionState.waiting &&
+              _cachedData == null) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (snapshot.hasError) {
+          if (snapshot.hasError && _cachedData == null) {
             return Center(
               child: Padding(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                    const SizedBox(height: 16),
+                    const Icon(Icons.error_outline, size: 48, color: AppColors.error),
+                    const SizedBox(height: AppSpacing.md),
                     Text(
                       loc.historyLoadError,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.sm),
                     Text(
                       '${snapshot.error}',
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.grey),
+                      style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppSpacing.lg),
                     ElevatedButton.icon(
                       onPressed: _refresh,
                       icon: const Icon(Icons.refresh),
@@ -331,17 +328,17 @@ class _CustomerBookingHistoryScreenState
             );
           }
 
-          final rawList = snapshot.data ?? [];
+          final rawList = _cachedData ?? [];
           if (rawList.isEmpty) {
             return Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.calendar_today, size: 64, color: Colors.grey[300]),
-                  const SizedBox(height: 16),
+                  Icon(Icons.calendar_today, size: 64, color: AppColors.textDisabled),
+                  const SizedBox(height: AppSpacing.md),
                   Text(
                     loc.noBookingsYet,
-                    style: const TextStyle(fontSize: 16, color: Colors.grey),
+                    style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textSecondary),
                   ),
                 ],
               ),
@@ -350,28 +347,36 @@ class _CustomerBookingHistoryScreenState
 
           final bookings = rawList.map((b) => Booking.fromJson(b)).toList();
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: bookings.length,
-            itemBuilder: (context, index) {
-              final b = bookings[index];
-              return _BookingCard(
-                booking: b,
-                statusLabel: _statusLabel(b.status, loc),
-                statusColor: _statusColor(b.status),
-                canCancel: _canCancel(b.status),
-                onCancel: () => _cancel(b.id),
-                onRate: b.status == 'completed' && b.customerRating == null
-                    ? () => _showRateDialog(b.id)
-                    : null,
-                onAcceptPostpone: b.status == 'pending_customer_approval'
-                    ? () => _acceptPostpone(b.id)
-                    : null,
-                onRejectPostpone: b.status == 'pending_customer_approval'
-                    ? () => _rejectPostpone(b.id)
-                    : null,
-              );
-            },
+          return Column(
+            children: [
+              if (snapshot.connectionState == ConnectionState.waiting)
+                const LinearProgressIndicator(),
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: bookings.length,
+                  itemBuilder: (context, index) {
+                    final b = bookings[index];
+                    return _BookingCard(
+                      booking: b,
+                      statusLabel: _statusLabel(b.status, loc),
+                      statusColor: b.statusColor,
+                      canCancel: _canCancel(b.status),
+                      onCancel: () => _cancel(b.id),
+                      onRate: b.status == 'completed' && b.customerRating == null
+                          ? () => _showRateDialog(b.id)
+                          : null,
+                      onAcceptPostpone: b.status == 'pending_customer_approval'
+                          ? () => _acceptPostpone(b.id)
+                          : null,
+                      onRejectPostpone: b.status == 'pending_customer_approval'
+                          ? () => _rejectPostpone(b.id)
+                          : null,
+                    );
+                  },
+                ),
+              ),
+            ],
           );
         },
       ),
@@ -404,9 +409,9 @@ class _BookingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -416,39 +421,24 @@ class _BookingCard extends StatelessWidget {
               children: [
                 Text(
                   '${loc.bookingNumberPrefix}${booking.bookingNumber}',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: statusColor.withValues(alpha: 0.4)),
-                  ),
-                  child: Text(
-                    statusLabel,
-                    style: TextStyle(
-                      color: statusColor,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
+                StatusBadge(status: booking.status, label: statusLabel),
               ],
             ),
-            const Divider(height: 20),
+            const Divider(height: AppSpacing.lg),
 
             // Station & service
             _InfoRow(icon: Icons.local_car_wash, text: booking.stationName),
-            const SizedBox(height: 6),
+            const SizedBox(height: AppSpacing.xs),
             _InfoRow(icon: Icons.build_circle_outlined, text: booking.serviceName),
-            const SizedBox(height: 6),
+            const SizedBox(height: AppSpacing.xs),
             _InfoRow(
               icon: Icons.calendar_today,
               text: '${booking.bookingDate}  ${booking.bookingTime}',
             ),
             if (booking.price != null) ...[
-              const SizedBox(height: 6),
+              const SizedBox(height: AppSpacing.xs),
               _InfoRow(
                 icon: Icons.attach_money,
                 text: '${booking.price!.toStringAsFixed(0)}${loc.servicePriceCurrencySuffix}',
@@ -457,22 +447,22 @@ class _BookingCard extends StatelessWidget {
 
             // Proposed date/time when owner requests postponement
             if (booking.proposedDate != null) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(AppSpacing.sm),
                 decoration: BoxDecoration(
-                  color: Colors.orange.shade50,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange.shade200),
+                  color: AppColors.warningSurface,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                  border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.schedule, color: Colors.orange, size: 16),
-                    const SizedBox(width: 8),
+                    const Icon(Icons.schedule, color: AppColors.warning, size: 16),
+                    const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: Text(
                         '${loc.proposedTimePrefix}${booking.proposedDate}  ${booking.proposedTime ?? ''}',
-                        style: const TextStyle(fontSize: 13, color: Colors.orange),
+                        style: AppTextStyles.bodySmall.copyWith(color: AppColors.warning),
                       ),
                     ),
                   ],
@@ -482,14 +472,14 @@ class _BookingCard extends StatelessWidget {
 
             // Star rating if already rated
             if (booking.customerRating != null) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Row(
                 children: [
                   const Icon(Icons.star, color: Colors.amber, size: 18),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: AppSpacing.xs),
                   Text(
                     '${loc.yourRatingPrefix}${booking.customerRating}/5',
-                    style: const TextStyle(fontSize: 13, color: Colors.grey),
+                    style: AppTextStyles.bodySmall,
                   ),
                 ],
               ),
@@ -497,19 +487,19 @@ class _BookingCard extends StatelessWidget {
 
             // Action buttons
             if (onAcceptPostpone != null || onRejectPostpone != null || canCancel || onRate != null) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.sm),
               if (onAcceptPostpone != null) ...[
                 ElevatedButton.icon(
                   onPressed: onAcceptPostpone,
                   icon: const Icon(Icons.check_circle_outline, size: 18),
                   label: Text(loc.acceptPostponeBtn),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
+                    backgroundColor: AppColors.success,
                     foregroundColor: Colors.white,
                     minimumSize: const Size(double.infinity, 44),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
               ],
               if (onRejectPostpone != null) ...[
                 ElevatedButton.icon(
@@ -517,12 +507,12 @@ class _BookingCard extends StatelessWidget {
                   icon: const Icon(Icons.schedule_outlined, size: 18),
                   label: Text(loc.rejectPostponeBtn),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
+                    backgroundColor: AppColors.warning,
                     foregroundColor: Colors.white,
                     minimumSize: const Size(double.infinity, 44),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
               ],
               Row(
                 children: [
@@ -535,14 +525,14 @@ class _BookingCard extends StatelessWidget {
                         style: OutlinedButton.styleFrom(foregroundColor: Colors.amber),
                       ),
                     ),
-                  if (onRate != null && canCancel) const SizedBox(width: 8),
+                  if (onRate != null && canCancel) const SizedBox(width: AppSpacing.sm),
                   if (canCancel)
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: onCancel,
                         icon: const Icon(Icons.cancel_outlined, size: 18),
                         label: Text(loc.cancelButton),
-                        style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
+                        style: OutlinedButton.styleFrom(foregroundColor: AppColors.error),
                       ),
                     ),
                 ],
@@ -566,11 +556,9 @@ class _InfoRow extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 16, color: Colors.grey),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(text, style: const TextStyle(fontSize: 14)),
-        ),
+        Icon(icon, size: 16, color: AppColors.textSecondary),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(child: Text(text, style: AppTextStyles.bodyMedium)),
       ],
     );
   }

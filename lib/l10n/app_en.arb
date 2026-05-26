@@ -243,5 +243,7 @@
   "ownerStatusCompleted": "Completed",
   "ownerStatusCancelled": "Cancelled",
   "ownerProposedTimeLabel": "Proposed time: ",
-  "ownerAwaitingCustomerNote": "Waiting for customer to accept the new time"
+  "ownerAwaitingCustomerNote": "Waiting for customer to accept the new time",
+  "bookingHistoryTitle": "Booking History",
+  "bookingHistorySubtitle": "Browse and track all your bookings"
 }
