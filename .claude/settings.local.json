@@ -4,7 +4,11 @@
       "Bash(flutter pub *)",
       "Bash(flutter analyze *)",
       "Bash(flutter test *)",
-      "Bash(flutter gen-l10n *)"
+      "Bash(flutter gen-l10n *)",
+      "mcp__ide__getDiagnostics",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(python3 *)"
     ]
   }
 }
