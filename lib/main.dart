@@ -39,6 +39,17 @@ class WashllyApp extends StatelessWidget {
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           locale: const Locale('ar'),
+          // Kurdish ('ku') uses Arabic script and is RTL, but Flutter's built-in
+          // locale system doesn't recognise it as RTL. This builder covers that gap.
+          // Arabic is already handled automatically; English stays LTR.
+          builder: (context, child) {
+            final lang = Localizations.localeOf(context).languageCode;
+            final isRtl = lang == 'ar' || lang == 'ku';
+            return Directionality(
+              textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+              child: child!,
+            );
+          },
           home: WelcomeScreen(sessionNotifier: sessionNotifier),
           routes: {
             HomeScreen.routeName: (_) => const HomeScreen(),

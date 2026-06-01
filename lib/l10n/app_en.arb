@@ -249,5 +249,11 @@
   "mapMyLocation": "My Location",
   "mapLocationPermissionTitle": "Location Access",
   "mapLocationPermissionMessage": "Allow Washlly to access your location to show it on the map.",
-  "mapAllowLocation": "Allow"
+  "mapAllowLocation": "Allow",
+  "cancelAllBookingsButton": "Cancel All Bookings",
+  "cancelAllBookingsConfirmTitle": "Cancel All Bookings?",
+  "cancelAllBookingsConfirmMessage": "All your active bookings will be cancelled. Are you sure?",
+  "cancelAllBookingsSuccess": "All bookings cancelled successfully",
+  "cancelAllBookingsFailed": "Failed to cancel bookings: ",
+  "cancelAllBookingsNoPhone": "Please login first"
 }

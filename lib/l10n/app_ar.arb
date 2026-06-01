@@ -249,5 +249,11 @@
   "mapMyLocation": "موقعي",
   "mapLocationPermissionTitle": "الوصول إلى الموقع",
   "mapLocationPermissionMessage": "هل تسمح لتطبيق Washlly بالوصول إلى موقعك لعرضه على الخريطة؟",
-  "mapAllowLocation": "سماح"
+  "mapAllowLocation": "سماح",
+  "cancelAllBookingsButton": "إلغاء كل الحجوزات",
+  "cancelAllBookingsConfirmTitle": "إلغاء جميع الحجوزات؟",
+  "cancelAllBookingsConfirmMessage": "سيتم إلغاء جميع حجوزاتك النشطة. هل أنت متأكد؟",
+  "cancelAllBookingsSuccess": "تم إلغاء جميع الحجوزات بنجاح",
+  "cancelAllBookingsFailed": "فشل إلغاء الحجوزات: ",
+  "cancelAllBookingsNoPhone": "يرجى تسجيل الدخول أولاً"
 }

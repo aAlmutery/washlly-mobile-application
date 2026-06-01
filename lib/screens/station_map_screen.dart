@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
@@ -28,15 +30,31 @@ class _StationMapScreenState extends State<StationMapScreen> {
   final _mapController = MapController();
   LatLng? _userLocation;
   bool _locating = false;
+  String? _customerPhone;
+  bool _cancellingAll = false;
+  bool _showLabels = true;
+  Timer? _labelTimer;
 
   @override
   void initState() {
     super.initState();
     _stationsFuture = SupabaseService.instance.fetchStations();
+    _loadCustomerPhone();
+    _labelTimer = Timer(const Duration(seconds: 5), () {
+      if (mounted) setState(() => _showLabels = false);
+    });
+  }
+
+  Future<void> _loadCustomerPhone() async {
+    final session = await SessionService.instance.loadCustomerSession();
+    if (mounted && session != null) {
+      setState(() => _customerPhone = session.customerPhone);
+    }
   }
 
   @override
   void dispose() {
+    _labelTimer?.cancel();
     _mapController.dispose();
     super.dispose();
   }
@@ -116,6 +134,50 @@ class _StationMapScreenState extends State<StationMapScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), action: action),
     );
+  }
+
+  Future<void> _cancelAllBookings() async {
+    final loc = AppLocalizations.of(context)!;
+    final lang = Localizations.localeOf(context).languageCode;
+
+    if (_customerPhone == null) {
+      _showSnackBar(loc.cancelAllBookingsNoPhone);
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(loc.cancelAllBookingsConfirmTitle),
+        content: Text(loc.cancelAllBookingsConfirmMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(loc.cancelButton),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(loc.yesCancelBtn),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _cancellingAll = true);
+    try {
+      await SupabaseService.instance.cancelAllMapBookings(
+        customerPhone: _customerPhone!,
+        language: lang,
+      );
+      if (mounted) _showSnackBar(loc.cancelAllBookingsSuccess);
+    } catch (e) {
+      if (mounted) _showSnackBar('${loc.cancelAllBookingsFailed}$e');
+    } finally {
+      if (mounted) setState(() => _cancellingAll = false);
+    }
   }
 
   void _showQuickBookingSheet() {
@@ -293,10 +355,10 @@ class _StationMapScreenState extends State<StationMapScreen> {
           );
         },
           ),
-          // Top-right action buttons
-          Positioned(
-            top: 16,
-            right: 16,
+          // Action buttons — positioned at the trailing edge (right in LTR, left in RTL)
+          PositionedDirectional(
+            bottom: 16,
+            end: 16,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -306,6 +368,7 @@ class _StationMapScreenState extends State<StationMapScreen> {
                   label: loc.quickBookingTitle,
                   icon: Icons.flash_on,
                   backgroundColor: AppColors.warning,
+                  showLabel: _showLabels,
                   onPressed: _showQuickBookingSheet,
                 ),
                 const SizedBox(height: 8),
@@ -314,7 +377,18 @@ class _StationMapScreenState extends State<StationMapScreen> {
                   label: loc.mapMyLocation,
                   icon: Icons.my_location,
                   loading: _locating,
+                  showLabel: _showLabels,
                   onPressed: _locateUser,
+                ),
+                const SizedBox(height: 8),
+                _MapActionButton(
+                  heroTag: 'fab_cancel_all',
+                  label: loc.cancelAllBookingsButton,
+                  icon: Icons.cancel,
+                  backgroundColor: Colors.red,
+                  loading: _cancellingAll,
+                  showLabel: _showLabels,
+                  onPressed: _cancelAllBookings,
                 ),
               ],
             ),
@@ -333,6 +407,7 @@ class _MapActionButton extends StatelessWidget {
   final IconData icon;
   final Color? backgroundColor;
   final bool loading;
+  final bool showLabel;
   final VoidCallback onPressed;
 
   const _MapActionButton({
@@ -342,38 +417,50 @@ class _MapActionButton extends StatelessWidget {
     required this.onPressed,
     this.backgroundColor,
     this.loading = false,
+    this.showLabel = true,
   });
 
   @override
   Widget build(BuildContext context) {
+    final lang = Localizations.localeOf(context).languageCode;
+    final isRtl = lang == 'ar' || lang == 'ku';
+
+    final labelWidget = AnimatedOpacity(
+      opacity: showLabel ? 1.0 : 0.0,
+      duration: const Duration(milliseconds: 400),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: Colors.black54,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(color: Colors.white, fontSize: 12),
+        ),
+      ),
+    );
+
+    final fabWidget = FloatingActionButton.small(
+      heroTag: heroTag,
+      onPressed: onPressed,
+      backgroundColor: backgroundColor,
+      child: loading
+          ? const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+            )
+          : Icon(icon),
+    );
+
+    // In RTL (Arabic/Kurdish): label first, then FAB.
+    // In LTR (English): FAB first, then label.
     return Row(
       mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          decoration: BoxDecoration(
-            color: Colors.black54,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            label,
-            style: const TextStyle(color: Colors.white, fontSize: 12),
-          ),
-        ),
-        const SizedBox(width: 8),
-        FloatingActionButton.small(
-          heroTag: heroTag,
-          onPressed: onPressed,
-          backgroundColor: backgroundColor,
-          child: loading
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                )
-              : Icon(icon),
-        ),
-      ],
+      children: isRtl
+          ? [labelWidget, const SizedBox(width: 8), fabWidget]
+          : [fabWidget, const SizedBox(width: 8), labelWidget],
     );
   }
 }
