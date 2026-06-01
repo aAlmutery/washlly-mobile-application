@@ -245,5 +245,9 @@
   "ownerProposedTimeLabel": "Proposed time: ",
   "ownerAwaitingCustomerNote": "Waiting for customer to accept the new time",
   "bookingHistoryTitle": "Booking History",
-  "bookingHistorySubtitle": "Browse and track all your bookings"
+  "bookingHistorySubtitle": "Browse and track all your bookings",
+  "mapMyLocation": "My Location",
+  "mapLocationPermissionTitle": "Location Access",
+  "mapLocationPermissionMessage": "Allow Washlly to access your location to show it on the map.",
+  "mapAllowLocation": "Allow"
 }

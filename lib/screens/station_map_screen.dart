@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
@@ -19,11 +20,97 @@ class StationMapScreen extends StatefulWidget {
 
 class _StationMapScreenState extends State<StationMapScreen> {
   late final Future<List<Station>> _stationsFuture;
+  final _mapController = MapController();
+  LatLng? _userLocation;
+  bool _locating = false;
 
   @override
   void initState() {
     super.initState();
     _stationsFuture = SupabaseService.instance.fetchStations();
+  }
+
+  @override
+  void dispose() {
+    _mapController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _locateUser() async {
+    if (_locating) return;
+    setState(() => _locating = true);
+
+    final loc = AppLocalizations.of(context)!;
+
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        _showSnackBar(loc.quickLocationDisabled);
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+
+      if (permission == LocationPermission.denied) {
+        final confirmed = await _showPermissionDialog();
+        if (!confirmed) return;
+        permission = await Geolocator.requestPermission();
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        _showSnackBar(
+          loc.quickLocationDeniedForever,
+          action: SnackBarAction(
+            label: loc.quickLocationSettings,
+            onPressed: Geolocator.openAppSettings,
+          ),
+        );
+        return;
+      }
+
+      if (permission == LocationPermission.denied) {
+        _showSnackBar(loc.quickLocationDenied);
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition();
+      final point = LatLng(position.latitude, position.longitude);
+      setState(() => _userLocation = point);
+      _mapController.move(point, 14);
+    } catch (_) {
+      _showSnackBar(loc.quickLocationFailed);
+    } finally {
+      if (mounted) setState(() => _locating = false);
+    }
+  }
+
+  Future<bool> _showPermissionDialog() async {
+    final loc = AppLocalizations.of(context)!;
+    return await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text(loc.mapLocationPermissionTitle),
+            content: Text(loc.mapLocationPermissionMessage),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(loc.cancelButton),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: Text(loc.mapAllowLocation),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  void _showSnackBar(String message, {SnackBarAction? action}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), action: action),
+    );
   }
 
   void _showStationDetails(Station station) {
@@ -108,6 +195,17 @@ class _StationMapScreenState extends State<StationMapScreen> {
     return BottomNavScaffold(
       currentIndex: 2,
       title: loc.mapTitle,
+      floatingActionButton: FloatingActionButton(
+        onPressed: _locateUser,
+        tooltip: loc.mapMyLocation,
+        child: _locating
+            ? const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+              )
+            : const Icon(Icons.my_location),
+      ),
       body: FutureBuilder<List<Station>>(
         future: _stationsFuture,
         builder: (context, snapshot) {
@@ -121,14 +219,14 @@ class _StationMapScreenState extends State<StationMapScreen> {
 
           final stations = snapshot.data ?? [];
           final validStations = stations
-              .where((station) => station.latitude != null && station.longitude != null)
+              .where((s) => s.latitude != null && s.longitude != null)
               .toList();
 
           if (validStations.isEmpty) {
             return Center(child: Text(loc.noStationsWithLocation));
           }
 
-          final markers = validStations.map((station) {
+          final stationMarkers = validStations.map((station) {
             return Marker(
               width: 40,
               height: 40,
@@ -145,10 +243,11 @@ class _StationMapScreenState extends State<StationMapScreen> {
           }).toList();
 
           final bounds = LatLngBounds.fromPoints(
-            validStations.map((station) => LatLng(station.latitude!, station.longitude!)).toList(),
+            validStations.map((s) => LatLng(s.latitude!, s.longitude!)).toList(),
           );
 
           return FlutterMap(
+            mapController: _mapController,
             options: MapOptions(
               initialCenter: LatLng(validStations.first.latitude!, validStations.first.longitude!),
               initialZoom: 10,
@@ -164,7 +263,25 @@ class _StationMapScreenState extends State<StationMapScreen> {
                 subdomains: const ['a', 'b', 'c'],
                 userAgentPackageName: 'com.example.washlly_mobile_app',
               ),
-              MarkerLayer(markers: markers),
+              MarkerLayer(
+                markers: [
+                  ...stationMarkers,
+                  if (_userLocation != null)
+                    Marker(
+                      width: 20,
+                      height: 20,
+                      point: _userLocation!,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.blue,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 3),
+                          boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ],
           );
         },

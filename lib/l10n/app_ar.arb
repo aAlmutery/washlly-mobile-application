@@ -245,5 +245,9 @@
   "ownerProposedTimeLabel": "الوقت المقترح: ",
   "ownerAwaitingCustomerNote": "بانتظار قبول العميل للموعد الجديد",
   "bookingHistoryTitle": "سجل الحجوزات",
-  "bookingHistorySubtitle": "استعرض وتابع جميع حجوزاتك"
+  "bookingHistorySubtitle": "استعرض وتابع جميع حجوزاتك",
+  "mapMyLocation": "موقعي",
+  "mapLocationPermissionTitle": "الوصول إلى الموقع",
+  "mapLocationPermissionMessage": "هل تسمح لتطبيق Washlly بالوصول إلى موقعك لعرضه على الخريطة؟",
+  "mapAllowLocation": "سماح"
 }
