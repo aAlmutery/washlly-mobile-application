@@ -255,5 +255,7 @@
   "cancelAllBookingsConfirmMessage": "هەموو حجزەکانی چالاکت هەڵدەوەشێنرێنەوە. دڵنیایت؟",
   "cancelAllBookingsSuccess": "هەموو حجزەکان بە سەرکەوتوویی هەڵوەشایەوە",
   "cancelAllBookingsFailed": "سەرکەوتوو نەبوو لە هەڵوەشاندنەوەی حجزەکان: ",
-  "cancelAllBookingsNoPhone": "تکایە سەرەتا چوونەژوورەوە بکە"
+  "cancelAllBookingsNoPhone": "تکایە سەرەتا چوونەژوورەوە بکە",
+  "nearestStationNotFound": "هیچ مەحەتەیەکی نزیک نەدۆزرایەوە",
+  "distanceKmAway": " کم لەتۆ"
 }

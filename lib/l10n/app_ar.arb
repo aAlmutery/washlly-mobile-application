@@ -255,5 +255,7 @@
   "cancelAllBookingsConfirmMessage": "سيتم إلغاء جميع حجوزاتك النشطة. هل أنت متأكد؟",
   "cancelAllBookingsSuccess": "تم إلغاء جميع الحجوزات بنجاح",
   "cancelAllBookingsFailed": "فشل إلغاء الحجوزات: ",
-  "cancelAllBookingsNoPhone": "يرجى تسجيل الدخول أولاً"
+  "cancelAllBookingsNoPhone": "يرجى تسجيل الدخول أولاً",
+  "nearestStationNotFound": "لم يتم العثور على محطة قريبة",
+  "distanceKmAway": " كم منك"
 }

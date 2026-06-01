@@ -255,5 +255,7 @@
   "cancelAllBookingsConfirmMessage": "All your active bookings will be cancelled. Are you sure?",
   "cancelAllBookingsSuccess": "All bookings cancelled successfully",
   "cancelAllBookingsFailed": "Failed to cancel bookings: ",
-  "cancelAllBookingsNoPhone": "Please login first"
+  "cancelAllBookingsNoPhone": "Please login first",
+  "nearestStationNotFound": "No nearby station found",
+  "distanceKmAway": " km away"
 }
