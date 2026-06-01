@@ -11,7 +11,8 @@
       "Bash(python3 *)",
       "Bash(Get-ChildItem -Path \"C:\\\\inetpub\\\\wwwroot\\\\washlly-mobile-application\" -Force)",
       "Bash(Select-Object Name, PSIsContainer)",
-      "Bash(del lib\\\\screens\\\\new_home_screen.dart)"
+      "Bash(del lib\\\\screens\\\\new_home_screen.dart)",
+      "WebFetch(domain:washlly.com)"
     ]
   }
 }
