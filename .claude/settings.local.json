@@ -8,7 +8,9 @@
       "mcp__ide__getDiagnostics",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "Bash(python3 *)"
+      "Bash(python3 *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\inetpub\\\\wwwroot\\\\washlly-mobile-application\" -Force)",
+      "Bash(Select-Object Name, PSIsContainer)"
     ]
   }
 }
