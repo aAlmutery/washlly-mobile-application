@@ -215,22 +215,22 @@ class _StationMapScreenState extends State<StationMapScreen> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          FloatingActionButton(
+          FloatingActionButton.small(
             heroTag: 'fab_quick_booking',
             onPressed: _showQuickBookingSheet,
             tooltip: loc.quickBookingTitle,
             backgroundColor: AppColors.warning,
             child: const Icon(Icons.flash_on, color: Colors.white),
           ),
-          const SizedBox(height: 12),
-          FloatingActionButton(
+          const SizedBox(height: 8),
+          FloatingActionButton.small(
             heroTag: 'fab_my_location',
             onPressed: _locateUser,
             tooltip: loc.mapMyLocation,
             child: _locating
                 ? const SizedBox(
-                    width: 24,
-                    height: 24,
+                    width: 18,
+                    height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                   )
                 : const Icon(Icons.my_location),
