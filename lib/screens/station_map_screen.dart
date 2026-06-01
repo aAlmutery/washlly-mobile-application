@@ -211,33 +211,9 @@ class _StationMapScreenState extends State<StationMapScreen> {
     return BottomNavScaffold(
       currentIndex: 2,
       title: loc.mapTitle,
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
+      body: Stack(
         children: [
-          FloatingActionButton.small(
-            heroTag: 'fab_quick_booking',
-            onPressed: _showQuickBookingSheet,
-            tooltip: loc.quickBookingTitle,
-            backgroundColor: AppColors.warning,
-            child: const Icon(Icons.flash_on, color: Colors.white),
-          ),
-          const SizedBox(height: 8),
-          FloatingActionButton.small(
-            heroTag: 'fab_my_location',
-            onPressed: _locateUser,
-            tooltip: loc.mapMyLocation,
-            child: _locating
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                  )
-                : const Icon(Icons.my_location),
-          ),
-        ],
-      ),
-      body: FutureBuilder<List<Station>>(
+          FutureBuilder<List<Station>>(
         future: _stationsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -316,7 +292,88 @@ class _StationMapScreenState extends State<StationMapScreen> {
             ],
           );
         },
+          ),
+          // Top-right action buttons
+          Positioned(
+            top: 16,
+            right: 16,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                _MapActionButton(
+                  heroTag: 'fab_quick_booking',
+                  label: loc.quickBookingTitle,
+                  icon: Icons.flash_on,
+                  backgroundColor: AppColors.warning,
+                  onPressed: _showQuickBookingSheet,
+                ),
+                const SizedBox(height: 8),
+                _MapActionButton(
+                  heroTag: 'fab_my_location',
+                  label: loc.mapMyLocation,
+                  icon: Icons.my_location,
+                  loading: _locating,
+                  onPressed: _locateUser,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
+    );
+  }
+}
+
+// ─── Map Action Button (icon + label) ────────────────────────────────────────
+
+class _MapActionButton extends StatelessWidget {
+  final String heroTag;
+  final String label;
+  final IconData icon;
+  final Color? backgroundColor;
+  final bool loading;
+  final VoidCallback onPressed;
+
+  const _MapActionButton({
+    required this.heroTag,
+    required this.label,
+    required this.icon,
+    required this.onPressed,
+    this.backgroundColor,
+    this.loading = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: Colors.black54,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            label,
+            style: const TextStyle(color: Colors.white, fontSize: 12),
+          ),
+        ),
+        const SizedBox(width: 8),
+        FloatingActionButton.small(
+          heroTag: heroTag,
+          onPressed: onPressed,
+          backgroundColor: backgroundColor,
+          child: loading
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                )
+              : Icon(icon),
+        ),
+      ],
     );
   }
 }
