@@ -8,6 +8,7 @@ import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/bottom_nav_scaffold.dart';
 import 'customer_booking_history_screen.dart';
+import 'inbox_screen.dart';
 import '../owner/owner_login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -153,12 +154,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: AppSpacing.xl),
                   Text(loc.profileOptionsTitle, style: AppTextStyles.titleMedium),
                   const SizedBox(height: AppSpacing.md),
-                  // Booking History — only when logged in
+                  // Booking History + Notifications — only when logged in
                   if (notifier.session != null) ...[
                     _ProfileOptionCard(
                       iconData: Icons.history,
-                      iconColor: AppColors.success,
-                      iconBackground: AppColors.successSurface,
+                      iconColor: AppColors.primary,
+                      iconBackground: AppColors.primarySurface,
                       title: loc.bookingHistoryTitle,
                       subtitle: loc.bookingHistorySubtitle,
                       onTap: () {
@@ -166,6 +167,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           MaterialPageRoute(
                             builder: (_) => CustomerBookingHistoryScreen(session: notifier.session!),
                           ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    _ProfileOptionCard(
+                      iconData: Icons.notifications_rounded,
+                      iconColor: AppColors.primary,
+                      iconBackground: AppColors.primarySurface,
+                      title: loc.notificationsLabel,
+                      subtitle: loc.noNotifications,
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const InboxScreen()),
                         );
                       },
                     ),

@@ -6,15 +6,7 @@ import '../../services/supabase_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
-import '../../widgets/status_badge.dart';
-
-/// Returns true when a booking with [status] can still be cancelled by the customer.
-/// Extracted as a top-level function so it can be unit-tested independently.
-bool canCancelBooking(String status) =>
-    status == 'pending' ||
-    status == 'pending_owner_approval' ||
-    status == 'confirmed';
-// Note: pending_customer_approval is handled by the dedicated Reject New Time button.
+import '../../widgets/booking_card.dart';
 
 class CustomerBookingHistoryScreen extends StatefulWidget {
   final CustomerSession session;
@@ -30,6 +22,7 @@ class _CustomerBookingHistoryScreenState
     extends State<CustomerBookingHistoryScreen> {
   late Future<List<Map<String, dynamic>>> _bookingsFuture;
   List<Map<String, dynamic>>? _cachedData;
+  bool _showOldBookings = false;
 
   @override
   void initState() {
@@ -251,24 +244,6 @@ class _CustomerBookingHistoryScreenState
     );
   }
 
-  String _statusLabel(String status, AppLocalizations loc) {
-    switch (status) {
-      case 'pending':
-      case 'pending_owner_approval':
-        return loc.statusPendingStation;
-      case 'pending_customer_approval':
-        return loc.statusPendingCustomer;
-      case 'confirmed':
-        return loc.statusConfirmed;
-      case 'completed':
-        return loc.statusCompleted;
-      case 'cancelled':
-        return loc.statusCancelled;
-      default:
-        return status;
-    }
-  }
-
   bool _canCancel(String status) => canCancelBooking(status);
 
   @override
@@ -345,7 +320,10 @@ class _CustomerBookingHistoryScreenState
             );
           }
 
-          final bookings = rawList.map((b) => Booking.fromJson(b)).toList();
+          final all = rawList.map((b) => Booking.fromJson(b)).toList();
+          final active = all.where((b) => !isOldBooking(b.status)).toList();
+          final old = all.where((b) => isOldBooking(b.status)).toList();
+          final visible = [...active, if (_showOldBookings) ...old];
 
           return Column(
             children: [
@@ -354,12 +332,19 @@ class _CustomerBookingHistoryScreenState
               Expanded(
                 child: ListView.builder(
                   padding: const EdgeInsets.all(16),
-                  itemCount: bookings.length,
+                  itemCount: visible.length + (old.isNotEmpty ? 1 : 0),
                   itemBuilder: (context, index) {
-                    final b = bookings[index];
-                    return _BookingCard(
+                    if (index == visible.length && old.isNotEmpty) {
+                      return _ToggleOldBookingsButton(
+                        count: old.length,
+                        expanded: _showOldBookings,
+                        onTap: () => setState(() => _showOldBookings = !_showOldBookings),
+                      );
+                    }
+                    final b = visible[index];
+                    return BookingCard(
                       booking: b,
-                      statusLabel: _statusLabel(b.status, loc),
+                      statusLabel: bookingStatusLabel(b.status, loc),
                       statusColor: b.statusColor,
                       canCancel: _canCancel(b.status),
                       onCancel: () => _cancel(b.id),
@@ -384,182 +369,41 @@ class _CustomerBookingHistoryScreenState
   }
 }
 
-class _BookingCard extends StatelessWidget {
-  final Booking booking;
-  final String statusLabel;
-  final Color statusColor;
-  final bool canCancel;
-  final VoidCallback onCancel;
-  final VoidCallback? onRate;
-  final VoidCallback? onAcceptPostpone;
-  final VoidCallback? onRejectPostpone;
+class _ToggleOldBookingsButton extends StatelessWidget {
+  final int count;
+  final bool expanded;
+  final VoidCallback onTap;
 
-  const _BookingCard({
-    required this.booking,
-    required this.statusLabel,
-    required this.statusColor,
-    required this.canCancel,
-    required this.onCancel,
-    this.onRate,
-    this.onAcceptPostpone,
-    this.onRejectPostpone,
+  const _ToggleOldBookingsButton({
+    required this.count,
+    required this.expanded,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
-    return Card(
-      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Header row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '${loc.bookingNumberPrefix}${booking.bookingNumber}',
-                  style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold),
-                ),
-                StatusBadge(status: booking.status, label: statusLabel),
-              ],
+            Icon(
+              expanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+              size: 18,
+              color: AppColors.primary,
             ),
-            const Divider(height: AppSpacing.lg),
-
-            // Station & service
-            _InfoRow(icon: Icons.local_car_wash, text: booking.stationName),
-            const SizedBox(height: AppSpacing.xs),
-            _InfoRow(icon: Icons.build_circle_outlined, text: booking.serviceName),
-            const SizedBox(height: AppSpacing.xs),
-            _InfoRow(
-              icon: Icons.calendar_today,
-              text: '${booking.bookingDate}  ${booking.bookingTime}',
+            const SizedBox(width: 6),
+            Text(
+              expanded ? loc.hideOldBookings(count) : loc.showOldBookings(count),
+              style: AppTextStyles.bodySmall.copyWith(color: AppColors.primary),
             ),
-            if (booking.price != null) ...[
-              const SizedBox(height: AppSpacing.xs),
-              _InfoRow(
-                icon: Icons.attach_money,
-                text: '${booking.price!.toStringAsFixed(0)}${loc.servicePriceCurrencySuffix}',
-              ),
-            ],
-
-            // Proposed date/time when owner requests postponement
-            if (booking.proposedDate != null) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.sm),
-                decoration: BoxDecoration(
-                  color: AppColors.warningSurface,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                  border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.schedule, color: AppColors.warning, size: 16),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: Text(
-                        '${loc.proposedTimePrefix}${booking.proposedDate}  ${booking.proposedTime ?? ''}',
-                        style: AppTextStyles.bodySmall.copyWith(color: AppColors.warning),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-
-            // Star rating if already rated
-            if (booking.customerRating != null) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Row(
-                children: [
-                  const Icon(Icons.star, color: Colors.amber, size: 18),
-                  const SizedBox(width: AppSpacing.xs),
-                  Text(
-                    '${loc.yourRatingPrefix}${booking.customerRating}/5',
-                    style: AppTextStyles.bodySmall,
-                  ),
-                ],
-              ),
-            ],
-
-            // Action buttons
-            if (onAcceptPostpone != null || onRejectPostpone != null || canCancel || onRate != null) ...[
-              const SizedBox(height: AppSpacing.sm),
-              if (onAcceptPostpone != null) ...[
-                ElevatedButton.icon(
-                  onPressed: onAcceptPostpone,
-                  icon: const Icon(Icons.check_circle_outline, size: 18),
-                  label: Text(loc.acceptPostponeBtn),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.success,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(double.infinity, 44),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-              ],
-              if (onRejectPostpone != null) ...[
-                ElevatedButton.icon(
-                  onPressed: onRejectPostpone,
-                  icon: const Icon(Icons.schedule_outlined, size: 18),
-                  label: Text(loc.rejectPostponeBtn),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.warning,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(double.infinity, 44),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-              ],
-              Row(
-                children: [
-                  if (onRate != null)
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: onRate,
-                        icon: const Icon(Icons.star_outline, size: 18),
-                        label: Text(loc.rateServiceBtn),
-                        style: OutlinedButton.styleFrom(foregroundColor: Colors.amber),
-                      ),
-                    ),
-                  if (onRate != null && canCancel) const SizedBox(width: AppSpacing.sm),
-                  if (canCancel)
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: onCancel,
-                        icon: const Icon(Icons.cancel_outlined, size: 18),
-                        label: Text(loc.cancelButton),
-                        style: OutlinedButton.styleFrom(foregroundColor: AppColors.error),
-                      ),
-                    ),
-                ],
-              ),
-            ],
           ],
         ),
       ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  final IconData icon;
-  final String text;
-
-  const _InfoRow({required this.icon, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 16, color: AppColors.textSecondary),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(child: Text(text, style: AppTextStyles.bodyMedium)),
-      ],
     );
   }
 }

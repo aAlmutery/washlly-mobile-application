@@ -34,6 +34,7 @@
   "quickBookingSentPrefix": "تم إرسال طلب الحجز السريع إلى ",
   "quickBookingSentSuffix": " محطة",
   "quickBookingFailedPrefix": "فشل الحجز السريع: ",
+  "quickNoStationsFound": "لا توجد محطات قريبة لهذا الطلب. حاول تعديل التاريخ أو الوقت أو الخدمة وأرسل مجدداً.",
   "bookingTitleAtPrefix": "حجز في ",
   "quickBookingTitle": "الحجز السريع",
   "stationLabelPrefix": "المحطة: ",
@@ -79,10 +80,18 @@
   "bookAtThisStation": "احجز في هذه المحطة",
   "noStationsWithLocation": "لا توجد محطات مع معلومات الموقع حتى الآن.",
   "inboxLabel": "صندوق الوارد",
-  "notificationsLabel": "الإشعارات",
+  "notificationsLabel": "الإشعارات وسجل الحجز",
   "bookingsLabel": "حجوزاتي",
   "noNotifications": "لا توجد إشعارات",
-  "noBookings": "لا توجد حجوزات",
+  "noBookings": "لا توجد حجوزات جديدة",
+  "showOldBookings": "إظهار الباقي ({count})",
+  "@showOldBookings": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "hideOldBookings": "إخفاء الباقي ({count})",
+  "@hideOldBookings": {
+    "placeholders": { "count": { "type": "int" } }
+  },
   "nameLabel": "الاسم",
   "dateLabel": "التاريخ",
   "timeLabel": "الوقت",
@@ -250,6 +259,7 @@
   "mapLocationPermissionTitle": "الوصول إلى الموقع",
   "mapLocationPermissionMessage": "هل تسمح لتطبيق Washlly بالوصول إلى موقعك لعرضه على الخريطة؟",
   "mapAllowLocation": "سماح",
+  "markAllRead": "تحديد الكل كمقروء",
   "cancelAllBookingsButton": "إلغاء كل الحجوزات",
   "cancelAllBookingsConfirmTitle": "إلغاء جميع الحجوزات؟",
   "cancelAllBookingsConfirmMessage": "سيتم إلغاء جميع حجوزاتك النشطة. هل أنت متأكد؟",

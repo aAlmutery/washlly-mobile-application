@@ -34,6 +34,7 @@
   "quickBookingSentPrefix": "داواکاری حجزی خێرا نێردرا بۆ ",
   "quickBookingSentSuffix": " مەحەتە",
   "quickBookingFailedPrefix": "حجزی خێرا سەرکەوتوو نەبوو: ",
+  "quickNoStationsFound": "هیچ مەحەتەیەکی نزیک نەدۆزرایەوە بۆ ئەم داواکارییە. کاتەکە، بەروارەکە، یان خزمەتگوزارییەکە بگۆڕە و دووبارە بنێرە.",
   "bookingTitleAtPrefix": "حجز لە ",
   "quickBookingTitle": "حجزی خێرا",
   "stationLabelPrefix": "مەحەتە: ",
@@ -79,10 +80,18 @@
   "bookAtThisStation": "لەم مەحەتەیە حجز بکە",
   "noStationsWithLocation": "هیچ مەحەتەیەک لەگەڵ زانیاری شوێن بەردەست نییە.",
   "inboxLabel": "خانووی نامە",
-  "notificationsLabel": "ئاگادارکردنەوەکان",
+  "notificationsLabel": "ئاگادارکردنەوەکان و مێژووی حجز",
   "bookingsLabel": "حجزەکانم",
-  "noNotifications": "هیچ ئاگادارکردنەوەیەک نییە",
-  "noBookings": "هیچ حجزێک نییە",
+  "noNotifications": "هیچ ئاگادارکردنەوەیەک نییە یا نوێ نییە",
+  "noBookings": "هیچ حجزێک نییە یا نوێ نییە",
+  "showOldBookings": "پیشاندانی ماوەکان ({count})",
+  "@showOldBookings": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "hideOldBookings": "شاردنەوەی ماوەکان ({count})",
+  "@hideOldBookings": {
+    "placeholders": { "count": { "type": "int" } }
+  },
   "nameLabel": "ناو",
   "dateLabel": "بەروار",
   "timeLabel": "کات",
@@ -250,6 +259,7 @@
   "mapLocationPermissionTitle": "دەستگەیشتن بە شوێن",
   "mapLocationPermissionMessage": "ڕێگا بدە بە Washlly کە بە شوێنەکەت دەست بگات بۆ نیشاندانی لەسەر نەخشە.",
   "mapAllowLocation": "ڕێگادان",
+  "markAllRead": "هەموویان وەک خوێندراوە نیشان بکە",
   "cancelAllBookingsButton": "هەموو حجزەکان هەڵوەشاندنەوە",
   "cancelAllBookingsConfirmTitle": "هەموو حجزەکان هەڵوەشاندنەوە؟",
   "cancelAllBookingsConfirmMessage": "هەموو حجزەکانی چالاکت هەڵدەوەشێنرێنەوە. دڵنیایت؟",

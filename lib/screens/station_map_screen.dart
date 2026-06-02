@@ -7,12 +7,15 @@ import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
+import '../models/booking.dart';
+import '../models/customer_session.dart';
 import '../models/station.dart';
 import '../services/session_service.dart';
 import '../services/supabase_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
+import '../widgets/booking_card.dart';
 import '../widgets/bottom_nav_scaffold.dart';
 import 'customer/booking_screen.dart';
 
@@ -35,10 +38,14 @@ class _StationMapScreenState extends State<StationMapScreen> {
 
   bool _locating = false;
   bool _findingNearest = false;
-  String? _customerPhone;
+  CustomerSession? _customerSession;
+  String? get _customerPhone => _customerSession?.customerPhone;
   bool _cancellingAll = false;
   bool _showLabels = true;
   Timer? _labelTimer;
+
+  Timer? _bookingPollTimer;
+  int _activeBookingCount = 0;
 
   // Zoom tier: 0=large clusters, 1=small clusters, 2=pins, 3=pins+labels.
   int _zoomTier = 1;
@@ -74,6 +81,7 @@ class _StationMapScreenState extends State<StationMapScreen> {
   void dispose() {
     _mapEventSub?.cancel();
     _labelTimer?.cancel();
+    _bookingPollTimer?.cancel();
     _mapController.dispose();
     super.dispose();
   }
@@ -100,8 +108,34 @@ class _StationMapScreenState extends State<StationMapScreen> {
   Future<void> _loadCustomerPhone() async {
     final session = await SessionService.instance.loadCustomerSession();
     if (mounted && session != null) {
-      setState(() => _customerPhone = session.customerPhone);
+      setState(() => _customerSession = session);
+      _startBookingPolling();
     }
+  }
+
+  void _startBookingPolling() {
+    _bookingPollTimer?.cancel();
+    _pollBookings();
+    _bookingPollTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => _pollBookings(),
+    );
+  }
+
+  Future<void> _pollBookings() async {
+    if (_customerSession == null) return;
+    try {
+      final raw = await SupabaseService.instance.fetchCustomerBookings(
+        _customerSession!.customerPhone,
+        sessionToken: _customerSession!.sessionToken,
+      );
+      if (!mounted) return;
+      const activeStatuses = {'pending', 'pending_owner_approval', 'confirmed'};
+      final count = raw.where((b) => activeStatuses.contains(b['status'])).length;
+      if (count != _activeBookingCount) {
+        setState(() => _activeBookingCount = count);
+      }
+    } catch (_) {}
   }
 
   void _showSnackBar(String message, {SnackBarAction? action}) {
@@ -234,6 +268,19 @@ class _StationMapScreenState extends State<StationMapScreen> {
     } finally {
       if (mounted) setState(() => _cancellingAll = false);
     }
+  }
+
+  void _showBookingsSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (_) => SizedBox(
+        height: MediaQuery.of(context).size.height * 0.6,
+        child: _BottomPanel(session: _customerSession),
+      ),
+    );
   }
 
   void _showQuickBookingSheet() {
@@ -587,10 +634,42 @@ class _StationMapScreenState extends State<StationMapScreen> {
     return BottomNavScaffold(
       currentIndex: 2,
       title: loc.mapTitle,
+      appBarActions: [
+        IconButton(
+          tooltip: loc.bookingsLabel,
+          onPressed: _showBookingsSheet,
+          icon: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              const Icon(Icons.history_rounded),
+              if (_activeBookingCount > 0)
+                Positioned(
+                  top: -4,
+                  right: -4,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                    child: Text(
+                      '$_activeBookingCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
       body: Stack(
         children: [
-          // Map is isolated in its own StatefulWidget so FAB state changes
-          // (loading spinners, label visibility) never cause it to rebuild.
           _MapBody(
             markers: _cachedMarkers,
             userLocation: _userLocation,
@@ -600,7 +679,7 @@ class _StationMapScreenState extends State<StationMapScreen> {
             errorPrefix: loc.errorPrefix,
           ),
 
-          // ── FABs — trailing edge (right LTR, left RTL)
+          // ── Bottom-end: action FABs ──────────────────────────────────────
           PositionedDirectional(
             bottom: 16,
             end: 16,
@@ -771,6 +850,391 @@ class _MapBodyState extends State<_MapBody> {
 
 // ─── Station detail row ───────────────────────────────────────────────────────
 
+// ─── Bottom panel (Notifications + Booking history) ──────────────────────────
+
+class _BottomPanel extends StatefulWidget {
+  final CustomerSession? session;
+  const _BottomPanel({this.session});
+
+  @override
+  State<_BottomPanel> createState() => _BottomPanelState();
+}
+
+class _BottomPanelState extends State<_BottomPanel> {
+  Future<List<Map<String, dynamic>>>? _bookingsFuture;
+  bool _showOldBookings = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.session != null) _reload();
+  }
+
+  @override
+  void didUpdateWidget(_BottomPanel old) {
+    super.didUpdateWidget(old);
+    if (widget.session != null && old.session == null) _reload();
+  }
+
+  void _reload() {
+    setState(() {
+      _bookingsFuture = SupabaseService.instance.fetchCustomerBookings(
+        widget.session!.customerPhone,
+        sessionToken: widget.session!.sessionToken,
+      );
+    });
+  }
+
+  Future<void> _cancel(String bookingId) async {
+    final loc = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(loc.cancelBookingTitle),
+        content: Text(loc.cancelBookingConfirm),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(loc.noBtn)),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: Text(loc.yesCancelBtn, style: const TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await SupabaseService.instance.customerManageBooking(
+        bookingId: bookingId,
+        action: 'cancel',
+        customerPhone: widget.session!.customerPhone,
+        sessionToken: widget.session!.sessionToken,
+      );
+      if (!mounted) return;
+      _reload();
+      messenger.showSnackBar(SnackBar(content: Text(loc.cancelBookingSuccess)));
+    } catch (e) {
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text('${loc.cancelBookingFailed}$e')));
+    }
+  }
+
+  Future<void> _acceptPostpone(String bookingId) async {
+    final loc = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(loc.acceptPostponeTitle),
+        content: Text(loc.acceptPostponeConfirm),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(loc.noBtn)),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            child: Text(loc.yesAcceptBtn, style: const TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await SupabaseService.instance.customerManageBooking(
+        bookingId: bookingId,
+        action: 'accept_postpone',
+        customerPhone: widget.session!.customerPhone,
+        sessionToken: widget.session!.sessionToken,
+      );
+      if (!mounted) return;
+      _reload();
+      messenger.showSnackBar(SnackBar(content: Text(loc.acceptPostponeSuccess)));
+    } catch (e) {
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text('${loc.acceptPostponeFailed}$e')));
+    }
+  }
+
+  Future<void> _rejectPostpone(String bookingId) async {
+    final loc = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(loc.rejectPostponeTitle),
+        content: Text(loc.rejectPostponeConfirm),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(loc.noBtn)),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: Text(loc.rejectPostponeBtn, style: const TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await SupabaseService.instance.customerManageBooking(
+        bookingId: bookingId,
+        action: 'reject_postpone',
+        customerPhone: widget.session!.customerPhone,
+        sessionToken: widget.session!.sessionToken,
+      );
+      if (!mounted) return;
+      _reload();
+      messenger.showSnackBar(SnackBar(content: Text(loc.rejectPostponeSuccess)));
+    } catch (e) {
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text('${loc.rejectPostponeFailed}$e')));
+    }
+  }
+
+  void _showRateDialog(String bookingId) {
+    final loc = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    int selectedRating = 0;
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: Text(loc.rateServiceTitle),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(loc.rateServicePrompt),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(5, (i) {
+                  final star = i + 1;
+                  return IconButton(
+                    icon: Icon(
+                      star <= selectedRating ? Icons.star : Icons.star_border,
+                      color: Colors.amber,
+                      size: 36,
+                    ),
+                    onPressed: () => setDialogState(() => selectedRating = star),
+                  );
+                }),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(loc.cancelButton)),
+            ElevatedButton(
+              onPressed: selectedRating == 0
+                  ? null
+                  : () async {
+                      Navigator.pop(ctx);
+                      try {
+                        await SupabaseService.instance.customerSubmitRating(
+                          bookingId: bookingId,
+                          customerPhone: widget.session!.customerPhone,
+                          sessionToken: widget.session!.sessionToken,
+                          rating: selectedRating,
+                        );
+                        if (!mounted) return;
+                        _reload();
+                        messenger.showSnackBar(SnackBar(content: Text(loc.rateSuccess)));
+                      } catch (e) {
+                        if (!mounted) return;
+                        messenger.showSnackBar(SnackBar(content: Text('${loc.rateFailed}$e')));
+                      }
+                    },
+              child: Text(loc.submitBtn),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        border: Border(top: BorderSide(color: Colors.grey.shade200)),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withAlpha(18),
+              blurRadius: 8,
+              offset: const Offset(0, -2)),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Drag handle
+          Padding(
+            padding: const EdgeInsets.only(top: 8, bottom: 2),
+            child: Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+          ),
+
+          // Header row
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            child: Row(
+              children: [
+                const Icon(Icons.history_rounded, size: 18,
+                    color: AppColors.primary),
+                const SizedBox(width: 8),
+                Text(loc.bookingsLabel,
+                    style: AppTextStyles.bodyMedium
+                        .copyWith(fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+
+          // Bookings list
+          Expanded(
+            child: widget.session == null
+                ? Center(
+                    child: Text(loc.profileLoginPrompt,
+                        style: AppTextStyles.bodyMedium
+                            .copyWith(color: AppColors.textSecondary)))
+                : FutureBuilder<List<Map<String, dynamic>>>(
+                    future: _bookingsFuture,
+                    builder: (context, snap) {
+                      if (snap.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      if (snap.hasError) {
+                        return Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text('${loc.errorPrefix}${snap.error}',
+                                  style: AppTextStyles.bodySmall
+                                      .copyWith(color: AppColors.error)),
+                              const SizedBox(height: 8),
+                              TextButton.icon(
+                                onPressed: _reload,
+                                icon: const Icon(Icons.refresh, size: 16),
+                                label: Text(loc.retryButton),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      final all = (snap.data ?? [])
+                          .map((e) => Booking.fromJson(e))
+                          .toList();
+
+                      if (all.isEmpty) {
+                        return Center(
+                          child: Text(loc.noBookings,
+                              style: AppTextStyles.bodyMedium
+                                  .copyWith(color: AppColors.textSecondary)),
+                        );
+                      }
+
+                      final active = all.where((b) => !isOldBooking(b.status)).toList();
+                      final old = all.where((b) => isOldBooking(b.status)).toList();
+                      final visible = [
+                        ...active,
+                        if (_showOldBookings) ...old,
+                      ];
+
+                      return RefreshIndicator(
+                        onRefresh: () async => _reload(),
+                        child: ListView.separated(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          itemCount: visible.length + (old.isNotEmpty ? 1 : 0),
+                          separatorBuilder: (_, i) =>
+                              i < visible.length - 1 ? const Divider(height: 1) : const SizedBox.shrink(),
+                          itemBuilder: (_, i) {
+                            if (i == visible.length && old.isNotEmpty) {
+                              return _ToggleOldButton(
+                                count: old.length,
+                                expanded: _showOldBookings,
+                                onTap: () => setState(() => _showOldBookings = !_showOldBookings),
+                              );
+                            }
+                            final b = visible[i];
+                            return BookingCard(
+                              booking: b,
+                              statusLabel: bookingStatusLabel(b.status, loc),
+                              statusColor: b.statusColor,
+                              canCancel: canCancelBooking(b.status),
+                              onCancel: () => _cancel(b.id),
+                              onRate: b.status == 'completed' && b.customerRating == null
+                                  ? () => _showRateDialog(b.id)
+                                  : null,
+                              onAcceptPostpone: b.status == 'pending_customer_approval'
+                                  ? () => _acceptPostpone(b.id)
+                                  : null,
+                              onRejectPostpone: b.status == 'pending_customer_approval'
+                                  ? () => _rejectPostpone(b.id)
+                                  : null,
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Toggle old bookings button ──────────────────────────────────────────────
+
+class _ToggleOldButton extends StatelessWidget {
+  final int count;
+  final bool expanded;
+  final VoidCallback onTap;
+
+  const _ToggleOldButton({
+    required this.count,
+    required this.expanded,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              expanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+              size: 18,
+              color: AppColors.primary,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              expanded ? loc.hideOldBookings(count) : loc.showOldBookings(count),
+              style: AppTextStyles.bodySmall.copyWith(color: AppColors.primary),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Station detail row ───────────────────────────────────────────────────────
+
 class _DetailRow extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
@@ -897,6 +1361,7 @@ class _QuickBookingSheetState extends State<_QuickBookingSheet> {
   bool _loading = false;
   String? _resultMessage;
   bool _success = false;
+  bool _noStationsWarning = false;
 
   @override
   void initState() {
@@ -983,7 +1448,7 @@ class _QuickBookingSheetState extends State<_QuickBookingSheet> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(loc.quickFillAllFields)));
       return;
     }
-    setState(() { _loading = true; _resultMessage = null; });
+    setState(() { _loading = true; _resultMessage = null; _noStationsWarning = false; });
     try {
       final booking = await SupabaseService.instance.createQuickBooking(
         customerName: _nameController.text.trim(),
@@ -997,8 +1462,13 @@ class _QuickBookingSheetState extends State<_QuickBookingSheet> {
       final targets = (booking['targets'] as List?) ?? [];
       if (mounted) {
         setState(() {
-          _success = true;
-          _resultMessage = '${loc.quickBookingSentPrefix}${targets.length}${loc.quickBookingSentSuffix}';
+          if (targets.isEmpty) {
+            _resultMessage = loc.quickNoStationsFound;
+            _noStationsWarning = true;
+          } else {
+            _success = true;
+            _resultMessage = '${loc.quickBookingSentPrefix}${targets.length}${loc.quickBookingSentSuffix}';
+          }
         });
       }
     } catch (error) {
@@ -1170,8 +1640,31 @@ class _QuickBookingSheetState extends State<_QuickBookingSheet> {
                   ),
                   if (_resultMessage != null && !_success) ...[
                     const SizedBox(height: AppSpacing.sm),
-                    Text(_resultMessage!,
-                        style: AppTextStyles.bodyMedium.copyWith(color: AppColors.error)),
+                    Container(
+                      padding: const EdgeInsets.all(AppSpacing.sm),
+                      decoration: BoxDecoration(
+                        color: _noStationsWarning ? AppColors.warningSurface : AppColors.errorSurface,
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            _noStationsWarning ? Icons.search_off_rounded : Icons.error_outline,
+                            color: _noStationsWarning ? AppColors.warning : AppColors.error,
+                            size: 18,
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: Text(
+                              _resultMessage!,
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: _noStationsWarning ? AppColors.warning : AppColors.error,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ]),
               ),

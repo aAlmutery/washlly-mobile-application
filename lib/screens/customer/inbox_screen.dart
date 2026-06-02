@@ -6,8 +6,8 @@ import '../../services/supabase_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
+import '../../widgets/booking_card.dart';
 import '../../widgets/bottom_nav_scaffold.dart';
-import '../../widgets/status_badge.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class InboxScreen extends StatefulWidget {
@@ -24,6 +24,9 @@ class _InboxScreenState extends State<InboxScreen> with SingleTickerProviderStat
   late Future<Map<String, dynamic>> _inboxFuture;
   String customerPhone = '';
   String sessionToken = '';
+  bool _markingAll = false;
+  List<CustomerNotification> _notifications = [];
+  bool _showOldBookings = false;
 
   @override
   void initState() {
@@ -39,7 +42,12 @@ class _InboxScreenState extends State<InboxScreen> with SingleTickerProviderStat
     }
     customerPhone = session.customerPhone;
     sessionToken = session.sessionToken;
-    return _loadInbox();
+    final data = await _loadInbox();
+    // Cache notifications in state so mark-all can update them without reloading.
+    _notifications = (data['notifications'] as List? ?? [])
+        .map((n) => CustomerNotification.fromJson(n as Map<String, dynamic>))
+        .toList();
+    return data;
   }
 
   @override
@@ -55,17 +63,55 @@ class _InboxScreenState extends State<InboxScreen> with SingleTickerProviderStat
     );
   }
 
-  void _markNotificationRead(String notificationId) async {
-    await SupabaseService.instance.customerMarkNotificationRead(
+  Future<void> _markAllRead() async {
+    if (_markingAll || customerPhone.isEmpty) return;
+    // Optimistic update — mark all as read in local state immediately.
+    setState(() {
+      _markingAll = true;
+      _notifications = _notifications
+          .map((n) => CustomerNotification(
+                id: n.id,
+                title: n.title,
+                body: n.body,
+                referenceBookingId: n.referenceBookingId,
+                isRead: true,
+                createdAt: n.createdAt,
+              ))
+          .toList();
+    });
+    try {
+      await SupabaseService.instance.customerMarkNotificationRead(
+        customerPhone: customerPhone,
+        sessionToken: sessionToken,
+        markAll: true,
+      );
+    } catch (_) {
+    } finally {
+      if (mounted) setState(() => _markingAll = false);
+    }
+  }
+
+  void _markNotificationRead(String notificationId) {
+    // Optimistic update — flip isRead locally, fire API in background.
+    setState(() {
+      _notifications = _notifications
+          .map((n) => n.id == notificationId
+              ? CustomerNotification(
+                  id: n.id,
+                  title: n.title,
+                  body: n.body,
+                  referenceBookingId: n.referenceBookingId,
+                  isRead: true,
+                  createdAt: n.createdAt,
+                )
+              : n)
+          .toList();
+    });
+    SupabaseService.instance.customerMarkNotificationRead(
       customerPhone: customerPhone,
       sessionToken: sessionToken,
       notificationId: notificationId,
     );
-    if (mounted) {
-      setState(() {
-        _inboxFuture = _initAndLoadInbox();
-      });
-    }
   }
 
   @override
@@ -86,10 +132,6 @@ class _InboxScreenState extends State<InboxScreen> with SingleTickerProviderStat
           }
 
           final inboxData = snapshot.data ?? {};
-          final notifications = (inboxData['notifications'] as List?)
-                  ?.map((n) => CustomerNotification.fromJson(n as Map<String, dynamic>))
-                  .toList() ??
-              [];
           final bookings = (inboxData['bookings'] as List?)
                   ?.map((b) => Booking.fromJson(b as Map<String, dynamic>))
                   .toList() ??
@@ -109,13 +151,42 @@ class _InboxScreenState extends State<InboxScreen> with SingleTickerProviderStat
                   controller: _tabController,
                   children: [
                     // Notifications Tab
-                    notifications.isEmpty
+                    _notifications.isEmpty
                         ? const Center(child: Text('No notifications'))
-                        : ListView.builder(
-                            padding: const EdgeInsets.all(AppSpacing.md),
-                            itemCount: notifications.length,
-                            itemBuilder: (context, index) {
-                              final notif = notifications[index];
+                        : Column(
+                            children: [
+                              if (_notifications.any((n) => !n.isRead))
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      TextButton.icon(
+                                        onPressed: _markingAll ? null : _markAllRead,
+                                        icon: _markingAll
+                                            ? const SizedBox(
+                                                width: 14,
+                                                height: 14,
+                                                child: CircularProgressIndicator(strokeWidth: 2),
+                                              )
+                                            : const Icon(Icons.done_all_rounded, size: 16),
+                                        label: Text(
+                                          AppLocalizations.of(context)!.markAllRead,
+                                          style: const TextStyle(fontSize: 13),
+                                        ),
+                                        style: TextButton.styleFrom(
+                                          foregroundColor: AppColors.success,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              Expanded(
+                                child: ListView.builder(
+                                  padding: const EdgeInsets.all(AppSpacing.md),
+                                  itemCount: _notifications.length,
+                                  itemBuilder: (context, index) {
+                              final notif = _notifications[index];
                               return GestureDetector(
                                 onTap: () {
                                   if (!notif.isRead) {
@@ -123,7 +194,11 @@ class _InboxScreenState extends State<InboxScreen> with SingleTickerProviderStat
                                   }
                                 },
                                 child: Card(
-                                  color: notif.isRead ? null : AppColors.primarySurface,
+                                  color: notif.isRead
+                                      ? null
+                                      : Theme.of(context).brightness == Brightness.dark
+                                          ? AppColors.success.withAlpha(30)
+                                          : AppColors.successSurface,
                                   child: ListTile(
                                     title: Text(
                                       notif.title,
@@ -131,25 +206,56 @@ class _InboxScreenState extends State<InboxScreen> with SingleTickerProviderStat
                                     ),
                                     subtitle: Text(notif.body, style: AppTextStyles.bodySmall),
                                     trailing: !notif.isRead
-                                        ? const Icon(Icons.circle, color: AppColors.primary, size: 12)
+                                        ? const Icon(Icons.circle, color: AppColors.success, size: 12)
                                         : null,
                                     contentPadding: const EdgeInsets.all(AppSpacing.md),
                                   ),
                                 ),
                               );
-                            },
+                                  },
+                                ),
+                              ),
+                            ],
                           ),
                     // Bookings Tab
                     bookings.isEmpty
                         ? const Center(child: Text('No bookings'))
-                        : ListView.builder(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: bookings.length,
-                            itemBuilder: (context, index) {
-                              final booking = bookings[index];
-                              return _buildBookingCard(context, booking, null);
-                            },
-                          ),
+                        : Builder(builder: (context) {
+                            final loc = AppLocalizations.of(context)!;
+                            final active = bookings.where((b) => !isOldBooking(b.status)).toList();
+                            final old = bookings.where((b) => isOldBooking(b.status)).toList();
+                            final visible = [...active, if (_showOldBookings) ...old];
+                            return ListView.builder(
+                              padding: const EdgeInsets.all(16),
+                              itemCount: visible.length + (old.isNotEmpty ? 1 : 0),
+                              itemBuilder: (context, index) {
+                                if (index == visible.length && old.isNotEmpty) {
+                                  return _InboxToggleOldButton(
+                                    count: old.length,
+                                    expanded: _showOldBookings,
+                                    onTap: () => setState(() => _showOldBookings = !_showOldBookings),
+                                  );
+                                }
+                                final b = visible[index];
+                                return BookingCard(
+                                  booking: b,
+                                  statusLabel: bookingStatusLabel(b.status, loc),
+                                  statusColor: b.statusColor,
+                                  canCancel: canCancelBooking(b.status),
+                                  onCancel: () => _cancel(b.id),
+                                  onRate: b.status == 'completed' && b.customerRating == null
+                                      ? () => _showRateDialog(b.id)
+                                      : null,
+                                  onAcceptPostpone: b.status == 'pending_customer_approval'
+                                      ? () => _acceptPostpone(b.id)
+                                      : null,
+                                  onRejectPostpone: b.status == 'pending_customer_approval'
+                                      ? () => _rejectPostpone(b.id)
+                                      : null,
+                                );
+                              },
+                            );
+                          }),
                   ],
                 ),
               ),
@@ -160,109 +266,227 @@ class _InboxScreenState extends State<InboxScreen> with SingleTickerProviderStat
     );
   }
 
-  Widget _buildBookingCard(BuildContext context, Booking booking, AppLocalizations? loc) {
-    final statusLabel = booking.statusLabel;
+  void _refreshAll() => setState(() => _inboxFuture = _initAndLoadInbox());
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Booking #${booking.bookingNumber}',
-                  style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold),
-                ),
-                StatusBadge(status: booking.status, label: statusLabel),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(booking.stationName, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold)),
-            Text(booking.serviceName, style: AppTextStyles.bodyMedium),
-            const SizedBox(height: AppSpacing.sm),
-            Row(
-              children: [
-                const Icon(Icons.calendar_today, size: 16, color: AppColors.textSecondary),
-                const SizedBox(width: AppSpacing.sm),
-                Text('${booking.bookingDate} at ${booking.bookingTime}', style: AppTextStyles.bodyMedium),
-              ],
-            ),
-            if (booking.price != null) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Text('Price: ${booking.price} IQD', style: AppTextStyles.bodyMedium),
-            ],
-            if (booking.customerRating != null) ...[
-              const SizedBox(height: AppSpacing.sm),
+  Future<void> _cancel(String bookingId) async {
+    final loc = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(loc.cancelBookingTitle),
+        content: Text(loc.cancelBookingConfirm),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(loc.noBtn)),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: Text(loc.yesCancelBtn, style: const TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await SupabaseService.instance.customerManageBooking(
+        bookingId: bookingId,
+        action: 'cancel',
+        customerPhone: customerPhone,
+        sessionToken: sessionToken,
+      );
+      _refreshAll();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.cancelBookingSuccess)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${AppLocalizations.of(context)!.cancelBookingFailed}$e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _acceptPostpone(String bookingId) async {
+    final loc = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(loc.acceptPostponeTitle),
+        content: Text(loc.acceptPostponeConfirm),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(loc.noBtn)),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            child: Text(loc.yesAcceptBtn, style: const TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await SupabaseService.instance.customerManageBooking(
+        bookingId: bookingId,
+        action: 'accept_postpone',
+        customerPhone: customerPhone,
+        sessionToken: sessionToken,
+      );
+      _refreshAll();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.acceptPostponeSuccess)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${AppLocalizations.of(context)!.acceptPostponeFailed}$e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _rejectPostpone(String bookingId) async {
+    final loc = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(loc.rejectPostponeTitle),
+        content: Text(loc.rejectPostponeConfirm),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(loc.noBtn)),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: Text(loc.rejectPostponeBtn, style: const TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await SupabaseService.instance.customerManageBooking(
+        bookingId: bookingId,
+        action: 'reject_postpone',
+        customerPhone: customerPhone,
+        sessionToken: sessionToken,
+      );
+      _refreshAll();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.rejectPostponeSuccess)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${AppLocalizations.of(context)!.rejectPostponeFailed}$e')),
+        );
+      }
+    }
+  }
+
+  void _showRateDialog(String bookingId) {
+    final loc = AppLocalizations.of(context)!;
+    int selectedRating = 0;
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: Text(loc.rateServiceTitle),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(loc.rateServicePrompt),
+              const SizedBox(height: 16),
               Row(
-                children: [
-                  const Icon(Icons.star, size: 16, color: Colors.amber),
-                  const SizedBox(width: AppSpacing.sm),
-                  Text('Rating: ${booking.customerRating}/5', style: AppTextStyles.bodyMedium),
-                ],
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(5, (i) {
+                  final star = i + 1;
+                  return IconButton(
+                    icon: Icon(
+                      star <= selectedRating ? Icons.star : Icons.star_border,
+                      color: Colors.amber,
+                      size: 36,
+                    ),
+                    onPressed: () => setDialogState(() => selectedRating = star),
+                  );
+                }),
               ),
             ],
-            if (booking.status == 'confirmed' && booking.customerRating == null) ...[
-              const SizedBox(height: AppSpacing.sm),
-              ElevatedButton(
-                onPressed: () => _showRatingDialog(context, booking),
-                child: const Text('Rate'),
-              ),
-            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(loc.cancelButton)),
+            ElevatedButton(
+              onPressed: selectedRating == 0
+                  ? null
+                  : () async {
+                      Navigator.pop(ctx);
+                      try {
+                        await SupabaseService.instance.customerSubmitRating(
+                          bookingId: bookingId,
+                          customerPhone: customerPhone,
+                          sessionToken: sessionToken,
+                          rating: selectedRating,
+                        );
+                        _refreshAll();
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(AppLocalizations.of(context)!.rateSuccess)),
+                          );
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('${AppLocalizations.of(context)!.rateFailed}$e')),
+                          );
+                        }
+                      }
+                    },
+              child: Text(loc.submitBtn),
+            ),
           ],
         ),
       ),
     );
   }
+}
 
-  void _showRatingDialog(BuildContext context, Booking booking) {
-    int rating = 5;
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Rate this booking'),
-        content: StatefulBuilder(
-          builder: (context, setState) => Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(5, (index) {
-                  return GestureDetector(
-                    onTap: () => setState(() => rating = index + 1),
-                    child: Icon(
-                      index < rating ? Icons.star : Icons.star_outline,
-                      color: Colors.amber,
-                      size: 32,
-                    ),
-                  );
-                }),
-              ),
-              const SizedBox(height: 16),
-              Text('$rating / 5'),
-            ],
-          ),
+class _InboxToggleOldButton extends StatelessWidget {
+  final int count;
+  final bool expanded;
+  final VoidCallback onTap;
+
+  const _InboxToggleOldButton({
+    required this.count,
+    required this.expanded,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              expanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+              size: 18,
+              color: AppColors.primary,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              expanded ? loc.hideOldBookings(count) : loc.showOldBookings(count),
+              style: AppTextStyles.bodySmall.copyWith(color: AppColors.primary),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              try {
-                await SupabaseService.instance.customerSubmitRating(
-                  bookingId: booking.id,
-                  customerPhone: customerPhone,
-                  sessionToken: sessionToken,
-                  rating: rating,
-                );
-              } catch (_) {}
-              if (mounted) setState(() => _inboxFuture = _initAndLoadInbox());
-            },
-            child: const Text('Submit'),
-          ),
-        ],
       ),
     );
   }

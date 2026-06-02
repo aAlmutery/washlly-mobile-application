@@ -34,6 +34,7 @@
   "quickBookingSentPrefix": "Quick booking request sent to ",
   "quickBookingSentSuffix": " stations",
   "quickBookingFailedPrefix": "Quick booking failed: ",
+  "quickNoStationsFound": "No nearby stations found for this request. Try adjusting the date, time, or service and send again.",
   "bookingTitleAtPrefix": "Book at ",
   "quickBookingTitle": "Quick Booking",
   "stationLabelPrefix": "Station: ",
@@ -79,10 +80,18 @@
   "bookAtThisStation": "Book at this station",
   "noStationsWithLocation": "No stations with location data available.",
   "inboxLabel": "Inbox",
-  "notificationsLabel": "Notifications",
+  "notificationsLabel": "Notifications & Booking History",
   "bookingsLabel": "My Bookings",
-  "noNotifications": "No notifications",
-  "noBookings": "No bookings",
+  "noNotifications": "No new notifications",
+  "noBookings": "No new bookings",
+  "showOldBookings": "Show the rest ({count})",
+  "@showOldBookings": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "hideOldBookings": "Hide the rest ({count})",
+  "@hideOldBookings": {
+    "placeholders": { "count": { "type": "int" } }
+  },
   "nameLabel": "Name",
   "dateLabel": "Date",
   "timeLabel": "Time",
@@ -250,6 +259,7 @@
   "mapLocationPermissionTitle": "Location Access",
   "mapLocationPermissionMessage": "Allow Washlly to access your location to show it on the map.",
   "mapAllowLocation": "Allow",
+  "markAllRead": "Mark all as read",
   "cancelAllBookingsButton": "Cancel All Bookings",
   "cancelAllBookingsConfirmTitle": "Cancel All Bookings?",
   "cancelAllBookingsConfirmMessage": "All your active bookings will be cancelled. Are you sure?",
