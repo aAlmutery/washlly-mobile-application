@@ -130,7 +130,7 @@ class _StationMapScreenState extends State<StationMapScreen> {
         sessionToken: _customerSession!.sessionToken,
       );
       if (!mounted) return;
-      const activeStatuses = {'pending', 'pending_owner_approval', 'confirmed'};
+      const activeStatuses = {'pending', 'pending_owner_approval', 'confirmed', 'pending_customer_approval'};
       final count = raw.where((b) => activeStatuses.contains(b['status'])).length;
       if (count != _activeBookingCount) {
         setState(() => _activeBookingCount = count);
@@ -262,7 +262,9 @@ class _StationMapScreenState extends State<StationMapScreen> {
     try {
       await SupabaseService.instance.cancelAllMapBookings(
           customerPhone: _customerPhone!, language: lang);
-      if (mounted) _showSnackBar(loc.cancelAllBookingsSuccess);
+      if (!mounted) return;
+      _showSnackBar(loc.cancelAllBookingsSuccess);
+      _pollBookings();
     } catch (e) {
       if (mounted) _showSnackBar('${loc.cancelAllBookingsFailed}$e');
     } finally {
@@ -687,16 +689,18 @@ class _StationMapScreenState extends State<StationMapScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                _MapActionButton(
-                  heroTag: 'fab_cancel_all',
-                  label: loc.cancelAllBookingsButton,
-                  icon: Icons.cancel,
-                  backgroundColor: Colors.red,
-                  loading: _cancellingAll,
-                  showLabel: _showLabels,
-                  onPressed: _cancelAllBookings,
-                ),
-                const SizedBox(height: 8),
+                if (_activeBookingCount > 0) ...[
+                  _MapActionButton(
+                    heroTag: 'fab_cancel_all',
+                    label: loc.cancelAllBookingsButton,
+                    icon: Icons.cancel,
+                    backgroundColor: Colors.red,
+                    loading: _cancellingAll,
+                    showLabel: _showLabels,
+                    onPressed: _cancelAllBookings,
+                  ),
+                  const SizedBox(height: 8),
+                ],
                 _MapActionButton(
                   heroTag: 'fab_quick_booking',
                   label: loc.quickBookingTitle,
