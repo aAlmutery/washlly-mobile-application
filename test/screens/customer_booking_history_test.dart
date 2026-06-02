@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:washlly_mobile_app/screens/customer/customer_booking_history_screen.dart';
+import 'package:washlly_mobile_app/widgets/booking_card.dart';
 
 // ---------------------------------------------------------------------------
 // Tests for canCancelBooking — extracted top-level function from
