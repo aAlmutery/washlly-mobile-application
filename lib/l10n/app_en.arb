@@ -267,5 +267,21 @@
   "cancelAllBookingsFailed": "Failed to cancel bookings: ",
   "cancelAllBookingsNoPhone": "Please login first",
   "nearestStationNotFound": "No nearby station found",
-  "distanceKmAway": " km away"
+  "distanceKmAway": " km away",
+  "homeFilterPopular": "Popular",
+  "homeFilterRecent": "Recent",
+  "homeQuickBook": "Quick Book",
+  "homeOurServices": "Our Services",
+  "homeBookNow": "Book Now",
+  "homeVipPromoTitle": "VIP Car Wash",
+  "homeVipPromoOffer": "20% Off This Week",
+  "homeSpecialOffer": "Special Offer",
+  "serviceCarWash": "Car Wash",
+  "serviceCarWashSub": "Full exterior clean",
+  "serviceOilChange": "Oil Filter Change",
+  "serviceOilChangeSub": "Engine oil & filter",
+  "serviceFullClean": "Int. & Ext. Cleaning",
+  "serviceFullCleanSub": "Deep full-car clean",
+  "serviceVipWash": "VIP Car Wash",
+  "serviceVipWashSub": "Premium treatment"
 }

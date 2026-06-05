@@ -10,6 +10,7 @@ class BottomNavScaffold extends StatelessWidget {
   final String? notificationPhone;
   final List<Widget>? appBarActions;
   final Widget? floatingActionButton;
+  final FloatingActionButtonLocation? floatingActionButtonLocation;
 
   static const List<String> _routes = [
     '/home',
@@ -27,6 +28,7 @@ class BottomNavScaffold extends StatelessWidget {
     this.notificationPhone,
     this.appBarActions,
     this.floatingActionButton,
+    this.floatingActionButtonLocation,
   });
 
   void _onTap(BuildContext context, int index) {
@@ -60,6 +62,7 @@ class BottomNavScaffold extends StatelessWidget {
       ),
       body: body,
       floatingActionButton: floatingActionButton,
+      floatingActionButtonLocation: floatingActionButtonLocation,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: currentIndex,
         onTap: (index) => _onTap(context, index),

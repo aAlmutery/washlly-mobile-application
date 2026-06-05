@@ -267,5 +267,21 @@
   "cancelAllBookingsFailed": "فشل إلغاء الحجوزات: ",
   "cancelAllBookingsNoPhone": "يرجى تسجيل الدخول أولاً",
   "nearestStationNotFound": "لم يتم العثور على محطة قريبة",
-  "distanceKmAway": " كم منك"
+  "distanceKmAway": " كم منك",
+  "homeFilterPopular": "الأكثر طلباً",
+  "homeFilterRecent": "الأخيرة",
+  "homeQuickBook": "حجز سريع",
+  "homeOurServices": "خدماتنا",
+  "homeBookNow": "احجز الآن",
+  "homeVipPromoTitle": "غسيل VIP",
+  "homeVipPromoOffer": "خصم 20% هذا الأسبوع",
+  "homeSpecialOffer": "عرض خاص",
+  "serviceCarWash": "غسيل السيارة",
+  "serviceCarWashSub": "تنظيف خارجي كامل",
+  "serviceOilChange": "تغيير فلتر الزيت",
+  "serviceOilChangeSub": "زيت المحرك والفلتر",
+  "serviceFullClean": "تنظيف داخلي وخارجي",
+  "serviceFullCleanSub": "تنظيف شامل للسيارة",
+  "serviceVipWash": "غسيل VIP",
+  "serviceVipWashSub": "معالجة فاخرة"
 }

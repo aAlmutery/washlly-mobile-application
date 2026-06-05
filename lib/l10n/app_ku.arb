@@ -267,5 +267,21 @@
   "cancelAllBookingsFailed": "سەرکەوتوو نەبوو لە هەڵوەشاندنەوەی حجزەکان: ",
   "cancelAllBookingsNoPhone": "تکایە سەرەتا چوونەژوورەوە بکە",
   "nearestStationNotFound": "هیچ مەحەتەیەکی نزیک نەدۆزرایەوە",
-  "distanceKmAway": " کم لەتۆ"
+  "distanceKmAway": " کم لەتۆ",
+  "homeFilterPopular": "بەناوبانگ",
+  "homeFilterRecent": "دوایین",
+  "homeQuickBook": "حجزی خێرا",
+  "homeOurServices": "خزمەتگوزارییەکانمان",
+  "homeBookNow": "ئێستا حجز بکە",
+  "homeVipPromoTitle": "شۆرانەوەی VIP",
+  "homeVipPromoOffer": "٪٢٠ داشکاندن ئەم هەفتەیە",
+  "homeSpecialOffer": "ئۆفەری تایبەت",
+  "serviceCarWash": "شۆرانەوەی ئۆتۆمبێل",
+  "serviceCarWashSub": "پاک کردنەوەی دەرەوەی تەواو",
+  "serviceOilChange": "گۆڕینی فلتری نەوت",
+  "serviceOilChangeSub": "نەوتی موتەر و فلتەر",
+  "serviceFullClean": "پاک کردنەوەی ناوەوە و دەرەوە",
+  "serviceFullCleanSub": "پاک کردنەوەی تەواوی ئۆتۆمبێل",
+  "serviceVipWash": "شۆرانەوەی VIP",
+  "serviceVipWashSub": "چاکسازی پریمیەم"
 }
