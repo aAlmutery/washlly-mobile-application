@@ -30,6 +30,8 @@ class _BookingScreenState extends State<BookingScreen> {
   TimeOfDay _selectedTime = TimeOfDay(hour: 12, minute: 0);
   List<ServiceModel> _services = [];
   ServiceModel? _selectedService;
+  List<String> _quickServiceNames = [];
+  String? _selectedQuickServiceName;
   bool _loading = false;
   String? _resultMessage;
   String? _createdBookingId;
@@ -51,6 +53,7 @@ class _BookingScreenState extends State<BookingScreen> {
     if (widget.station != null) {
       _loadServices();
     } else {
+      _loadQuickServices();
       WidgetsBinding.instance.addPostFrameCallback((_) => _fetchLocation());
     }
   }
@@ -96,6 +99,18 @@ class _BookingScreenState extends State<BookingScreen> {
     } finally {
       if (mounted) setState(() => _loadingLocation = false);
     }
+  }
+
+  Future<void> _loadQuickServices() async {
+    try {
+      final names = await SupabaseService.instance.fetchServiceNames();
+      if (mounted) {
+        setState(() {
+          _quickServiceNames = names;
+          _selectedQuickServiceName = names.isNotEmpty ? names.first : null;
+        });
+      }
+    } catch (_) {}
   }
 
   Future<void> _loadServices() async {
@@ -195,7 +210,7 @@ class _BookingScreenState extends State<BookingScreen> {
   }
 
   Future<void> _createQuickBooking() async {
-    if (!_formKey.currentState!.validate() || _position == null) return;
+    if (!_formKey.currentState!.validate() || _position == null || _selectedQuickServiceName == null) return;
     setState(() { _loading = true; _resultMessage = null; });
     try {
       final booking = await SupabaseService.instance.createQuickBooking(
@@ -203,7 +218,7 @@ class _BookingScreenState extends State<BookingScreen> {
         customerPhone: _phoneController.text.trim(),
         bookingDate: _formattedDate,
         bookingTime: _formattedTimeIso,
-        serviceKind: 'quick',
+        serviceKind: _selectedQuickServiceName!,
         customerLat: _position!.latitude,
         customerLng: _position!.longitude,
       );
@@ -316,7 +331,7 @@ class _BookingScreenState extends State<BookingScreen> {
     final loc = AppLocalizations.of(context)!;
 
     return BottomNavScaffold(
-      currentIndex: 3,
+      currentIndex: 2,
       title: widget.station != null ? '${loc.bookingTitleAtPrefix}${widget.station!.name}' : loc.quickBookingTitle,
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -395,10 +410,22 @@ class _BookingScreenState extends State<BookingScreen> {
                 ),
               ],
               if (widget.station == null) ...[
+                if (_quickServiceNames.isEmpty)
+                  const Center(child: CircularProgressIndicator())
+                else
+                  DropdownButtonFormField<String>(
+                    value: _selectedQuickServiceName,
+                    decoration: InputDecoration(labelText: loc.chooseServiceLabel),
+                    items: _quickServiceNames
+                        .map((n) => DropdownMenuItem(value: n, child: Text(n)))
+                        .toList(),
+                    onChanged: (v) => setState(() => _selectedQuickServiceName = v),
+                  ),
+                const SizedBox(height: 16),
                 _buildLocationCard(),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: (_loading || _loadingLocation || _position == null) ? null : _createQuickBooking,
+                  onPressed: (_loading || _loadingLocation || _position == null || _selectedQuickServiceName == null) ? null : _createQuickBooking,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     child: Text(_loading ? loc.quickSendingText : loc.quickBookingButton),

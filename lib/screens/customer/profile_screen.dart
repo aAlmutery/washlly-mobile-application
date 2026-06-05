@@ -61,7 +61,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final notifier = widget.sessionNotifier;
 
     return BottomNavScaffold(
-      currentIndex: 4,
+      currentIndex: 3,
       title: loc.bottomProfile,
       body: !notifier.loaded
           ? const Center(child: CircularProgressIndicator())

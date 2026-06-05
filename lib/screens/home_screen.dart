@@ -80,7 +80,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int? _selectedIndex;
   _Filter _filter = _Filter.all;
   late List<_Service> _allServices;
 
@@ -96,25 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _Filter.all => _allServices,
       };
 
-  void _setFilter(_Filter f) => setState(() {
-        _filter = f;
-        _selectedIndex = null;
-      });
-
-  void _toggleService(int globalIndex) => setState(() {
-        _selectedIndex = _selectedIndex == globalIndex ? null : globalIndex;
-      });
-
-  void _openBookSheet() {
-    final svc =
-        _selectedIndex != null ? _allServices[_selectedIndex!] : null;
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _QuickBookSheet(service: svc),
-    );
-  }
+  void _setFilter(_Filter f) => setState(() => _filter = f);
 
   @override
   Widget build(BuildContext context) {
@@ -124,17 +105,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return BottomNavScaffold(
       currentIndex: 0,
       title: loc.appTitle,
-      floatingActionButtonLocation:
-          FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: _BookFab(
-        label: _selectedIndex != null
-            ? _allServices[_selectedIndex!].title
-            : loc.homeQuickBook,
-        accent: _selectedIndex != null
-            ? _allServices[_selectedIndex!].accent
-            : AppColors.primary,
-        onTap: _openBookSheet,
-      ),
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
@@ -164,11 +134,10 @@ class _HomeScreenState extends State<HomeScreen> {
               itemCount: filtered.length,
               itemBuilder: (context, i) {
                 final svc = filtered[i];
-                final globalIdx = _allServices.indexOf(svc);
                 return _ServiceCard(
                   service: svc,
-                  selected: _selectedIndex == globalIdx,
-                  onTap: () => _toggleService(globalIdx),
+                  onTap: () => Navigator.pushNamed(
+                      context, BookingScreen.routeName),
                 );
               },
             ),
@@ -178,11 +147,9 @@ class _HomeScreenState extends State<HomeScreen> {
               AppSpacing.md, 0, AppSpacing.md, AppSpacing.xl,
             ),
             sliver: SliverToBoxAdapter(
-              child: _PromoBanner(onTap: _openBookSheet),
+              child: _PromoBanner(),
             ),
           ),
-          // Bottom clearance so content is not hidden behind the FAB
-          const SliverToBoxAdapter(child: SizedBox(height: 88)),
         ],
       ),
     );
@@ -460,12 +427,10 @@ class _FilterChip extends StatelessWidget {
 
 class _ServiceCard extends StatefulWidget {
   final _Service service;
-  final bool selected;
   final VoidCallback onTap;
 
   const _ServiceCard({
     required this.service,
-    required this.selected,
     required this.onTap,
   });
 
@@ -480,7 +445,6 @@ class _ServiceCardState extends State<_ServiceCard> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final svc = widget.service;
-    final sel = widget.selected;
     final loc = AppLocalizations.of(context)!;
 
     return GestureDetector(
@@ -494,86 +458,43 @@ class _ServiceCardState extends State<_ServiceCard> {
         scale: _pressed ? 0.93 : 1.0,
         duration: const Duration(milliseconds: 110),
         curve: Curves.easeOut,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 240),
-          curve: Curves.easeInOut,
+        child: Container(
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
-            color: sel
-                ? svc.accent.withAlpha(isDark ? 38 : 18)
-                : (isDark
-                    ? AppColors.surfaceCardDark
-                    : AppColors.surfaceCard),
-            borderRadius:
-                BorderRadius.circular(AppSpacing.radiusXl),
-            border: Border.all(
-              color: sel ? svc.accent : AppColors.divider,
-              width: sel ? 2.0 : 1.0,
-            ),
-            boxShadow: sel
-                ? [
-                    BoxShadow(
-                      color: svc.accent.withAlpha(55),
-                      blurRadius: 18,
-                      offset: const Offset(0, 8),
-                    ),
-                  ]
-                : [
-                    BoxShadow(
-                      color:
-                          Colors.black.withAlpha(isDark ? 28 : 10),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
+            color: isDark ? AppColors.surfaceCardDark : AppColors.surfaceCard,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+            border: Border.all(color: AppColors.divider),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withAlpha(isDark ? 28 : 10),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Icon row with selection indicator
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 240),
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: sel
-                          ? svc.accent.withAlpha(50)
-                          : svc.accent.withAlpha(28),
-                      borderRadius:
-                          BorderRadius.circular(AppSpacing.radiusMd),
-                    ),
-                    child: Icon(svc.icon, color: svc.accent, size: 26),
-                  ),
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 200),
-                    child: sel
-                        ? Icon(Icons.check_circle,
-                            key: const ValueKey('check'),
-                            color: svc.accent,
-                            size: 20)
-                        : const SizedBox(
-                            key: ValueKey('empty'),
-                            width: 20,
-                            height: 20),
-                  ),
-                ],
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: svc.accent.withAlpha(28),
+                  borderRadius:
+                      BorderRadius.circular(AppSpacing.radiusMd),
+                ),
+                child: Icon(svc.icon, color: svc.accent, size: 26),
               ),
               const SizedBox(height: AppSpacing.md),
-              // Title
               Text(
                 svc.title,
                 style: AppTextStyles.bodyLarge.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: sel ? svc.accent : null,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: AppSpacing.xs),
-              // Subtitle
               Text(
                 svc.subtitle,
                 style: AppTextStyles.bodySmall.copyWith(
@@ -583,22 +504,20 @@ class _ServiceCardState extends State<_ServiceCard> {
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: AppSpacing.xs),
-              // Price badge
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 240),
+              Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.sm,
                   vertical: AppSpacing.xs,
                 ),
                 decoration: BoxDecoration(
-                  color: sel ? svc.accent : AppColors.primarySurface,
+                  color: AppColors.primarySurface,
                   borderRadius:
                       BorderRadius.circular(AppSpacing.radiusFull),
                 ),
                 child: Text(
                   '${svc.price}${loc.servicePriceCurrencySuffix}',
                   style: AppTextStyles.labelSmall.copyWith(
-                    color: sel ? Colors.white : AppColors.primary,
+                    color: AppColors.primary,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -614,16 +533,15 @@ class _ServiceCardState extends State<_ServiceCard> {
 // ─── Promo banner ──────────────────────────────────────────────────────────
 
 class _PromoBanner extends StatelessWidget {
-  final VoidCallback onTap;
-
-  const _PromoBanner({required this.onTap});
+  const _PromoBanner();
 
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
 
     return GestureDetector(
-      onTap: onTap,
+      onTap: () =>
+          Navigator.pushNamed(context, BookingScreen.routeName),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
@@ -647,7 +565,6 @@ class _PromoBanner extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // "Special Offer" pill
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.sm,
@@ -720,163 +637,6 @@ class _PromoBanner extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-// ─── Quick-book bottom sheet ───────────────────────────────────────────────
-
-class _QuickBookSheet extends StatelessWidget {
-  final _Service? service;
-
-  const _QuickBookSheet({this.service});
-
-  @override
-  Widget build(BuildContext context) {
-    final loc = AppLocalizations.of(context)!;
-    final svc = service;
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceCardDark : AppColors.surfaceCard,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(AppSpacing.radiusXl),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(45),
-            blurRadius: 24,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      padding: EdgeInsets.only(
-        left: AppSpacing.lg,
-        right: AppSpacing.lg,
-        top: AppSpacing.sm,
-        bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.xl,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Drag handle
-          Container(
-            width: 40,
-            height: 4,
-            margin: const EdgeInsets.only(bottom: AppSpacing.lg),
-            decoration: BoxDecoration(
-              color: AppColors.divider,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-            ),
-          ),
-          if (svc != null) ...[
-            // Selected service row
-            Row(
-              children: [
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: svc.accent.withAlpha(30),
-                    borderRadius:
-                        BorderRadius.circular(AppSpacing.radiusMd),
-                  ),
-                  child: Icon(svc.icon, color: svc.accent, size: 30),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(svc.title, style: AppTextStyles.titleMedium),
-                      Text(
-                        svc.subtitle,
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.sm,
-                    vertical: AppSpacing.xs,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primarySurface,
-                    borderRadius:
-                        BorderRadius.circular(AppSpacing.radiusFull),
-                  ),
-                  child: Text(
-                    '${svc.price}${loc.servicePriceCurrencySuffix}',
-                    style: AppTextStyles.labelSmall.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.lg),
-          ] else ...[
-            Text(loc.homeQuickBook, style: AppTextStyles.titleLarge),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              loc.chooseServiceLabel,
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-          ],
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: () {
-                Navigator.pop(context);
-                Navigator.pushReplacementNamed(
-                    context, BookingScreen.routeName);
-              },
-              icon: const Icon(Icons.flash_on_rounded),
-              label: Text(loc.homeBookNow),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── FAB ───────────────────────────────────────────────────────────────────
-
-class _BookFab extends StatelessWidget {
-  final String label;
-  final Color accent;
-  final VoidCallback onTap;
-
-  const _BookFab({
-    required this.label,
-    required this.accent,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return FloatingActionButton.extended(
-      onPressed: onTap,
-      backgroundColor: accent,
-      foregroundColor: Colors.white,
-      elevation: 6,
-      icon: const Icon(Icons.flash_on_rounded),
-      label: Text(
-        label,
-        style: AppTextStyles.labelLarge.copyWith(color: Colors.white),
-        overflow: TextOverflow.ellipsis,
-        maxLines: 1,
       ),
     );
   }
