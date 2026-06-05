@@ -632,7 +632,6 @@ class _StationMapScreenState extends State<StationMapScreen> {
     return BottomNavScaffold(
       currentIndex: 2,
       title: loc.mapTitle,
-      activeBookingCount: _activeBookingCount,
       appBarActions: [
         IconButton(
           tooltip: loc.bookingsLabel,
