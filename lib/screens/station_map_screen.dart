@@ -906,9 +906,8 @@ class _BottomPanelState extends State<_BottomPanel> {
     );
     if (confirmed != true) return;
     try {
-      await SupabaseService.instance.customerManageBooking(
+      await SupabaseService.instance.customerCompleteBooking(
         bookingId: bookingId,
-        action: 'complete',
         customerPhone: widget.session!.customerPhone,
         sessionToken: widget.session!.sessionToken,
       );

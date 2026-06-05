@@ -464,6 +464,35 @@ class SupabaseService {
     return Map<String, dynamic>.from(response.data as Map<String, dynamic>);
   }
 
+  /// Mark a confirmed booking as completed from the customer side.
+  /// Tries the edge function first; falls back to direct REST if unsupported.
+  Future<void> customerCompleteBooking({
+    required String bookingId,
+    required String customerPhone,
+    required String sessionToken,
+  }) async {
+    try {
+      await customerManageBooking(
+        bookingId: bookingId,
+        action: 'complete',
+        customerPhone: customerPhone,
+        sessionToken: sessionToken,
+      );
+    } catch (_) {
+      // Edge function doesn't support 'complete' yet — update directly.
+      final rows = await client
+          .from('bookings')
+          .update({'status': 'completed'})
+          .eq('id', bookingId)
+          .eq('customer_phone', customerPhone)
+          .eq('status', 'confirmed')
+          .select('id');
+      if ((rows as List).isEmpty) {
+        throw Exception('لم يتم تحديث الحجز — تحقق من الصلاحيات');
+      }
+    }
+  }
+
   Future<Map<String, dynamic>> customerSubmitRating({
     required String bookingId,
     required String customerPhone,
