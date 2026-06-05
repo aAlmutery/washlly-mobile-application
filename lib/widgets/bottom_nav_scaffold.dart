@@ -11,6 +11,7 @@ class BottomNavScaffold extends StatelessWidget {
   final List<Widget>? appBarActions;
   final Widget? floatingActionButton;
   final FloatingActionButtonLocation? floatingActionButtonLocation;
+  final int activeBookingCount;
 
   static const List<String> _routes = [
     '/home',
@@ -28,6 +29,7 @@ class BottomNavScaffold extends StatelessWidget {
     this.appBarActions,
     this.floatingActionButton,
     this.floatingActionButtonLocation,
+    this.activeBookingCount = 0,
   });
 
   void _onTap(BuildContext context, int index) {
@@ -47,10 +49,41 @@ class BottomNavScaffold extends StatelessWidget {
       );
     }
 
+    Widget mapIcon = inboxIcon;
+    if (activeBookingCount > 0) {
+      mapIcon = Stack(
+        clipBehavior: Clip.none,
+        children: [
+          inboxIcon,
+          Positioned(
+            top: -4,
+            right: -4,
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: const BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+              ),
+              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+              child: Text(
+                '$activeBookingCount',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
     final items = <BottomNavigationBarItem>[
       BottomNavigationBarItem(icon: const Icon(Icons.home), label: loc.bottomHome),
       BottomNavigationBarItem(icon: const Icon(Icons.list), label: loc.bottomStations),
-      BottomNavigationBarItem(icon: inboxIcon, label: loc.bottomMap),
+      BottomNavigationBarItem(icon: mapIcon, label: loc.bottomMap),
       BottomNavigationBarItem(icon: const Icon(Icons.person), label: loc.bottomProfile),
     ];
     return Scaffold(
