@@ -279,7 +279,11 @@ class _StationMapScreenState extends State<StationMapScreen> {
           borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (_) => SizedBox(
         height: MediaQuery.of(context).size.height * 0.6,
-        child: _BottomPanel(session: _customerSession),
+        child: _BottomPanel(
+          session: _customerSession,
+          onSnackBar: (msg, {Color? color}) =>
+              _showSnackBar(msg),
+        ),
       ),
     );
   }
@@ -854,7 +858,8 @@ class _MapBodyState extends State<_MapBody> {
 
 class _BottomPanel extends StatefulWidget {
   final CustomerSession? session;
-  const _BottomPanel({this.session});
+  final void Function(String message, {Color? color})? onSnackBar;
+  const _BottomPanel({this.session, this.onSnackBar});
 
   @override
   State<_BottomPanel> createState() => _BottomPanelState();
@@ -887,13 +892,10 @@ class _BottomPanelState extends State<_BottomPanel> {
 
   Future<void> _markDone(String bookingId) async {
     final loc = AppLocalizations.of(context)!;
-    // Capture messenger from the root scaffold BEFORE any navigation so the
-    // snackbar appears in the main scaffold, not behind the bottom sheet.
-    final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
-      useRootNavigator: true, // ensure dialog renders above the bottom sheet
+      useRootNavigator: true,
       builder: (ctx) => AlertDialog(
         title: Text(loc.customerMarkDoneConfirmTitle),
         content: Text(loc.customerMarkDoneConfirmMessage),
@@ -915,15 +917,15 @@ class _BottomPanelState extends State<_BottomPanel> {
         sessionToken: widget.session!.sessionToken,
       );
       if (!mounted) return;
-      // Close the bottom sheet first so the snackbar is fully visible.
+      // Pop the sheet first so the snackbar shows in the main scaffold.
       navigator.pop();
-      messenger.showSnackBar(SnackBar(
-        content: Text(loc.ownerCompleteSuccess),
-        backgroundColor: AppColors.success,
-      ));
+      widget.onSnackBar?.call(
+        loc.ownerCompleteSuccess,
+        color: AppColors.success,
+      );
     } catch (e) {
       if (!mounted) return;
-      messenger.showSnackBar(SnackBar(content: Text('${loc.ownerCompleteFailed}$e')));
+      widget.onSnackBar?.call('${loc.ownerCompleteFailed}$e');
     }
   }
 
