@@ -40,6 +40,7 @@ class BookingCard extends StatelessWidget {
   final VoidCallback? onRate;
   final VoidCallback? onAcceptPostpone;
   final VoidCallback? onRejectPostpone;
+  final VoidCallback? onMarkDone;
 
   const BookingCard({
     super.key,
@@ -51,6 +52,7 @@ class BookingCard extends StatelessWidget {
     this.onRate,
     this.onAcceptPostpone,
     this.onRejectPostpone,
+    this.onMarkDone,
   });
 
   @override
@@ -129,8 +131,21 @@ class BookingCard extends StatelessWidget {
               ),
             ],
 
-            if (onAcceptPostpone != null || onRejectPostpone != null || canCancel || onRate != null) ...[
+            if (onMarkDone != null || onAcceptPostpone != null || onRejectPostpone != null || canCancel || onRate != null) ...[
               const SizedBox(height: AppSpacing.sm),
+              if (onMarkDone != null) ...[
+                ElevatedButton.icon(
+                  onPressed: onMarkDone,
+                  icon: const Icon(Icons.check_circle_outline, size: 18),
+                  label: Text(loc.customerDoneBtn),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.success,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(double.infinity, 44),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+              ],
               if (onAcceptPostpone != null) ...[
                 ElevatedButton.icon(
                   onPressed: onAcceptPostpone,

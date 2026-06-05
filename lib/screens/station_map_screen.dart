@@ -885,6 +885,44 @@ class _BottomPanelState extends State<_BottomPanel> {
     });
   }
 
+  Future<void> _markDone(String bookingId) async {
+    final loc = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(loc.customerMarkDoneConfirmTitle),
+        content: Text(loc.customerMarkDoneConfirmMessage),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(loc.noBtn)),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.success),
+            child: Text(loc.yesAcceptBtn, style: const TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await SupabaseService.instance.customerManageBooking(
+        bookingId: bookingId,
+        action: 'complete',
+        customerPhone: widget.session!.customerPhone,
+        sessionToken: widget.session!.sessionToken,
+      );
+      if (!mounted) return;
+      _reload();
+      messenger.showSnackBar(SnackBar(
+        content: Text(loc.ownerCompleteSuccess),
+        backgroundColor: AppColors.success,
+      ));
+    } catch (e) {
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text('${loc.ownerCompleteFailed}$e')));
+    }
+  }
+
   Future<void> _cancel(String bookingId) async {
     final loc = AppLocalizations.of(context)!;
     final messenger = ScaffoldMessenger.of(context);
@@ -1171,6 +1209,9 @@ class _BottomPanelState extends State<_BottomPanel> {
                               statusColor: b.statusColor,
                               canCancel: canCancelBooking(b.status),
                               onCancel: () => _cancel(b.id),
+                              onMarkDone: b.status == 'confirmed'
+                                  ? () => _markDone(b.id)
+                                  : null,
                               onRate: b.status == 'completed' && b.customerRating == null
                                   ? () => _showRateDialog(b.id)
                                   : null,

@@ -501,46 +501,6 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
 
   void _refresh() => widget.onRefresh();
 
-  Future<void> _complete(String bookingId) async {
-    try {
-      // Prefer the edge function — it uses service_role and bypasses RLS.
-      // Fall back to direct REST if the edge function doesn't support 'complete'.
-      try {
-        await SupabaseService.instance.ownerManageBooking(
-          bookingId: bookingId,
-          action: 'complete',
-          sessionToken: widget.session.sessionToken,
-        );
-      } on Exception {
-        await SupabaseService.instance.ownerUpdateBookingStatus(
-          bookingId: bookingId,
-          stationId: widget.session.stationId,
-          newStatus: 'completed',
-        );
-      }
-      _refresh();
-      if (mounted) {
-        final loc = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(loc.ownerCompleteSuccess),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        final loc = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${loc.ownerCompleteFailed}$e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
   Future<void> _cancelConfirmed(String bookingId) async {
     final loc = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
@@ -891,17 +851,6 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
 
                 // Actions for confirmed
                 if (tabType == _TabType.confirmed) ...[
-                  const SizedBox(height: AppSpacing.sm),
-                  ElevatedButton.icon(
-                    onPressed: () => _complete(b.id),
-                    icon: const Icon(Icons.check_circle_outline, size: 18),
-                    label: Text(loc.ownerDoneBtn),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size(double.infinity, 44),
-                    ),
-                  ),
                   const SizedBox(height: AppSpacing.sm),
                   Row(
                     children: [
