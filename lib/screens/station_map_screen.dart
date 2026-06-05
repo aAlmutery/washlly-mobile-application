@@ -887,9 +887,13 @@ class _BottomPanelState extends State<_BottomPanel> {
 
   Future<void> _markDone(String bookingId) async {
     final loc = AppLocalizations.of(context)!;
+    // Capture messenger from the root scaffold BEFORE any navigation so the
+    // snackbar appears in the main scaffold, not behind the bottom sheet.
     final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
+      useRootNavigator: true, // ensure dialog renders above the bottom sheet
       builder: (ctx) => AlertDialog(
         title: Text(loc.customerMarkDoneConfirmTitle),
         content: Text(loc.customerMarkDoneConfirmMessage),
@@ -911,7 +915,8 @@ class _BottomPanelState extends State<_BottomPanel> {
         sessionToken: widget.session!.sessionToken,
       );
       if (!mounted) return;
-      _reload();
+      // Close the bottom sheet first so the snackbar is fully visible.
+      navigator.pop();
       messenger.showSnackBar(SnackBar(
         content: Text(loc.ownerCompleteSuccess),
         backgroundColor: AppColors.success,

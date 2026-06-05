@@ -248,6 +248,7 @@ class _CustomerBookingHistoryScreenState
     final loc = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
+      useRootNavigator: true,
       builder: (ctx) => AlertDialog(
         title: Text(loc.customerMarkDoneConfirmTitle),
         content: Text(loc.customerMarkDoneConfirmMessage),
