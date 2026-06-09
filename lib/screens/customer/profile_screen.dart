@@ -65,26 +65,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _openWhatsAppSupport() async {
     final loc = AppLocalizations.of(context)!;
-    final confirmed = await showDialog<bool>(
+    final action = await showDialog<_SupportAction>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(loc.profileHelpSupport),
-        content: Text(loc.supportLeaveAppMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(loc.noBtn),
-          ),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(ctx, true),
-            icon: const Icon(Icons.open_in_new, size: 16),
-            label: Text(loc.supportOpenWhatsApp),
-          ),
-        ],
-      ),
+      builder: (ctx) => _WhatsAppSupportDialog(loc: loc),
     );
-    if (confirmed != true) return;
-    final uri = Uri.parse('https://wa.me/9647506033421');
+    if (action == null) return;
+    final uri = action == _SupportAction.whatsapp
+        ? Uri.parse('https://wa.me/9647506033421')
+        : Uri.parse('tel:+9647506033421');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
@@ -406,6 +394,159 @@ class _ProfileOptionCard extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ---------- WhatsApp Support Dialog ----------
+
+enum _SupportAction { whatsapp, call }
+
+class _WhatsAppSupportDialog extends StatelessWidget {
+  final AppLocalizations loc;
+  const _WhatsAppSupportDialog({required this.loc});
+
+  static const _whatsappGreen = Color(0xFF25D366);
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // ── Gradient header ──
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 28),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF1DA851), _whatsappGreen],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Column(
+              children: [
+                Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withAlpha(40),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.headset_mic_rounded,
+                      color: Colors.white, size: 36),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  loc.profileHelpSupport,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  loc.supportLeaveAppMessage,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white.withAlpha(200),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // ── Phone number pill ──
+          Padding(
+            padding: const EdgeInsets.only(top: 20),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: _whatsappGreen.withAlpha(20),
+                borderRadius: BorderRadius.circular(50),
+                border: Border.all(color: _whatsappGreen.withAlpha(60)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.phone_rounded,
+                      color: _whatsappGreen, size: 15),
+                  const SizedBox(width: 6),
+                  const Text(
+                    '+964 750 603 3421',
+                    style: TextStyle(
+                      color: _whatsappGreen,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // ── Action buttons ──
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+            child: Row(
+              children: [
+                // WhatsApp button
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () =>
+                        Navigator.pop(context, _SupportAction.whatsapp),
+                    icon: const Icon(Icons.chat_rounded, size: 18),
+                    label: Text(loc.supportOpenWhatsApp),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _whatsappGreen,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 13),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      elevation: 0,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                // Call button
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () =>
+                        Navigator.pop(context, _SupportAction.call),
+                    icon: const Icon(Icons.call_rounded, size: 18),
+                    label: Text(loc.supportCallNow),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 13),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      elevation: 0,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // ── Cancel ──
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+            child: SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                onPressed: () => Navigator.pop(context),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.textSecondary,
+                ),
+                child: Text(loc.cancelButton),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
