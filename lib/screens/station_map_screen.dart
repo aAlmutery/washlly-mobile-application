@@ -860,7 +860,7 @@ class _MapBodyState extends State<_MapBody> {
               urlTemplate:
                   'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
               subdomains: const ['a', 'b', 'c'],
-              userAgentPackageName: 'com.example.washlly_mobile_app',
+              userAgentPackageName: 'com.washlly.washlly_mobile_app',
             ),
             MarkerLayer(markers: allMarkers),
           ],
