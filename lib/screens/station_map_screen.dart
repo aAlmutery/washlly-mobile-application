@@ -908,45 +908,6 @@ class _BottomPanelState extends State<_BottomPanel> {
     });
   }
 
-  Future<void> _markDone(String bookingId) async {
-    final loc = AppLocalizations.of(context)!;
-    final navigator = Navigator.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      useRootNavigator: true,
-      builder: (ctx) => AlertDialog(
-        title: Text(loc.customerMarkDoneConfirmTitle),
-        content: Text(loc.customerMarkDoneConfirmMessage),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(loc.noBtn)),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.success),
-            child: Text(loc.yesAcceptBtn, style: const TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-    try {
-      await SupabaseService.instance.customerCompleteBooking(
-        bookingId: bookingId,
-        customerPhone: widget.session!.customerPhone,
-        sessionToken: widget.session!.sessionToken,
-      );
-      if (!mounted) return;
-      // Pop the sheet first so the snackbar shows in the main scaffold.
-      navigator.pop();
-      widget.onSnackBar?.call(
-        loc.ownerCompleteSuccess,
-        color: AppColors.success,
-      );
-    } catch (e) {
-      if (!mounted) return;
-      widget.onSnackBar?.call('${loc.ownerCompleteFailed}$e');
-    }
-  }
-
   Future<void> _cancel(String bookingId) async {
     final loc = AppLocalizations.of(context)!;
     final messenger = ScaffoldMessenger.of(context);
@@ -1037,9 +998,11 @@ class _BottomPanelState extends State<_BottomPanel> {
     );
     if (confirmed != true) return;
     try {
+      // Rejecting the owner's proposed time = cancelling the booking.
+      // 'reject_postpone' is not a documented action; use 'cancel' instead.
       await SupabaseService.instance.customerManageBooking(
         bookingId: bookingId,
-        action: 'reject_postpone',
+        action: 'cancel',
         customerPhone: widget.session!.customerPhone,
         sessionToken: widget.session!.sessionToken,
       );
@@ -1234,7 +1197,7 @@ class _BottomPanelState extends State<_BottomPanel> {
                               canCancel: canCancelBooking(b.status),
                               onCancel: () => _cancel(b.id),
                               onMarkDone: b.status == 'confirmed'
-                                  ? () => _markDone(b.id)
+                                  ? () => _showRateDialog(b.id)
                                   : null,
                               onRate: b.status == 'completed' && b.customerRating == null
                                   ? () => _showRateDialog(b.id)

@@ -106,9 +106,11 @@ class _CustomerBookingHistoryScreenState
     );
     if (confirmed != true) return;
     try {
+      // Rejecting the owner's proposed time = cancelling the booking.
+      // 'reject_postpone' is not a documented action; use 'cancel' instead.
       await SupabaseService.instance.customerManageBooking(
         bookingId: bookingId,
-        action: 'reject_postpone',
+        action: 'cancel',
         customerPhone: widget.session.customerPhone,
         sessionToken: widget.session.sessionToken,
       );
@@ -244,52 +246,6 @@ class _CustomerBookingHistoryScreenState
     );
   }
 
-  Future<void> _markDone(String bookingId) async {
-    final loc = AppLocalizations.of(context)!;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      useRootNavigator: true,
-      builder: (ctx) => AlertDialog(
-        title: Text(loc.customerMarkDoneConfirmTitle),
-        content: Text(loc.customerMarkDoneConfirmMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(loc.noBtn),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.success),
-            child: Text(loc.yesAcceptBtn, style: const TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-    try {
-      await SupabaseService.instance.customerCompleteBooking(
-        bookingId: bookingId,
-        customerPhone: widget.session.customerPhone,
-        sessionToken: widget.session.sessionToken,
-      );
-      _refresh();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!.ownerCompleteSuccess),
-            backgroundColor: AppColors.success,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${AppLocalizations.of(context)!.ownerCompleteFailed}$e')),
-        );
-      }
-    }
-  }
-
   bool _canCancel(String status) => canCancelBooking(status);
 
   @override
@@ -394,8 +350,11 @@ class _CustomerBookingHistoryScreenState
                       statusColor: b.statusColor,
                       canCancel: _canCancel(b.status),
                       onCancel: () => _cancel(b.id),
+                      // Completing a confirmed booking goes through
+                      // customer-submit-rating (the only documented customer
+                      // completion path). Rating is required to mark done.
                       onMarkDone: b.status == 'confirmed'
-                          ? () => _markDone(b.id)
+                          ? () => _showRateDialog(b.id)
                           : null,
                       onRate: b.status == 'completed' && b.customerRating == null
                           ? () => _showRateDialog(b.id)
