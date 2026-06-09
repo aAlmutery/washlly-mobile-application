@@ -464,28 +464,31 @@ class _WhatsAppSupportDialog extends StatelessWidget {
           // ── Phone number pill ──
           Padding(
             padding: const EdgeInsets.only(top: 20),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: _whatsappGreen.withAlpha(20),
-                borderRadius: BorderRadius.circular(50),
-                border: Border.all(color: _whatsappGreen.withAlpha(60)),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.phone_rounded,
-                      color: _whatsappGreen, size: 15),
-                  const SizedBox(width: 6),
-                  const Text(
-                    '+964 750 603 3421',
-                    style: TextStyle(
-                      color: _whatsappGreen,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
+            child: Directionality(
+              textDirection: TextDirection.ltr,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: _whatsappGreen.withAlpha(20),
+                  borderRadius: BorderRadius.circular(50),
+                  border: Border.all(color: _whatsappGreen.withAlpha(60)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.phone_rounded,
+                        color: _whatsappGreen, size: 15),
+                    const SizedBox(width: 6),
+                    const Text(
+                      '+964 750 603 3421',
+                      style: TextStyle(
+                        color: _whatsappGreen,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
