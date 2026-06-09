@@ -11,6 +11,7 @@ import 'screens/owner/owner_shell.dart';
 import 'screens/welcome_screen.dart';
 import 'state/customer_session_notifier.dart';
 import 'state/locale_notifier.dart';
+import 'state/theme_mode_notifier.dart';
 import 'theme/app_theme.dart';
 
 Future<void> main() async {
@@ -22,29 +23,33 @@ Future<void> main() async {
   runApp(WashllyApp(
     sessionNotifier: CustomerSessionNotifier(),
     localeNotifier: LocaleNotifier(),
+    themeModeNotifier: ThemeModeNotifier(),
   ));
 }
 
 class WashllyApp extends StatelessWidget {
   final CustomerSessionNotifier sessionNotifier;
   final LocaleNotifier localeNotifier;
+  final ThemeModeNotifier themeModeNotifier;
 
   const WashllyApp({
     super.key,
     required this.sessionNotifier,
     required this.localeNotifier,
+    required this.themeModeNotifier,
   });
 
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: Listenable.merge([sessionNotifier, localeNotifier]),
+      listenable: Listenable.merge([sessionNotifier, localeNotifier, themeModeNotifier]),
       builder: (context, _) {
         return MaterialApp(
           title: AppLocalizations.of(context)?.appTitle ?? 'Washlly',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.light(),
           darkTheme: AppTheme.dark(),
+          themeMode: themeModeNotifier.themeMode,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           locale: localeNotifier.locale,
@@ -67,6 +72,7 @@ class WashllyApp extends StatelessWidget {
             ProfileScreen.routeName: (_) => ProfileScreen(
               sessionNotifier: sessionNotifier,
               localeNotifier: localeNotifier,
+              themeModeNotifier: themeModeNotifier,
             ),
             OwnerShell.routeName: (_) => const OwnerShell(),
           },

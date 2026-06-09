@@ -4,12 +4,14 @@ import '../../models/customer_session.dart';
 import '../../services/supabase_service.dart';
 import '../../state/customer_session_notifier.dart';
 import '../../state/locale_notifier.dart';
+import '../../state/theme_mode_notifier.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/bottom_nav_scaffold.dart';
 import 'customer_booking_history_screen.dart';
 import 'inbox_screen.dart';
+import 'settings_screen.dart';
 import '../owner/owner_login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -17,11 +19,13 @@ class ProfileScreen extends StatefulWidget {
 
   final CustomerSessionNotifier sessionNotifier;
   final LocaleNotifier localeNotifier;
+  final ThemeModeNotifier themeModeNotifier;
 
   const ProfileScreen({
     super.key,
     required this.sessionNotifier,
     required this.localeNotifier,
+    required this.themeModeNotifier,
   });
 
   @override
@@ -58,45 +62,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  void _showLanguageDialog() {
-    final loc = AppLocalizations.of(context)!;
-    final languages = [
-      ('ar', loc.languageArabic),
-      ('en', loc.languageEnglish),
-      ('ku', loc.languageKurdish),
-    ];
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => SimpleDialog(
-          title: Text(loc.profileLanguage),
-          children: languages.map(((String, String) entry) {
-            final (code, label) = entry;
-            final selected = widget.localeNotifier.locale.languageCode == code;
-            return SimpleDialogOption(
-              onPressed: () {
-                widget.localeNotifier.setLocale(code);
-                Navigator.pop(ctx);
-              },
-              child: Row(
-                children: [
-                  Icon(
-                    selected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                    color: selected ? AppColors.primary : AppColors.textSecondary,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-                      color: selected ? AppColors.primary : null,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
+  void _openSettings() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SettingsScreen(
+          localeNotifier: widget.localeNotifier,
+          themeModeNotifier: widget.themeModeNotifier,
         ),
       ),
     );
@@ -270,14 +241,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: AppSpacing.sm),
                   ],
-                  // Language Option
+                  // Settings Option
                   _ProfileOptionCard(
-                    iconData: Icons.language,
+                    iconData: Icons.settings,
                     iconColor: AppColors.primary,
                     iconBackground: AppColors.primarySurface,
-                    title: loc.profileLanguage,
-                    subtitle: loc.profileLanguageDesc,
-                    onTap: _showLanguageDialog,
+                    title: loc.profileSettings,
+                    subtitle: loc.profileSettingsDesc,
+                    onTap: _openSettings,
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   // Help Option
