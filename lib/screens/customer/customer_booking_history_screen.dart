@@ -365,9 +365,7 @@ class _CustomerBookingHistoryScreenState
                       onMarkDone: b.status == 'confirmed'
                           ? () => _showRateDialog(b.id)
                           : null,
-                      onRate: b.status == 'completed' && b.customerRating == null
-                          ? () => _showRateDialog(b.id)
-                          : null,
+                      onRate: null,
                       onAcceptPostpone: b.status == 'pending_customer_approval'
                           ? () => _acceptPostpone(b.id)
                           : null,
