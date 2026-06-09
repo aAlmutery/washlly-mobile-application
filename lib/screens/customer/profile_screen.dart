@@ -103,6 +103,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return BottomNavScaffold(
       currentIndex: 3,
       title: loc.bottomProfile,
+      appBarActions: notifier.session != null
+          ? [
+              IconButton(
+                icon: const Icon(Icons.notifications_outlined),
+                tooltip: loc.notificationsLabel,
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const InboxScreen()),
+                ),
+              ),
+            ]
+          : null,
       body: !notifier.loaded
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -207,19 +218,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           MaterialPageRoute(
                             builder: (_) => CustomerBookingHistoryScreen(session: notifier.session!),
                           ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    _ProfileOptionCard(
-                      iconData: Icons.notifications_rounded,
-                      iconColor: AppColors.primary,
-                      iconBackground: AppColors.primarySurface,
-                      title: loc.notificationsLabel,
-                      subtitle: loc.noNotifications,
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const InboxScreen()),
                         );
                       },
                     ),
