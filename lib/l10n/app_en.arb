@@ -120,6 +120,8 @@
   "profileClose": "Close",
   "profileLogout": "Logout",
   "profileLogoutSuccess": "Logged out successfully",
+  "profileLogoutConfirmTitle": "Logout",
+  "profileLogoutConfirmMessage": "Are you sure you want to logout?",
   "customerLoginTitle": "Customer Login",
   "customerPhoneHint": "07XXXXXXXXX",
   "customerNameHint": "Your name",

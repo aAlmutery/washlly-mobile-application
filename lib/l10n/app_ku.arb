@@ -120,6 +120,8 @@
   "profileClose": "داخستن",
   "profileLogout": "دەرچوون",
   "profileLogoutSuccess": "بە سەرکەوتوویی دەرچوویت",
+  "profileLogoutConfirmTitle": "دەرچوون",
+  "profileLogoutConfirmMessage": "دڵنیایت دەتەوێت دەربچیت؟",
   "customerLoginTitle": "چوونەژوورەوەی کڕیار",
   "customerPhoneHint": "07XXXXXXXXX",
   "customerNameHint": "ناوت",

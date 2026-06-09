@@ -120,6 +120,8 @@
   "profileClose": "إغلاق",
   "profileLogout": "تسجيل الخروج",
   "profileLogoutSuccess": "تم تسجيل الخروج بنجاح",
+  "profileLogoutConfirmTitle": "تسجيل الخروج",
+  "profileLogoutConfirmMessage": "هل أنت متأكد أنك تريد تسجيل الخروج؟",
   "customerLoginTitle": "تسجيل الدخول",
   "customerPhoneHint": "07XXXXXXXXX",
   "customerNameHint": "اسمك",
