@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../utils/location_utils.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -88,7 +89,7 @@ class _BookingScreenState extends State<BookingScreen> {
         return;
       }
       final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(accuracy: LocationAccuracy.medium),
+        locationSettings: LocationSettings(accuracy: await resolveLocationAccuracy()),
       );
       if (mounted) setState(() => _position = position);
     } catch (_) {

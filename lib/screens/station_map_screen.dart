@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../utils/location_utils.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
@@ -96,9 +97,9 @@ class _StationMapScreenState extends State<StationMapScreen> {
           permission == LocationPermission.deniedForever) {
         return;
       }
+      final accuracy = await resolveLocationAccuracy();
       final position = await Geolocator.getCurrentPosition(
-        locationSettings:
-            const LocationSettings(accuracy: LocationAccuracy.medium),
+        locationSettings: LocationSettings(accuracy: accuracy),
       );
       if (mounted) {
         setState(() =>
@@ -175,9 +176,9 @@ class _StationMapScreenState extends State<StationMapScreen> {
         _showSnackBar(loc.quickLocationDenied);
         return;
       }
+      final accuracy = await resolveLocationAccuracy();
       final position = await Geolocator.getCurrentPosition(
-        locationSettings:
-            const LocationSettings(accuracy: LocationAccuracy.medium),
+        locationSettings: LocationSettings(accuracy: accuracy),
       );
       final point = LatLng(position.latitude, position.longitude);
       setState(() => _userLocation = point);
