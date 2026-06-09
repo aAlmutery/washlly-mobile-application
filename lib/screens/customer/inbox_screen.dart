@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../models/customer_notification.dart';
 import '../../services/session_service.dart';
 import '../../services/supabase_service.dart';
@@ -73,6 +74,24 @@ class _InboxScreenState extends State<InboxScreen> {
     } finally {
       if (mounted) setState(() => _markingAll = false);
     }
+  }
+
+  String _formatTime(DateTime utc) {
+    final local = utc.toLocal();
+    final now = DateTime.now();
+    final time = DateFormat('hh:mm a').format(local);
+    if (local.year == now.year &&
+        local.month == now.month &&
+        local.day == now.day) {
+      return time;
+    }
+    final yesterday = now.subtract(const Duration(days: 1));
+    if (local.year == yesterday.year &&
+        local.month == yesterday.month &&
+        local.day == yesterday.day) {
+      return 'Yesterday  $time';
+    }
+    return '${DateFormat('MMM d').format(local)}  $time';
   }
 
   void _markNotificationRead(String notificationId) {
@@ -175,8 +194,21 @@ class _InboxScreenState extends State<InboxScreen> {
                             style: AppTextStyles.bodyMedium
                                 .copyWith(fontWeight: FontWeight.bold),
                           ),
-                          subtitle: Text(notif.body,
-                              style: AppTextStyles.bodySmall),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(notif.body,
+                                  style: AppTextStyles.bodySmall),
+                              const SizedBox(height: 4),
+                              Text(
+                                _formatTime(notif.createdAt),
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  color: AppColors.textDisabled,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
+                          ),
                           trailing: !notif.isRead
                               ? const Icon(Icons.circle,
                                   color: AppColors.success, size: 12)
