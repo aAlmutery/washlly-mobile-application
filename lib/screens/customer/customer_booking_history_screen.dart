@@ -189,19 +189,28 @@ class _CustomerBookingHistoryScreenState
             children: [
               Text(loc.rateServicePrompt),
               const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(5, (i) {
-                  final star = i + 1;
-                  return IconButton(
-                    icon: Icon(
-                      star <= selectedRating ? Icons.star : Icons.star_border,
-                      color: Colors.amber,
-                      size: 36,
-                    ),
-                    onPressed: () => setDialogState(() => selectedRating = star),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final starSize = (constraints.maxWidth / 5).clamp(24.0, 40.0);
+                  return Row(
+                    children: List.generate(5, (i) {
+                      final star = i + 1;
+                      return Expanded(
+                        child: GestureDetector(
+                          onTap: () => setDialogState(() => selectedRating = star),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Icon(
+                              star <= selectedRating ? Icons.star : Icons.star_border,
+                              color: Colors.amber,
+                              size: starSize,
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
                   );
-                }),
+                },
               ),
             ],
           ),
