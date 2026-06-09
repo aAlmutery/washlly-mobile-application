@@ -185,20 +185,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: AppSpacing.sm),
                   ],
-                  // Owner Login Option
-                  _ProfileOptionCard(
-                    iconData: Icons.business,
-                    iconColor: AppColors.primary,
-                    iconBackground: AppColors.primarySurface,
-                    title: loc.actionOwnerLoginTitle,
-                    subtitle: loc.profileOwnerLoginDesc,
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const OwnerLoginScreen()),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
+                  // Owner Login Option — hidden when a customer session is active.
+                  if (notifier.session == null) ...[
+                    _ProfileOptionCard(
+                      iconData: Icons.business,
+                      iconColor: AppColors.primary,
+                      iconBackground: AppColors.primarySurface,
+                      title: loc.actionOwnerLoginTitle,
+                      subtitle: loc.profileOwnerLoginDesc,
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const OwnerLoginScreen()),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                  ],
                   // Settings Option
                   _ProfileOptionCard(
                     iconData: Icons.settings,
