@@ -106,6 +106,15 @@ class _HomeScreenState extends State<HomeScreen> {
     return BottomNavScaffold(
       currentIndex: 0,
       title: loc.appTitle,
+      appBarActions: [
+        IconButton(
+          icon: const Icon(Icons.notifications_outlined),
+          tooltip: loc.notificationsLabel,
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const InboxScreen()),
+          ),
+        ),
+      ],
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
@@ -159,14 +168,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
 // ─── Welcome Header ────────────────────────────────────────────────────────
 
-class _WelcomeHeader extends StatefulWidget {
+class _WelcomeHeader extends StatelessWidget {
   const _WelcomeHeader();
 
-  @override
-  State<_WelcomeHeader> createState() => _WelcomeHeaderState();
-}
-
-class _WelcomeHeaderState extends State<_WelcomeHeader> {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
@@ -223,27 +227,6 @@ class _WelcomeHeaderState extends State<_WelcomeHeader> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
-                ),
-              ),
-              // Notification bell
-              GestureDetector(
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const InboxScreen(),
-                  ),
-                ),
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withAlpha(30),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.notifications_outlined,
-                    color: Colors.white,
-                    size: 24,
-                  ),
                 ),
               ),
             ],
