@@ -10,6 +10,7 @@ import 'screens/station_map_screen.dart';
 import 'screens/owner/owner_shell.dart';
 import 'screens/welcome_screen.dart';
 import 'state/customer_session_notifier.dart';
+import 'state/locale_notifier.dart';
 import 'theme/app_theme.dart';
 
 Future<void> main() async {
@@ -18,18 +19,26 @@ Future<void> main() async {
     url: supabaseUrl,
     anonKey: supabaseAnonKey,
   );
-  runApp(WashllyApp(sessionNotifier: CustomerSessionNotifier()));
+  runApp(WashllyApp(
+    sessionNotifier: CustomerSessionNotifier(),
+    localeNotifier: LocaleNotifier(),
+  ));
 }
 
 class WashllyApp extends StatelessWidget {
   final CustomerSessionNotifier sessionNotifier;
+  final LocaleNotifier localeNotifier;
 
-  const WashllyApp({super.key, required this.sessionNotifier});
+  const WashllyApp({
+    super.key,
+    required this.sessionNotifier,
+    required this.localeNotifier,
+  });
 
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: sessionNotifier,
+      listenable: Listenable.merge([sessionNotifier, localeNotifier]),
       builder: (context, _) {
         return MaterialApp(
           title: AppLocalizations.of(context)?.appTitle ?? 'Washlly',
@@ -38,10 +47,9 @@ class WashllyApp extends StatelessWidget {
           darkTheme: AppTheme.dark(),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('ar'),
+          locale: localeNotifier.locale,
           // Kurdish ('ku') uses Arabic script and is RTL, but Flutter's built-in
           // locale system doesn't recognise it as RTL. This builder covers that gap.
-          // Arabic is already handled automatically; English stays LTR.
           builder: (context, child) {
             final lang = Localizations.localeOf(context).languageCode;
             final isRtl = lang == 'ar' || lang == 'ku';
@@ -56,7 +64,10 @@ class WashllyApp extends StatelessWidget {
             StationListScreen.routeName: (_) => const StationListScreen(),
             StationMapScreen.routeName: (_) => const StationMapScreen(),
             BookingScreen.routeName: (_) => const BookingScreen(),
-            ProfileScreen.routeName: (_) => ProfileScreen(sessionNotifier: sessionNotifier),
+            ProfileScreen.routeName: (_) => ProfileScreen(
+              sessionNotifier: sessionNotifier,
+              localeNotifier: localeNotifier,
+            ),
             OwnerShell.routeName: (_) => const OwnerShell(),
           },
         );

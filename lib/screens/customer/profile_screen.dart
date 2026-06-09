@@ -3,6 +3,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../models/customer_session.dart';
 import '../../services/supabase_service.dart';
 import '../../state/customer_session_notifier.dart';
+import '../../state/locale_notifier.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
@@ -15,8 +16,13 @@ class ProfileScreen extends StatefulWidget {
   static const routeName = '/profile';
 
   final CustomerSessionNotifier sessionNotifier;
+  final LocaleNotifier localeNotifier;
 
-  const ProfileScreen({super.key, required this.sessionNotifier});
+  const ProfileScreen({
+    super.key,
+    required this.sessionNotifier,
+    required this.localeNotifier,
+  });
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -50,6 +56,50 @@ class _ProfileScreenState extends State<ProfileScreen> {
         SnackBar(content: Text(AppLocalizations.of(context)!.profileLogoutSuccess)),
       );
     }
+  }
+
+  void _showLanguageDialog() {
+    final loc = AppLocalizations.of(context)!;
+    final languages = [
+      ('ar', loc.languageArabic),
+      ('en', loc.languageEnglish),
+      ('ku', loc.languageKurdish),
+    ];
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => SimpleDialog(
+          title: Text(loc.profileLanguage),
+          children: languages.map(((String, String) entry) {
+            final (code, label) = entry;
+            final selected = widget.localeNotifier.locale.languageCode == code;
+            return SimpleDialogOption(
+              onPressed: () {
+                widget.localeNotifier.setLocale(code);
+                Navigator.pop(ctx);
+              },
+              child: Row(
+                children: [
+                  Icon(
+                    selected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                    color: selected ? AppColors.primary : AppColors.textSecondary,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                      color: selected ? AppColors.primary : null,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
   }
 
   void _openLoginSheet() {
@@ -220,18 +270,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: AppSpacing.sm),
                   ],
-                  // Settings Option
+                  // Language Option
                   _ProfileOptionCard(
-                    iconData: Icons.settings,
+                    iconData: Icons.language,
                     iconColor: AppColors.primary,
                     iconBackground: AppColors.primarySurface,
-                    title: loc.profileAccountSettings,
-                    subtitle: loc.profileAccountSettingsDesc,
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(loc.profileSettingsComingSoon)),
-                      );
-                    },
+                    title: loc.profileLanguage,
+                    subtitle: loc.profileLanguageDesc,
+                    onTap: _showLanguageDialog,
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   // Help Option
