@@ -1352,9 +1352,6 @@ class _MapActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final lang = Localizations.localeOf(context).languageCode;
-    final isRtl = lang == 'ar' || lang == 'ku';
-
     final labelWidget = AnimatedOpacity(
       opacity: showLabel ? 1.0 : 0.0,
       duration: const Duration(milliseconds: 400),
@@ -1384,9 +1381,7 @@ class _MapActionButton extends StatelessWidget {
 
     return Row(
       mainAxisSize: MainAxisSize.min,
-      children: isRtl
-          ? [labelWidget, const SizedBox(width: 8), fabWidget]
-          : [fabWidget, const SizedBox(width: 8), labelWidget],
+      children: [labelWidget, const SizedBox(width: 8), fabWidget],
     );
   }
 }
