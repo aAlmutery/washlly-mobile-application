@@ -96,7 +96,10 @@ class _StationMapScreenState extends State<StationMapScreen> {
           permission == LocationPermission.deniedForever) {
         return;
       }
-      final position = await Geolocator.getCurrentPosition();
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings:
+            const LocationSettings(accuracy: LocationAccuracy.medium),
+      );
       if (mounted) {
         setState(() =>
             _userLocation = LatLng(position.latitude, position.longitude));
@@ -172,7 +175,10 @@ class _StationMapScreenState extends State<StationMapScreen> {
         _showSnackBar(loc.quickLocationDenied);
         return;
       }
-      final position = await Geolocator.getCurrentPosition();
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings:
+            const LocationSettings(accuracy: LocationAccuracy.medium),
+      );
       final point = LatLng(position.latitude, position.longitude);
       setState(() => _userLocation = point);
       _mapController.move(point, 14);

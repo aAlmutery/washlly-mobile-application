@@ -88,7 +88,7 @@ class _BookingScreenState extends State<BookingScreen> {
         return;
       }
       final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.medium),
       );
       if (mounted) setState(() => _position = position);
     } catch (_) {
