@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../models/customer_session.dart';
 import '../../services/supabase_service.dart';
 import '../../state/customer_session_notifier.dart';
@@ -59,6 +60,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context)!.profileLogoutSuccess)),
       );
+    }
+  }
+
+  Future<void> _openWhatsAppSupport() async {
+    final loc = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(loc.profileHelpSupport),
+        content: Text(loc.supportLeaveAppMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(loc.noBtn),
+          ),
+          ElevatedButton.icon(
+            onPressed: () => Navigator.pop(ctx, true),
+            icon: const Icon(Icons.open_in_new, size: 16),
+            label: Text(loc.supportOpenWhatsApp),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    final uri = Uri.parse('https://wa.me/9647506033421');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
 
@@ -256,11 +284,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     iconBackground: AppColors.primarySurface,
                     title: loc.profileHelpSupport,
                     subtitle: loc.profileHelpSupportDesc,
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(loc.profileSupportComingSoon)),
-                      );
-                    },
+                    onTap: _openWhatsAppSupport,
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   // About Option
