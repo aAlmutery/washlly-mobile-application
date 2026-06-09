@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../models/customer_notification.dart';
+import '../models/customer_session.dart';
+import '../services/session_service.dart';
+import '../services/supabase_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
@@ -166,11 +170,90 @@ class _WelcomeHeader extends StatefulWidget {
 }
 
 class _WelcomeHeaderState extends State<_WelcomeHeader> {
-  bool _hasNotif = true;
+  CustomerSession? _session;
+  List<CustomerNotification> _notifications = [];
+
+  int get _unreadCount => _notifications.where((n) => !n.isRead).length;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotifications();
+  }
+
+  Future<void> _loadNotifications() async {
+    final session = await SessionService.instance.loadCustomerSession();
+    if (!mounted || session == null) return;
+    setState(() => _session = session);
+    try {
+      final data = await SupabaseService.instance.customerGetInbox(
+        customerPhone: session.customerPhone,
+        sessionToken: session.sessionToken,
+      );
+      if (!mounted) return;
+      setState(() {
+        _notifications = (data['notifications'] as List? ?? [])
+            .map((n) => CustomerNotification.fromJson(n as Map<String, dynamic>))
+            .toList();
+      });
+    } catch (_) {}
+  }
+
+  void _markRead(String id) {
+    setState(() {
+      _notifications = _notifications.map((n) => n.id == id
+          ? CustomerNotification(
+              id: n.id, title: n.title, body: n.body,
+              referenceBookingId: n.referenceBookingId,
+              isRead: true, createdAt: n.createdAt)
+          : n).toList();
+    });
+    if (_session != null) {
+      SupabaseService.instance.customerMarkNotificationRead(
+        customerPhone: _session!.customerPhone,
+        sessionToken: _session!.sessionToken,
+        notificationId: id,
+      );
+    }
+  }
+
+  void _markAllRead() {
+    setState(() {
+      _notifications = _notifications.map((n) => CustomerNotification(
+            id: n.id, title: n.title, body: n.body,
+            referenceBookingId: n.referenceBookingId,
+            isRead: true, createdAt: n.createdAt)).toList();
+    });
+    if (_session != null) {
+      SupabaseService.instance.customerMarkNotificationRead(
+        customerPhone: _session!.customerPhone,
+        sessionToken: _session!.sessionToken,
+        markAll: true,
+      );
+    }
+  }
+
+  void _showNotificationsPopup() {
+    final loc = AppLocalizations.of(context)!;
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => _NotificationsSheet(
+        loc: loc,
+        notifications: _notifications,
+        onMarkRead: _markRead,
+        onMarkAllRead: _markAllRead,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
+    final hasUnread = _unreadCount > 0;
 
     return Container(
       width: double.infinity,
@@ -229,7 +312,7 @@ class _WelcomeHeaderState extends State<_WelcomeHeader> {
               ),
               // Notification bell
               GestureDetector(
-                onTap: () => setState(() => _hasNotif = !_hasNotif),
+                onTap: _showNotificationsPopup,
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
@@ -238,7 +321,7 @@ class _WelcomeHeaderState extends State<_WelcomeHeader> {
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
-                        color: _hasNotif
+                        color: hasUnread
                             ? Colors.white.withAlpha(55)
                             : Colors.white.withAlpha(30),
                         shape: BoxShape.circle,
@@ -249,18 +332,28 @@ class _WelcomeHeaderState extends State<_WelcomeHeader> {
                         size: 24,
                       ),
                     ),
-                    if (_hasNotif)
+                    if (hasUnread)
                       Positioned(
-                        top: 7,
-                        right: 7,
+                        top: 5,
+                        right: 5,
                         child: Container(
-                          width: 10,
-                          height: 10,
+                          padding: const EdgeInsets.all(2),
                           decoration: BoxDecoration(
                             color: const Color(0xFFFF5252),
                             shape: BoxShape.circle,
                             border: Border.all(
                                 color: AppColors.primaryDark, width: 1.5),
+                          ),
+                          constraints: const BoxConstraints(
+                              minWidth: 16, minHeight: 16),
+                          child: Text(
+                            _unreadCount > 99 ? '99+' : '$_unreadCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
                           ),
                         ),
                       ),
@@ -637,6 +730,151 @@ class _PromoBanner extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ─── Notifications popup sheet ─────────────────────────────────────────────
+
+class _NotificationsSheet extends StatelessWidget {
+  final AppLocalizations loc;
+  final List<CustomerNotification> notifications;
+  final void Function(String id) onMarkRead;
+  final VoidCallback onMarkAllRead;
+
+  const _NotificationsSheet({
+    required this.loc,
+    required this.notifications,
+    required this.onMarkRead,
+    required this.onMarkAllRead,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hasUnread = notifications.any((n) => !n.isRead);
+    final maxHeight = MediaQuery.of(context).size.height * 0.7;
+
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: maxHeight),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Drag handle
+          Padding(
+            padding: const EdgeInsets.only(top: 12, bottom: 4),
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.divider,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          // Header
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.lg, 8, AppSpacing.sm, 4),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    loc.notificationsLabel,
+                    style: AppTextStyles.titleLarge,
+                  ),
+                ),
+                if (hasUnread)
+                  TextButton.icon(
+                    onPressed: () {
+                      onMarkAllRead();
+                      Navigator.pop(context);
+                    },
+                    icon: const Icon(Icons.done_all_rounded, size: 16),
+                    label: Text(loc.markAllRead,
+                        style: const TextStyle(fontSize: 13)),
+                    style: TextButton.styleFrom(
+                        foregroundColor: AppColors.success),
+                  ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          // Body
+          if (notifications.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              child: Center(
+                child: Column(
+                  children: [
+                    Icon(Icons.notifications_off_outlined,
+                        size: 48, color: AppColors.textDisabled),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(loc.noNotifications,
+                        style: AppTextStyles.bodyMedium.copyWith(
+                            color: AppColors.textSecondary)),
+                  ],
+                ),
+              ),
+            )
+          else
+            Flexible(
+              child: ListView.separated(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                shrinkWrap: true,
+                itemCount: notifications.length,
+                separatorBuilder: (_, __) =>
+                    const Divider(height: 1, indent: 16, endIndent: 16),
+                itemBuilder: (context, index) {
+                  final notif = notifications[index];
+                  return ListTile(
+                    onTap: notif.isRead
+                        ? null
+                        : () => onMarkRead(notif.id),
+                    tileColor: notif.isRead
+                        ? null
+                        : Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.success.withAlpha(30)
+                            : AppColors.successSurface,
+                    leading: CircleAvatar(
+                      backgroundColor: notif.isRead
+                          ? AppColors.divider
+                          : AppColors.primarySurface,
+                      child: Icon(
+                        Icons.notifications_outlined,
+                        size: 20,
+                        color: notif.isRead
+                            ? AppColors.textDisabled
+                            : AppColors.primary,
+                      ),
+                    ),
+                    title: Text(
+                      notif.title,
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        fontWeight: notif.isRead
+                            ? FontWeight.normal
+                            : FontWeight.bold,
+                      ),
+                    ),
+                    subtitle: Text(notif.body,
+                        style: AppTextStyles.bodySmall,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis),
+                    trailing: !notif.isRead
+                        ? const Icon(Icons.circle,
+                            color: AppColors.success, size: 10)
+                        : null,
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg, vertical: AppSpacing.xs),
+                  );
+                },
+              ),
+            ),
+          SizedBox(height: MediaQuery.of(context).padding.bottom),
+        ],
       ),
     );
   }
