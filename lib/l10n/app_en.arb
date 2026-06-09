@@ -80,7 +80,7 @@
   "bookAtThisStation": "Book at this station",
   "noStationsWithLocation": "No stations with location data available.",
   "inboxLabel": "Inbox",
-  "notificationsLabel": "Notifications & Booking History",
+  "notificationsLabel": "Notifications",
   "bookingsLabel": "My Bookings",
   "noNotifications": "No new notifications",
   "noBookings": "No new bookings",

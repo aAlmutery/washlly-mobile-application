@@ -80,7 +80,7 @@
   "bookAtThisStation": "لەم مەحەتەیە حجز بکە",
   "noStationsWithLocation": "هیچ مەحەتەیەک لەگەڵ زانیاری شوێن بەردەست نییە.",
   "inboxLabel": "خانووی نامە",
-  "notificationsLabel": "ئاگادارکردنەوەکان و مێژووی حجز",
+  "notificationsLabel": "ئاگادارکردنەوەکان",
   "bookingsLabel": "حجزەکانم",
   "noNotifications": "هیچ ئاگادارکردنەوەیەک نییە یا نوێ نییە",
   "noBookings": "هیچ حجزێک نییە یا نوێ نییە",
