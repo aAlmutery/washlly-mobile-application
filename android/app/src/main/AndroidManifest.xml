@@ -4,7 +4,7 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <application
-        android:label="washlly_mobile_app"
+        android:label="Washlly"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
