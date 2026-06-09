@@ -179,8 +179,10 @@ class _CustomerBookingHistoryScreenState
   void _showRateDialog(String bookingId) {
     final loc = AppLocalizations.of(context)!;
     int selectedRating = 0;
+    bool submitting = false;
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
           title: Text(loc.rateServiceTitle),
@@ -197,7 +199,9 @@ class _CustomerBookingHistoryScreenState
                       final star = i + 1;
                       return Expanded(
                         child: GestureDetector(
-                          onTap: () => setDialogState(() => selectedRating = star),
+                          onTap: submitting
+                              ? null
+                              : () => setDialogState(() => selectedRating = star),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(vertical: 8),
                             child: Icon(
@@ -216,14 +220,17 @@ class _CustomerBookingHistoryScreenState
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(ctx),
+              onPressed: submitting ? null : () => Navigator.pop(ctx),
               child: Text(loc.cancelButton),
             ),
             ElevatedButton(
-              onPressed: selectedRating == 0
+              onPressed: selectedRating == 0 || submitting
                   ? null
                   : () async {
-                      Navigator.pop(ctx);
+                      // Capture context-derived objects before the async gap.
+                      final scaffoldMessenger = ScaffoldMessenger.of(context);
+                      final l = AppLocalizations.of(context)!;
+                      setDialogState(() => submitting = true);
                       try {
                         await SupabaseService.instance.customerSubmitRating(
                           bookingId: bookingId,
@@ -231,23 +238,29 @@ class _CustomerBookingHistoryScreenState
                           sessionToken: widget.session.sessionToken,
                           rating: selectedRating,
                         );
+                        if (ctx.mounted) Navigator.pop(ctx);
+                        if (!mounted) return;
                         _refresh();
-                        if (mounted) {
-                          final loc2 = AppLocalizations.of(context)!;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(loc2.rateSuccess)),
-                          );
-                        }
+                        scaffoldMessenger.showSnackBar(
+                          SnackBar(
+                            content: Text(l.rateSuccess),
+                            backgroundColor: AppColors.success,
+                          ),
+                        );
                       } catch (e) {
-                        if (mounted) {
-                          final loc2 = AppLocalizations.of(context)!;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('${loc2.rateFailed}$e')),
-                          );
-                        }
+                        setDialogState(() => submitting = false);
+                        scaffoldMessenger.showSnackBar(
+                          SnackBar(content: Text('${l.rateFailed}$e')),
+                        );
                       }
                     },
-              child: Text(loc.submitBtn),
+              child: submitting
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : Text(loc.submitBtn),
             ),
           ],
         ),

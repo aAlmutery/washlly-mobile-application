@@ -1019,8 +1019,10 @@ class _BottomPanelState extends State<_BottomPanel> {
     final loc = AppLocalizations.of(context)!;
     final messenger = ScaffoldMessenger.of(context);
     int selectedRating = 0;
+    bool submitting = false;
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
           title: Text(loc.rateServiceTitle),
@@ -1037,7 +1039,9 @@ class _BottomPanelState extends State<_BottomPanel> {
                       final star = i + 1;
                       return Expanded(
                         child: GestureDetector(
-                          onTap: () => setDialogState(() => selectedRating = star),
+                          onTap: submitting
+                              ? null
+                              : () => setDialogState(() => selectedRating = star),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(vertical: 8),
                             child: Icon(
@@ -1055,12 +1059,17 @@ class _BottomPanelState extends State<_BottomPanel> {
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(loc.cancelButton)),
+            TextButton(
+              onPressed: submitting ? null : () => Navigator.pop(ctx),
+              child: Text(loc.cancelButton),
+            ),
             ElevatedButton(
-              onPressed: selectedRating == 0
+              onPressed: selectedRating == 0 || submitting
                   ? null
                   : () async {
-                      Navigator.pop(ctx);
+                      // messenger and loc are captured before the dialog opens —
+                      // safe to use after the await without re-reading context.
+                      setDialogState(() => submitting = true);
                       try {
                         await SupabaseService.instance.customerSubmitRating(
                           bookingId: bookingId,
@@ -1068,15 +1077,29 @@ class _BottomPanelState extends State<_BottomPanel> {
                           sessionToken: widget.session!.sessionToken,
                           rating: selectedRating,
                         );
+                        if (ctx.mounted) Navigator.pop(ctx);
                         if (!mounted) return;
                         _reload();
-                        messenger.showSnackBar(SnackBar(content: Text(loc.rateSuccess)));
+                        messenger.showSnackBar(
+                          SnackBar(
+                            content: Text(loc.rateSuccess),
+                            backgroundColor: AppColors.success,
+                          ),
+                        );
                       } catch (e) {
-                        if (!mounted) return;
-                        messenger.showSnackBar(SnackBar(content: Text('${loc.rateFailed}$e')));
+                        setDialogState(() => submitting = false);
+                        messenger.showSnackBar(
+                          SnackBar(content: Text('${loc.rateFailed}$e')),
+                        );
                       }
                     },
-              child: Text(loc.submitBtn),
+              child: submitting
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : Text(loc.submitBtn),
             ),
           ],
         ),
