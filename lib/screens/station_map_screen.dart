@@ -12,7 +12,6 @@ import '../models/station.dart';
 import '../services/session_service.dart';
 import '../services/supabase_service.dart';
 import '../theme/app_colors.dart';
-import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/booking_card.dart';
 import '../widgets/bottom_nav_scaffold.dart';
@@ -49,14 +48,16 @@ class _StationMapScreenState extends State<StationMapScreen> {
   // Zoom tier: 0=large clusters, 1=small clusters, 2=pins, 3=pins+labels.
   int _zoomTier = 1;
   StreamSubscription<MapEvent>? _mapEventSub;
+  Timer? _zoomDebounce;
 
   @override
   void initState() {
     super.initState();
     _stationsFuture = SupabaseService.instance.fetchStations().then((list) {
       if (mounted) {
-        final valid =
-            list.where((s) => s.latitude != null && s.longitude != null).toList();
+        final valid = list.where((s) =>
+            s.latitude != null && s.longitude != null &&
+            s.latitude!.isFinite && s.longitude!.isFinite).toList();
         setState(() {
           _validStations = valid;
           _cachedMarkers = _buildMarkers(valid);
@@ -81,6 +82,7 @@ class _StationMapScreenState extends State<StationMapScreen> {
     _mapEventSub?.cancel();
     _labelTimer?.cancel();
     _bookingPollTimer?.cancel();
+    _zoomDebounce?.cancel();
     _mapController.dispose();
     super.dispose();
   }
@@ -303,13 +305,17 @@ class _StationMapScreenState extends State<StationMapScreen> {
         event is! MapEventFlingAnimation) {
       return;
     }
-    final newTier = _tierFor(_mapController.camera.zoom);
-    if (newTier == _zoomTier) {
-      return;
-    }
-    setState(() {
-      _zoomTier = newTier;
-      _cachedMarkers = _buildMarkers(_validStations);
+    // Debounce: rebuild markers only after the user pauses zooming, not on
+    // every frame. This prevents janky redraws during fast pinch/scroll-zoom.
+    _zoomDebounce?.cancel();
+    _zoomDebounce = Timer(const Duration(milliseconds: 120), () {
+      if (!mounted) return;
+      final newTier = _tierFor(_mapController.camera.zoom);
+      if (newTier == _zoomTier) return;
+      setState(() {
+        _zoomTier = newTier;
+        _cachedMarkers = _buildMarkers(_validStations);
+      });
     });
   }
 
@@ -672,13 +678,15 @@ class _StationMapScreenState extends State<StationMapScreen> {
       ],
       body: Stack(
         children: [
-          _MapBody(
-            markers: _cachedMarkers,
-            userLocation: _userLocation,
-            mapController: _mapController,
-            stationsFuture: _stationsFuture,
-            noStationsText: loc.noStationsWithLocation,
-            errorPrefix: loc.errorPrefix,
+          RepaintBoundary(
+            child: _MapBody(
+              markers: _cachedMarkers,
+              userLocation: _userLocation,
+              mapController: _mapController,
+              stationsFuture: _stationsFuture,
+              noStationsText: loc.noStationsWithLocation,
+              errorPrefix: loc.errorPrefix,
+            ),
           ),
 
           // ── Bottom-end: action FABs ──────────────────────────────────────
@@ -765,6 +773,11 @@ class _MapBodyState extends State<_MapBody> {
   late List<Marker> _markers;
   LatLng? _userLocation;
 
+  // Cached once when the future resolves — avoids O(n) work on every rebuild.
+  List<LatLng>? _stationPoints;
+  LatLngBounds? _stationBounds;
+  LatLng? _initialCenter;
+
   @override
   void initState() {
     super.initState();
@@ -785,6 +798,20 @@ class _MapBodyState extends State<_MapBody> {
     }
   }
 
+  void _cacheStationData(List<Station> stations) {
+    if (_stationPoints != null) return; // already cached
+    final points = stations
+        .where((s) =>
+            s.latitude != null && s.longitude != null &&
+            s.latitude!.isFinite && s.longitude!.isFinite)
+        .map((s) => LatLng(s.latitude!, s.longitude!))
+        .toList();
+    if (points.isEmpty) return;
+    _stationPoints = points;
+    _stationBounds = LatLngBounds.fromPoints(points);
+    _initialCenter = points.first;
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Station>>(
@@ -798,26 +825,32 @@ class _MapBodyState extends State<_MapBody> {
               child: Text('${widget.errorPrefix}${snapshot.error}'));
         }
 
-        final validStations = (snapshot.data ?? [])
-            .where((s) => s.latitude != null && s.longitude != null)
-            .toList();
+        // Cache on first resolution; subsequent builds reuse cached values.
+        _cacheStationData(snapshot.data ?? []);
 
-        if (validStations.isEmpty) {
+        if (_stationPoints == null || _stationPoints!.isEmpty) {
           return Center(child: Text(widget.noStationsText));
         }
 
-        final bounds = LatLngBounds.fromPoints(
-          validStations.map((s) => LatLng(s.latitude!, s.longitude!)).toList(),
-        );
+        final allMarkers = _userLocation != null
+            ? [
+                ..._markers,
+                Marker(
+                  width: 28,
+                  height: 28,
+                  point: _userLocation!,
+                  child: const Icon(Icons.location_pin, color: Colors.red, size: 36),
+                ),
+              ]
+            : _markers;
 
         return FlutterMap(
           mapController: widget.mapController,
           options: MapOptions(
-            initialCenter: LatLng(
-                validStations.first.latitude!, validStations.first.longitude!),
+            initialCenter: _initialCenter!,
             initialZoom: 10,
             initialCameraFit: CameraFit.bounds(
-              bounds: bounds,
+              bounds: _stationBounds!,
               padding: const EdgeInsets.all(80),
             ),
             maxZoom: 18,
@@ -829,22 +862,7 @@ class _MapBodyState extends State<_MapBody> {
               subdomains: const ['a', 'b', 'c'],
               userAgentPackageName: 'com.example.washlly_mobile_app',
             ),
-            MarkerLayer(markers: _markers),
-            if (_userLocation != null)
-              MarkerLayer(
-                markers: [
-                  Marker(
-                    width: 28,
-                    height: 28,
-                    point: _userLocation!,
-                    child: Icon(
-                      Icons.location_pin,
-                      color: Colors.red, 
-                      size: 36
-                    )
-                  ),
-                ],
-              ),
+            MarkerLayer(markers: allMarkers),
           ],
         );
       },
