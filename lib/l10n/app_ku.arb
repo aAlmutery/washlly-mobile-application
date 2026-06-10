@@ -276,6 +276,8 @@
   "bookingHistoryTitle": "مێژووی حجز",
   "bookingHistorySubtitle": "هەموو حجزەکانت بگەڕێ و شوێن بکەوە",
   "mapMyLocation": "شوێنەکەم",
+  "mapFilterTooltip": "گەڕان لە مەحەتەکان",
+  "mapSearchHint": "ناو، کۆد یان ناوچە...",
   "mapLocationPermissionTitle": "دەستگەیشتن بە شوێن",
   "mapLocationPermissionMessage": "ڕێگا بدە بە Washlly کە بە شوێنەکەت دەست بگات بۆ نیشاندانی لەسەر نەخشە.",
   "mapAllowLocation": "ڕێگادان",
