@@ -46,37 +46,6 @@ class _StationMapScreenState extends State<StationMapScreen> {
   Timer? _bookingPollTimer;
   int _activeBookingCount = 0;
 
-  // Filter
-  bool _filterVisible = false;
-  String _filterQuery = '';
-  final _filterCtrl = TextEditingController();
-
-  List<Station> get _filteredStations {
-    if (_filterQuery.isEmpty) return _validStations;
-    final q = _filterQuery.toLowerCase();
-    return _validStations.where((s) =>
-        s.name.toLowerCase().contains(q) ||
-        s.id.toLowerCase().contains(q) ||
-        s.address.toLowerCase().contains(q)).toList();
-  }
-
-  void _applyFilter(String query) {
-    setState(() {
-      _filterQuery = query;
-      _cachedMarkers = _buildMarkers(_filteredStations);
-    });
-  }
-
-  void _toggleFilter() {
-    setState(() {
-      _filterVisible = !_filterVisible;
-      if (!_filterVisible) {
-        _filterCtrl.clear();
-        _applyFilter('');
-      }
-    });
-  }
-
   // Zoom tier: 0=large clusters, 1=small clusters, 2=pins, 3=pins+labels.
   int _zoomTier = 1;
   StreamSubscription<MapEvent>? _mapEventSub;
@@ -115,8 +84,6 @@ class _StationMapScreenState extends State<StationMapScreen> {
     _labelTimer?.cancel();
     _bookingPollTimer?.cancel();
     _zoomDebounce?.cancel();
-    _zoomDebounce?.cancel();
-    _filterCtrl.dispose();
     _mapController.dispose();
     super.dispose();
   }
@@ -354,7 +321,7 @@ class _StationMapScreenState extends State<StationMapScreen> {
       if (newTier == _zoomTier) return;
       setState(() {
         _zoomTier = newTier;
-        _cachedMarkers = _buildMarkers(_filteredStations);
+        _cachedMarkers = _buildMarkers(_validStations);
       });
     });
   }
@@ -684,13 +651,6 @@ class _StationMapScreenState extends State<StationMapScreen> {
       title: loc.mapTitle,
       appBarActions: [
         IconButton(
-          tooltip: loc.mapFilterTooltip,
-          icon: Icon(
-            _filterVisible ? Icons.search_off_rounded : Icons.search_rounded,
-          ),
-          onPressed: _toggleFilter,
-        ),
-        IconButton(
           tooltip: loc.bookingsLabel,
           onPressed: _showBookingsSheet,
           icon: Stack(
@@ -733,78 +693,6 @@ class _StationMapScreenState extends State<StationMapScreen> {
               stationsFuture: _stationsFuture,
               noStationsText: loc.noStationsWithLocation,
               errorPrefix: loc.errorPrefix,
-            ),
-          ),
-
-          // ── Top: search / filter bar ─────────────────────────────────────
-          AnimatedPositionedDirectional(
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeInOut,
-            top: _filterVisible ? 8 : -80,
-            start: 12,
-            end: 12,
-            child: Material(
-              elevation: 4,
-              borderRadius: BorderRadius.circular(14),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                child: Row(
-                  children: [
-                    const Icon(Icons.search_rounded, size: 20,
-                        color: AppColors.textSecondary),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextField(
-                        controller: _filterCtrl,
-                        onChanged: _applyFilter,
-                        autofocus: _filterVisible,
-                        decoration: InputDecoration(
-                          hintText: loc.mapSearchHint,
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          filled: false,
-                          isDense: true,
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                    ),
-                    if (_filterQuery.isNotEmpty)
-                      GestureDetector(
-                        onTap: () {
-                          _filterCtrl.clear();
-                          _applyFilter('');
-                        },
-                        child: const Icon(Icons.close_rounded, size: 18,
-                            color: AppColors.textSecondary),
-                      ),
-                    if (_filterQuery.isNotEmpty) ...[
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: AppColors.primarySurface,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          '${_filteredStations.length}',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
             ),
           ),
 

@@ -276,8 +276,6 @@
   "bookingHistoryTitle": "سجل الحجوزات",
   "bookingHistorySubtitle": "استعرض وتابع جميع حجوزاتك",
   "mapMyLocation": "موقعي",
-  "mapFilterTooltip": "البحث في المحطات",
-  "mapSearchHint": "الاسم أو الرمز أو المنطقة...",
   "mapLocationPermissionTitle": "الوصول إلى الموقع",
   "mapLocationPermissionMessage": "هل تسمح لتطبيق Washlly بالوصول إلى موقعك لعرضه على الخريطة؟",
   "mapAllowLocation": "سماح",
