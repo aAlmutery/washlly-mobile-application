@@ -946,6 +946,7 @@ class _BottomPanelState extends State<_BottomPanel> {
       if (!mounted) return;
       _reload();
       SoundService.instance.playPopupSound();
+      Navigator.pop(context);
       messenger.showSnackBar(SnackBar(content: Text(loc.cancelBookingSuccess)));
     } catch (e) {
       if (!mounted) return;
@@ -982,6 +983,7 @@ class _BottomPanelState extends State<_BottomPanel> {
       if (!mounted) return;
       _reload();
       SoundService.instance.playPopupSound();
+      Navigator.pop(context);
       messenger.showSnackBar(SnackBar(content: Text(loc.acceptPostponeSuccess)));
     } catch (e) {
       if (!mounted) return;
@@ -1020,6 +1022,7 @@ class _BottomPanelState extends State<_BottomPanel> {
       if (!mounted) return;
       _reload();
       SoundService.instance.playPopupSound();
+      Navigator.pop(context);
       messenger.showSnackBar(SnackBar(content: Text(loc.rejectPostponeSuccess)));
     } catch (e) {
       if (!mounted) return;
@@ -1093,6 +1096,7 @@ class _BottomPanelState extends State<_BottomPanel> {
                         if (!mounted) return;
                         _reload();
                         SoundService.instance.playPopupSound();
+                        Navigator.pop(context);
                         messenger.showSnackBar(
                           SnackBar(
                             content: Text(loc.rateSuccess),
