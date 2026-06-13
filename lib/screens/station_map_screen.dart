@@ -17,6 +17,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/booking_card.dart';
 import '../widgets/bottom_nav_scaffold.dart';
+import '../widgets/customer_login_sheet.dart';
 import 'customer/booking_screen.dart';
 
 class StationMapScreen extends StatefulWidget {
@@ -300,9 +301,30 @@ class _StationMapScreenState extends State<StationMapScreen> {
   }
 
   void _openQuickBooking() {
-    Navigator.push(
+    requireCustomerLogin(
       context,
-      MaterialPageRoute(builder: (_) => const BookingScreen()),
+      onAuthenticated: (session) async {
+        if (!mounted) return;
+        setState(() => _customerSession = session);
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const BookingScreen()),
+        );
+      },
+    );
+  }
+
+  void _openBookingForStation(Station station) {
+    requireCustomerLogin(
+      context,
+      onAuthenticated: (session) async {
+        if (!mounted) return;
+        setState(() => _customerSession = session);
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => BookingScreen(station: station)),
+        );
+      },
     );
   }
 
@@ -610,11 +632,7 @@ class _StationMapScreenState extends State<StationMapScreen> {
                     ),
                     onPressed: () {
                       Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => BookingScreen(station: station)),
-                      );
+                      _openBookingForStation(station);
                     },
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,

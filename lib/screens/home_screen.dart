@@ -4,6 +4,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/bottom_nav_scaffold.dart';
+import '../widgets/customer_login_sheet.dart';
 import 'customer/booking_screen.dart';
 import 'customer/inbox_screen.dart';
 import 'station_list_screen.dart';
@@ -146,8 +147,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 final svc = filtered[i];
                 return _ServiceCard(
                   service: svc,
-                  onTap: () => Navigator.pushNamed(
-                      context, BookingScreen.routeName),
+                  onTap: () => requireCustomerLogin(
+                    context,
+                    onAuthenticated: (_) async =>
+                        Navigator.pushNamed(context, BookingScreen.routeName),
+                  ),
                 );
               },
             ),
@@ -502,8 +506,11 @@ class _PromoBanner extends StatelessWidget {
     final loc = AppLocalizations.of(context)!;
 
     return GestureDetector(
-      onTap: () =>
-          Navigator.pushNamed(context, BookingScreen.routeName),
+      onTap: () => requireCustomerLogin(
+        context,
+        onAuthenticated: (_) async =>
+            Navigator.pushNamed(context, BookingScreen.routeName),
+      ),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(

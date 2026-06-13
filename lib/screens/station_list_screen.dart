@@ -4,6 +4,7 @@ import '../models/station.dart';
 import '../services/supabase_service.dart';
 import '../theme/app_spacing.dart';
 import '../widgets/bottom_nav_scaffold.dart';
+import '../widgets/customer_login_sheet.dart';
 import '../widgets/station_card.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'customer/booking_screen.dart';
@@ -394,14 +395,15 @@ class _StationListScreenState extends State<StationListScreen> {
                             padding: const EdgeInsets.only(bottom: 12),
                             child: StationCard(
                               station: station,
-                              onTap: () {
-                                Navigator.push(
+                              onTap: () => requireCustomerLogin(
+                                context,
+                                onAuthenticated: (_) async => Navigator.push(
                                   context,
                                   MaterialPageRoute(
                                     builder: (_) => BookingScreen(station: station),
                                   ),
-                                );
-                              },
+                                ),
+                              ),
                             ),
                           );
                         },
