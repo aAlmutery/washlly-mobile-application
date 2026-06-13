@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../utils/location_utils.dart';
 import 'package:geolocator/geolocator.dart';
@@ -12,6 +13,8 @@ import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/bottom_nav_scaffold.dart';
 import '../../widgets/realtime_notifications_widget.dart';
+import '../../widgets/spin_discount_sheet.dart';
+import '../station_map_screen.dart';
 
 class BookingScreen extends StatefulWidget {
   static const routeName = '/booking';
@@ -167,54 +170,88 @@ class _BookingScreenState extends State<BookingScreen> {
     if (!_formKey.currentState!.validate() || widget.station == null || _selectedService == null) {
       return;
     }
+
+    // Show spin wheel — calls spin-booking-discount API internally and returns
+    // {token, discountPercent} on confirm, or null if the user dismisses.
+    final spinResult = await showModalBottomSheet<Map<String, dynamic>>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppSpacing.radiusLg),
+        ),
+      ),
+      builder: (_) => SpinDiscountSheet(
+        onSpin: () => SupabaseService.instance.spinBookingDiscount(
+          stationId: widget.station!.id,
+          serviceId: _selectedService!.id,
+          bookingDate: _formattedDate,
+          bookingTime: _formattedTimeIso,
+          customerPhone: _phoneController.text.trim(),
+        ),
+      ),
+    );
+
+    if (spinResult == null || !mounted) return;
+
     setState(() {
       _loading = true;
       _resultMessage = null;
     });
     try {
-      final discount = await SupabaseService.instance.spinBookingDiscount(
-        stationId: widget.station!.id,
-        serviceId: _selectedService!.id,
-        bookingDate: _formattedDate,
-        bookingTime: _formattedTimeIso,
-        customerPhone: _phoneController.text.trim(),
-      );
-      final spinToken = discount['token'] as String? ?? '';
-      final spinPercent = discount['discountPercent'] as int? ?? 0;
-      final booking = await SupabaseService.instance.createMapBooking(
+      await SupabaseService.instance.createMapBooking(
         stationId: widget.station!.id,
         serviceId: _selectedService!.id,
         customerName: _nameController.text.trim(),
         customerPhone: _phoneController.text.trim(),
         bookingDate: _formattedDate,
         bookingTime: _formattedTimeIso,
-        spinDiscountPercent: spinPercent,
-        spinToken: spinToken,
+        spinDiscountPercent: spinResult['discountPercent'] as int? ?? 0,
+        spinToken: spinResult['token'] as String? ?? '',
       );
-      setState(() {
-        final loc = AppLocalizations.of(context)!;
-        _resultMessage = '${loc.bookingCreated} #${booking['bookingNumber']}';
-        _createdBookingId = booking['id'] as String?;
-      });
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, StationMapScreen.routeName);
+      }
     } catch (error) {
       setState(() {
         final loc = AppLocalizations.of(context)!;
         _resultMessage = '${loc.bookingErrorPrefix}$error';
       });
     } finally {
-      if (mounted) {
-        setState(() {
-          _loading = false;
-        });
-      }
+      if (mounted) setState(() => _loading = false);
     }
   }
 
   Future<void> _createQuickBooking() async {
     if (!_formKey.currentState!.validate() || _position == null || _selectedQuickServiceName == null) return;
+
+    // Show spin wheel with a local random pick.
+    // TODO: replace onSpin with the real quick-booking spin API call once
+    // the backend supports spin_token on create-quick-booking.
+    final spinResult = await showModalBottomSheet<Map<String, dynamic>>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppSpacing.radiusLg),
+        ),
+      ),
+      builder: (_) => SpinDiscountSheet(
+        onSpin: () async {
+          // Simulate network delay for a natural feel
+          await Future.delayed(const Duration(milliseconds: 600));
+          const discounts = [0, 5, 10, 15];
+          final picked = discounts[Random().nextInt(discounts.length)];
+          return {'discountPercent': picked, 'token': ''};
+        },
+      ),
+    );
+
+    if (spinResult == null || !mounted) return;
+
     setState(() { _loading = true; _resultMessage = null; });
     try {
-      final booking = await SupabaseService.instance.createQuickBooking(
+      await SupabaseService.instance.createQuickBooking(
         customerName: _nameController.text.trim(),
         customerPhone: _phoneController.text.trim(),
         bookingDate: _formattedDate,
@@ -223,11 +260,9 @@ class _BookingScreenState extends State<BookingScreen> {
         customerLat: _position!.latitude,
         customerLng: _position!.longitude,
       );
-      setState(() {
-        final loc = AppLocalizations.of(context)!;
-        final targets = (booking['targets'] as List?) ?? [];
-        _resultMessage = '${loc.quickBookingSentPrefix}${targets.length}${loc.quickBookingSentSuffix}';
-      });
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, StationMapScreen.routeName);
+      }
     } catch (error) {
       setState(() {
         final loc = AppLocalizations.of(context)!;

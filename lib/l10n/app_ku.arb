@@ -303,5 +303,17 @@
   "serviceFullClean": "پاک کردنەوەی ناوەوە و دەرەوە",
   "serviceFullCleanSub": "پاک کردنەوەی تەواوی ئۆتۆمبێل",
   "serviceVipWash": "شۆرانەوەی VIP",
-  "serviceVipWashSub": "چاکسازی پریمیەم"
+  "serviceVipWashSub": "چاکسازی پریمیەم",
+  "spinTitle": "بزڤێنە بۆ بەدەستهێنانی داشکاندن!",
+  "spinButtonSpin": "بزڤێنە!",
+  "spinLoading": "ئامادەکردن...",
+  "spinSpinning": "بزڤاندن...",
+  "spinDiscountWon": "داشکاندنی {percent}%ت بەدەستهێنا!",
+  "@spinDiscountWon": {
+    "placeholders": { "percent": { "type": "int" } }
+  },
+  "spinNoDiscount": "ئەم جارە داشکاندن نییە",
+  "spinConfirmButton": "پشتڕاستکردنی حجز",
+  "spinErrorMessage": "هەڵەیەک ڕووی دا. تکایە دووبارە هەوڵبدەرەوە.",
+  "spinCancelButton": "پاشگەزبوونەوە"
 }

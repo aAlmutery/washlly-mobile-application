@@ -303,5 +303,17 @@
   "serviceFullClean": "تنظيف داخلي وخارجي",
   "serviceFullCleanSub": "تنظيف شامل للسيارة",
   "serviceVipWash": "غسيل VIP",
-  "serviceVipWashSub": "معالجة فاخرة"
+  "serviceVipWashSub": "معالجة فاخرة",
+  "spinTitle": "العب عجلة الحظ وأحصل على خصم!",
+  "spinButtonSpin": "أدر العجلة!",
+  "spinLoading": "جاري التحضير...",
+  "spinSpinning": "تدور العجلة...",
+  "spinDiscountWon": "حصلت على خصم {percent}%!",
+  "@spinDiscountWon": {
+    "placeholders": { "percent": { "type": "int" } }
+  },
+  "spinNoDiscount": "لا يوجد خصم هذه المرة",
+  "spinConfirmButton": "تأكيد الحجز",
+  "spinErrorMessage": "حدث خطأ. يرجى المحاولة مرة أخرى.",
+  "spinCancelButton": "إلغاء"
 }

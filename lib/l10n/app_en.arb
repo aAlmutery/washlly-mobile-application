@@ -303,5 +303,17 @@
   "serviceFullClean": "Int. & Ext. Cleaning",
   "serviceFullCleanSub": "Deep full-car clean",
   "serviceVipWash": "VIP Car Wash",
-  "serviceVipWashSub": "Premium treatment"
+  "serviceVipWashSub": "Premium treatment",
+  "spinTitle": "Spin to get your discount!",
+  "spinButtonSpin": "Spin!",
+  "spinLoading": "Getting ready...",
+  "spinSpinning": "Spinning...",
+  "spinDiscountWon": "You got {percent}% off!",
+  "@spinDiscountWon": {
+    "placeholders": { "percent": { "type": "int" } }
+  },
+  "spinNoDiscount": "No discount this time",
+  "spinConfirmButton": "Confirm Booking",
+  "spinErrorMessage": "Something went wrong. Please try again.",
+  "spinCancelButton": "Cancel"
 }
