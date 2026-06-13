@@ -210,6 +210,23 @@ class _BookingScreenState extends State<BookingScreen> {
         spinDiscountPercent: spinResult['discountPercent'] as int? ?? 0,
         spinToken: spinResult['token'] as String? ?? '',
       );
+      if (!mounted) return;
+      final loc = AppLocalizations.of(context)!;
+      SoundService.instance.playPopupSound();
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          title: Text(loc.bookingSuccessTitle),
+          content: Text(loc.bookingSuccessMessage),
+          actions: [
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(loc.okBtn),
+            ),
+          ],
+        ),
+      );
       if (mounted) {
         Navigator.pushReplacementNamed(context, StationMapScreen.routeName);
       }
@@ -260,6 +277,23 @@ class _BookingScreenState extends State<BookingScreen> {
         serviceKind: _selectedQuickServiceName!,
         customerLat: _position!.latitude,
         customerLng: _position!.longitude,
+      );
+      if (!mounted) return;
+      final loc = AppLocalizations.of(context)!;
+      SoundService.instance.playPopupSound();
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          title: Text(loc.quickBookingSuccessTitle),
+          content: Text(loc.quickBookingSuccessMessage),
+          actions: [
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(loc.okBtn),
+            ),
+          ],
+        ),
       );
       if (mounted) {
         Navigator.pushReplacementNamed(context, StationMapScreen.routeName);

@@ -554,6 +554,27 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
   }
 
   Future<void> _approve(String bookingId) async {
+    final loc = AppLocalizations.of(context)!;
+    SoundService.instance.playPopupSound();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(loc.ownerApproveDialogTitle),
+        content: Text(loc.ownerApproveConfirmMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(loc.noBtn),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.success),
+            child: Text(loc.ownerApproveConfirmBtn, style: const TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
     try {
       await SupabaseService.instance.ownerManageBooking(
         bookingId: bookingId,
@@ -561,11 +582,20 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
         sessionToken: widget.session.sessionToken,
       );
       _refresh();
+      if (mounted) {
+        final loc2 = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(loc2.ownerApproveSuccess),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
     } catch (e) {
       if (mounted) {
-        final loc = AppLocalizations.of(context)!;
+        final loc2 = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${loc.ownerApproveFailed}$e')),
+          SnackBar(content: Text('${loc2.ownerApproveFailed}$e')),
         );
       }
     }
