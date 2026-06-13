@@ -292,8 +292,8 @@ class _StationMapScreenState extends State<StationMapScreen> {
         height: MediaQuery.of(context).size.height * 0.6,
         child: _BottomPanel(
           session: _customerSession,
-          onSnackBar: (msg, {Color? color}) =>
-              _showSnackBar(msg),
+          onSnackBar: (msg, {Color? color}) => _showSnackBar(msg),
+          onActionDone: () { _pollBookings(); },
         ),
       ),
     );
@@ -886,7 +886,8 @@ class _MapBodyState extends State<_MapBody> {
 class _BottomPanel extends StatefulWidget {
   final CustomerSession? session;
   final void Function(String message, {Color? color})? onSnackBar;
-  const _BottomPanel({this.session, this.onSnackBar});
+  final VoidCallback? onActionDone;
+  const _BottomPanel({this.session, this.onSnackBar, this.onActionDone});
 
   @override
   State<_BottomPanel> createState() => _BottomPanelState();
@@ -944,7 +945,7 @@ class _BottomPanelState extends State<_BottomPanel> {
         sessionToken: widget.session!.sessionToken,
       );
       if (!mounted) return;
-      _reload();
+      widget.onActionDone?.call();
       SoundService.instance.playPopupSound();
       Navigator.pop(context);
       messenger.showSnackBar(SnackBar(content: Text(loc.cancelBookingSuccess)));
@@ -981,7 +982,7 @@ class _BottomPanelState extends State<_BottomPanel> {
         sessionToken: widget.session!.sessionToken,
       );
       if (!mounted) return;
-      _reload();
+      widget.onActionDone?.call();
       SoundService.instance.playPopupSound();
       Navigator.pop(context);
       messenger.showSnackBar(SnackBar(content: Text(loc.acceptPostponeSuccess)));
@@ -1020,7 +1021,7 @@ class _BottomPanelState extends State<_BottomPanel> {
         sessionToken: widget.session!.sessionToken,
       );
       if (!mounted) return;
-      _reload();
+      widget.onActionDone?.call();
       SoundService.instance.playPopupSound();
       Navigator.pop(context);
       messenger.showSnackBar(SnackBar(content: Text(loc.rejectPostponeSuccess)));
@@ -1094,7 +1095,7 @@ class _BottomPanelState extends State<_BottomPanel> {
                         );
                         if (ctx.mounted) Navigator.pop(ctx);
                         if (!mounted) return;
-                        _reload();
+                        widget.onActionDone?.call();
                         SoundService.instance.playPopupSound();
                         Navigator.pop(context);
                         messenger.showSnackBar(
