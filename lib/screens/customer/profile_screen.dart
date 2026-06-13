@@ -10,6 +10,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/bottom_nav_scaffold.dart';
+import '../home_screen.dart';
 import 'customer_booking_history_screen.dart';
 import 'inbox_screen.dart';
 import 'settings_screen.dart';
@@ -57,8 +58,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (confirmed != true || !mounted) return;
     await widget.sessionNotifier.logout();
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.profileLogoutSuccess)),
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        HomeScreen.routeName,
+        (route) => false,
       );
     }
   }
