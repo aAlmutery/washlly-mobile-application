@@ -45,6 +45,15 @@
 	<string>يستخدم التطبيق موقعك للعثور على أقرب محطات غسيل السيارات إليك</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>يستخدم التطبيق موقعك للعثور على أقرب محطات غسيل السيارات إليك</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Used to take a photo for your station profile during registration.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Used to choose a photo for your station profile during registration.</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>tel</string>
+		<string>whatsapp</string>
+	</array>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
