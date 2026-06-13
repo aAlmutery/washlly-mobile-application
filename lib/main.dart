@@ -1,5 +1,7 @@
-﻿import 'package:flutter/material.dart';
+﻿import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config.dart';
 import 'screens/customer/booking_screen.dart';
@@ -52,7 +54,19 @@ class WashllyApp extends StatelessWidget {
           theme: AppTheme.light(),
           darkTheme: AppTheme.dark(),
           themeMode: themeModeNotifier.themeMode,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            // Bridge delegates: GlobalMaterialLocalizations and
+            // GlobalCupertinoLocalizations don't include 'ku', so they skip it
+            // and leave MaterialLocalizations null — crashing any Material widget.
+            // These intercept 'ku' first and load Arabic equivalents (same script,
+            // same RTL direction) so all built-in widgets keep working.
+            _KurdishMaterialLocalizationsDelegate(),
+            _KurdishCupertinoLocalizationsDelegate(),
+            GlobalMaterialLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+          ],
           supportedLocales: AppLocalizations.supportedLocales,
           locale: localeNotifier.locale,
           // Kurdish ('ku') uses Arabic script and is RTL, but Flutter's built-in
@@ -82,4 +96,38 @@ class WashllyApp extends StatelessWidget {
       },
     );
   }
+}
+
+// Kurdish (Sorani) is not in GlobalMaterialLocalizations/GlobalCupertinoLocalizations.
+// These delegates intercept 'ku' and load Arabic equivalents — both share Arabic
+// script and RTL direction, so all built-in Material/Cupertino widgets work correctly.
+
+class _KurdishMaterialLocalizationsDelegate
+    extends LocalizationsDelegate<MaterialLocalizations> {
+  const _KurdishMaterialLocalizationsDelegate();
+
+  @override
+  bool isSupported(Locale locale) => locale.languageCode == 'ku';
+
+  @override
+  Future<MaterialLocalizations> load(Locale locale) =>
+      GlobalMaterialLocalizations.delegate.load(const Locale('ar'));
+
+  @override
+  bool shouldReload(_KurdishMaterialLocalizationsDelegate old) => false;
+}
+
+class _KurdishCupertinoLocalizationsDelegate
+    extends LocalizationsDelegate<CupertinoLocalizations> {
+  const _KurdishCupertinoLocalizationsDelegate();
+
+  @override
+  bool isSupported(Locale locale) => locale.languageCode == 'ku';
+
+  @override
+  Future<CupertinoLocalizations> load(Locale locale) =>
+      GlobalCupertinoLocalizations.delegate.load(const Locale('ar'));
+
+  @override
+  bool shouldReload(_KurdishCupertinoLocalizationsDelegate old) => false;
 }
