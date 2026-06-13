@@ -325,5 +325,10 @@
   "spinNoDiscount": "No discount this time",
   "spinConfirmButton": "Confirm Booking",
   "spinErrorMessage": "Something went wrong. Please try again.",
-  "spinCancelButton": "Cancel"
+  "spinCancelButton": "Cancel",
+  "stationImageLabel": "Add Station Photo",
+  "stationImageOptional": "Optional — tap to choose",
+  "stationImagePickGallery": "Choose from Gallery",
+  "stationImageTakePhoto": "Take Photo",
+  "stationImageRemove": "Remove photo"
 }

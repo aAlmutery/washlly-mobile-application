@@ -325,5 +325,10 @@
   "spinNoDiscount": "ئەم جارە داشکاندن نییە",
   "spinConfirmButton": "پشتڕاستکردنی حجز",
   "spinErrorMessage": "هەڵەیەک ڕووی دا. تکایە دووبارە هەوڵبدەرەوە.",
-  "spinCancelButton": "پاشگەزبوونەوە"
+  "spinCancelButton": "پاشگەزبوونەوە",
+  "stationImageLabel": "وێنەی مەحەتە زیاد بکە",
+  "stationImageOptional": "ئارەزووی — دەست بدە بۆ هەڵبژاردن",
+  "stationImagePickGallery": "لە گەلەری هەڵبژێرە",
+  "stationImageTakePhoto": "وێنەی بکێشە",
+  "stationImageRemove": "وێنەکە لاببە"
 }

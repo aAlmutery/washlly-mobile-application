@@ -325,5 +325,10 @@
   "spinNoDiscount": "لا يوجد خصم هذه المرة",
   "spinConfirmButton": "تأكيد الحجز",
   "spinErrorMessage": "حدث خطأ. يرجى المحاولة مرة أخرى.",
-  "spinCancelButton": "إلغاء"
+  "spinCancelButton": "إلغاء",
+  "stationImageLabel": "إضافة صورة المحطة",
+  "stationImageOptional": "اختياري — اضغط للاختيار",
+  "stationImagePickGallery": "اختيار من المعرض",
+  "stationImageTakePhoto": "التقاط صورة",
+  "stationImageRemove": "إزالة الصورة"
 }
