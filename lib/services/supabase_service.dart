@@ -7,6 +7,38 @@ class SupabaseService {
   static final SupabaseService instance = SupabaseService._();
   final SupabaseClient client = Supabase.instance.client;
 
+  /// Extracts the human-readable message from an error response body and throws.
+  /// Accepts a Map (JSON body), a plain String, or null.
+  Never _throwFunctionError(dynamic data) {
+    String? msg;
+    if (data is Map) {
+      msg = (data['message'] ?? data['error']) as String?;
+    } else if (data is String && data.isNotEmpty) {
+      msg = data;
+    }
+    throw Exception(msg ?? 'Something went wrong. Please try again.');
+  }
+
+  /// Invokes a Supabase edge function and returns the raw response data.
+  /// On HTTP error or FunctionException, throws with only the API message.
+  Future<dynamic> _invoke(
+    String function, {
+    Map<String, dynamic>? body,
+    Map<String, String>? headers,
+  }) async {
+    try {
+      final response = await client.functions.invoke(
+        function,
+        body: body,
+        headers: headers,
+      );
+      if (response.status >= 400) _throwFunctionError(response.data);
+      return response.data;
+    } on FunctionException catch (e) {
+      _throwFunctionError(e.details);
+    }
+  }
+
   Future<List<Station>> fetchStations() async {
     final data = await client
         .from('stations')
@@ -129,37 +161,21 @@ class SupabaseService {
     required Map<String, dynamic> station,
     required List<Map<String, dynamic>> services,
   }) async {
-    final response = await client.functions.invoke(
-      'owner-self-register',
-      body: {
-        'owner_name': ownerName,
-        'owner_phone': ownerPhone,
-        'email': email,
-        'password': password,
-        'free_requests_quota': freeRequestsQuota,
-        'station': station,
-        'services': services,
-      },
-    );
-
-    if (response.status >= 400) {
-      throw Exception('Function error: ${response.status}');
-    }
-
-    return Map<String, dynamic>.from(response.data as Map<String, dynamic>);
+    final data = await _invoke('owner-self-register', body: {
+      'owner_name': ownerName,
+      'owner_phone': ownerPhone,
+      'email': email,
+      'password': password,
+      'free_requests_quota': freeRequestsQuota,
+      'station': station,
+      'services': services,
+    });
+    return Map<String, dynamic>.from(data as Map);
   }
 
   Future<Map<String, dynamic>> ownerLoginLookup(String identifier) async {
-    final response = await client.functions.invoke(
-      'owner-login-lookup',
-      body: {'identifier': identifier},
-    );
-
-    if (response.status >= 400) {
-      throw Exception('Function error: ${response.status}');
-    }
-
-    return Map<String, dynamic>.from(response.data as Map<String, dynamic>);
+    final data = await _invoke('owner-login-lookup', body: {'identifier': identifier});
+    return Map<String, dynamic>.from(data as Map);
   }
 
   Future<Map<String, dynamic>> ownerSignIn({
@@ -197,22 +213,14 @@ class SupabaseService {
     required String bookingTime,
     required String customerPhone,
   }) async {
-    final response = await client.functions.invoke(
-      'spin-booking-discount',
-      body: {
-        'station_id': stationId,
-        'service_id': serviceId,
-        'booking_date': bookingDate,
-        'booking_time': bookingTime,
-        'customer_phone': customerPhone,
-      },
-    );
-
-    if (response.status >= 400) {
-      throw Exception('Function error: ${response.status}');
-    }
-
-    return Map<String, dynamic>.from(response.data as Map<String, dynamic>);
+    final data = await _invoke('spin-booking-discount', body: {
+      'station_id': stationId,
+      'service_id': serviceId,
+      'booking_date': bookingDate,
+      'booking_time': bookingTime,
+      'customer_phone': customerPhone,
+    });
+    return Map<String, dynamic>.from(data as Map);
   }
 
   Future<Map<String, dynamic>> createMapBooking({
@@ -226,26 +234,18 @@ class SupabaseService {
     required String spinToken,
     String language = 'ar',
   }) async {
-    final response = await client.functions.invoke(
-      'create-map-booking',
-      body: {
-        'station_id': stationId,
-        'service_id': serviceId,
-        'customer_name': customerName,
-        'customer_phone': customerPhone,
-        'booking_date': bookingDate,
-        'booking_time': bookingTime,
-        'spin_discount_percent': spinDiscountPercent,
-        'spin_token': spinToken,
-        'language': language,
-      },
-    );
-
-    if (response.status >= 400) {
-      throw Exception('Function error: ${response.status}');
-    }
-
-    return Map<String, dynamic>.from(response.data as Map<String, dynamic>);
+    final data = await _invoke('create-map-booking', body: {
+      'station_id': stationId,
+      'service_id': serviceId,
+      'customer_name': customerName,
+      'customer_phone': customerPhone,
+      'booking_date': bookingDate,
+      'booking_time': bookingTime,
+      'spin_discount_percent': spinDiscountPercent,
+      'spin_token': spinToken,
+      'language': language,
+    });
+    return Map<String, dynamic>.from(data as Map);
   }
 
   Future<Map<String, dynamic>> createQuickBooking({
@@ -259,64 +259,40 @@ class SupabaseService {
     List<String> excludeStationIds = const [],
     String language = 'ar',
   }) async {
-    final response = await client.functions.invoke(
-      'create-quick-booking',
-      body: {
-        'customer_name': customerName,
-        'customer_phone': customerPhone,
-        'booking_date': bookingDate,
-        'booking_time': bookingTime,
-        'service_kind': serviceKind,
-        'language': language,
-        'customer_lat': customerLat,
-        'customer_lng': customerLng,
-        'exclude_station_ids': excludeStationIds,
-      },
-    );
-
-    if (response.status >= 400) {
-      throw Exception('Function error: ${response.status}');
-    }
-
-    return Map<String, dynamic>.from(response.data as Map<String, dynamic>);
+    final data = await _invoke('create-quick-booking', body: {
+      'customer_name': customerName,
+      'customer_phone': customerPhone,
+      'booking_date': bookingDate,
+      'booking_time': bookingTime,
+      'service_kind': serviceKind,
+      'language': language,
+      'customer_lat': customerLat,
+      'customer_lng': customerLng,
+      'exclude_station_ids': excludeStationIds,
+    });
+    return Map<String, dynamic>.from(data as Map);
   }
 
   Future<Map<String, dynamic>> cancelMapBooking({
     required String bookingId,
     required String customerPhone,
   }) async {
-    final response = await client.functions.invoke(
-      'cancel-map-booking',
-      body: {
-        'booking_id': bookingId,
-        'customer_phone': customerPhone,
-      },
-    );
-
-    if (response.status >= 400) {
-      throw Exception('Function error: ${response.status}');
-    }
-
-    return Map<String, dynamic>.from(response.data as Map<String, dynamic>);
+    final data = await _invoke('cancel-map-booking', body: {
+      'booking_id': bookingId,
+      'customer_phone': customerPhone,
+    });
+    return Map<String, dynamic>.from(data as Map);
   }
 
   Future<Map<String, dynamic>> cancelAllMapBookings({
     required String customerPhone,
     String language = 'ar',
   }) async {
-    final response = await client.functions.invoke(
-      'cancel-all-map-bookings',
-      body: {
-        'customer_phone': customerPhone,
-        'language': language,
-      },
-    );
-
-    if (response.status >= 400) {
-      throw Exception('Function error: ${response.status}');
-    }
-
-    return Map<String, dynamic>.from(response.data as Map<String, dynamic>);
+    final data = await _invoke('cancel-all-map-bookings', body: {
+      'customer_phone': customerPhone,
+      'language': language,
+    });
+    return Map<String, dynamic>.from(data as Map);
   }
 
   Future<Map<String, dynamic>> whatsappSend({
@@ -324,20 +300,12 @@ class SupabaseService {
     required String message,
     String? conversationId,
   }) async {
-    final response = await client.functions.invoke(
-      'whatsapp-send',
-      body: {
-        'phone': phone,
-        'message': message,
-        if (conversationId != null) 'conversation_id': conversationId,
-      },
-    );
-
-    if (response.status >= 400) {
-      throw Exception('Function error: ${response.status}');
-    }
-
-    return Map<String, dynamic>.from(response.data as Map<String, dynamic>);
+    final data = await _invoke('whatsapp-send', body: {
+      'phone': phone,
+      'message': message,
+      if (conversationId != null) 'conversation_id': conversationId,
+    });
+    return Map<String, dynamic>.from(data as Map);
   }
 
   Future<List<Map<String, dynamic>>> fetchCustomerBookings(
@@ -353,9 +321,7 @@ class SupabaseService {
             'session_token': sessionToken,
           },
         );
-        if (response.status >= 400) {
-          throw Exception('Failed to load bookings (${response.status})');
-        }
+        if (response.status >= 400) _throwFunctionError(response.data);
         final data = response.data;
         if (data == null) return [];
         final List list;
@@ -404,35 +370,19 @@ class SupabaseService {
     if (customerName != null && customerName.isNotEmpty) {
       body['customer_name'] = customerName;
     }
-    final response = await client.functions.invoke(
-      'customer-login-by-phone',
-      body: body,
-    );
-
-    if (response.status >= 400) {
-      throw Exception('Function error: ${response.status}');
-    }
-
-    return Map<String, dynamic>.from(response.data as Map<String, dynamic>);
+    final data = await _invoke('customer-login-by-phone', body: body);
+    return Map<String, dynamic>.from(data as Map);
   }
 
   Future<Map<String, dynamic>> customerGetInbox({
     required String customerPhone,
     required String sessionToken,
   }) async {
-    final response = await client.functions.invoke(
-      'customer-get-inbox',
-      body: {
-        'customer_phone': customerPhone,
-        'session_token': sessionToken,
-      },
-    );
-
-    if (response.status >= 400) {
-      throw Exception('Function error: ${response.status}');
-    }
-
-    return Map<String, dynamic>.from(response.data as Map<String, dynamic>);
+    final data = await _invoke('customer-get-inbox', body: {
+      'customer_phone': customerPhone,
+      'session_token': sessionToken,
+    });
+    return Map<String, dynamic>.from(data as Map);
   }
 
   Future<Map<String, dynamic>> customerManageBooking({
@@ -443,25 +393,15 @@ class SupabaseService {
     String? bookingDate,
     String? bookingTime,
   }) async {
-    final body = {
+    final data = await _invoke('customer-manage-booking', body: {
       'booking_id': bookingId,
       'action': action,
       'customer_phone': customerPhone,
       'session_token': sessionToken,
       if (bookingDate != null) 'booking_date': bookingDate,
       if (bookingTime != null) 'booking_time': bookingTime,
-    };
-
-    final response = await client.functions.invoke(
-      'customer-manage-booking',
-      body: body,
-    );
-
-    if (response.status >= 400) {
-      throw Exception('Function error: ${response.status}');
-    }
-
-    return Map<String, dynamic>.from(response.data as Map<String, dynamic>);
+    });
+    return Map<String, dynamic>.from(data as Map);
   }
 
   Future<Map<String, dynamic>> customerSubmitRating({
@@ -470,21 +410,13 @@ class SupabaseService {
     required String sessionToken,
     required int rating,
   }) async {
-    final response = await client.functions.invoke(
-      'customer-submit-rating',
-      body: {
-        'booking_id': bookingId,
-        'customer_phone': customerPhone,
-        'session_token': sessionToken,
-        'rating': rating,
-      },
-    );
-
-    if (response.status >= 400) {
-      throw Exception('Function error: ${response.status}');
-    }
-
-    return Map<String, dynamic>.from(response.data as Map<String, dynamic>);
+    final data = await _invoke('customer-submit-rating', body: {
+      'booking_id': bookingId,
+      'customer_phone': customerPhone,
+      'session_token': sessionToken,
+      'rating': rating,
+    });
+    return Map<String, dynamic>.from(data as Map);
   }
 
   Future<Map<String, dynamic>> customerMarkNotificationRead({
@@ -493,41 +425,21 @@ class SupabaseService {
     String? notificationId,
     bool markAll = false,
   }) async {
-    final body = {
+    final data = await _invoke('customer-mark-notification-read', body: {
       'customer_phone': customerPhone,
       'session_token': sessionToken,
       if (notificationId != null) 'notification_id': notificationId,
       if (markAll) 'mark_all': true,
-    };
-
-    final response = await client.functions.invoke(
-      'customer-mark-notification-read',
-      body: body,
-    );
-
-    if (response.status >= 400) {
-      throw Exception('Function error: ${response.status}');
-    }
-
-    return Map<String, dynamic>.from(response.data as Map<String, dynamic>);
+    });
+    return Map<String, dynamic>.from(data as Map);
   }
 
   // Owner API Methods
   Future<Map<String, dynamic>> ownerLoginByPhone({
     required String ownerPhone,
   }) async {
-    final response = await client.functions.invoke(
-      'owner-login-by-phone',
-      body: {
-        'owner_phone': ownerPhone,
-      },
-    );
-
-    if (response.status >= 400) {
-      throw Exception('Function error: ${response.status}');
-    }
-
-    return Map<String, dynamic>.from(response.data as Map<String, dynamic>);
+    final data = await _invoke('owner-login-by-phone', body: {'owner_phone': ownerPhone});
+    return Map<String, dynamic>.from(data as Map);
   }
 
   /// Fetch bookings for a station via direct REST (documented in API docs).
@@ -553,38 +465,18 @@ class SupabaseService {
     String? proposedDate,
     String? proposedTime,
   }) async {
-    final body = <String, dynamic>{
-      'booking_id': bookingId,
-      'action': action,
-      if (proposedDate != null) 'booking_date': proposedDate,
-      if (proposedTime != null) 'booking_time': proposedTime,
-    };
-
-    try {
-      final response = await client.functions.invoke(
-        'owner-manage-booking',
-        body: body,
-        headers: {'Authorization': 'Bearer $sessionToken'},
-      );
-      if (response.status >= 400) {
-        final data = response.data;
-        String? msg;
-        if (data is Map) {
-          msg = data['error'] as String? ?? data['message'] as String?;
-        }
-        throw Exception(msg ?? 'Function error: ${response.status}');
-      }
-      final data = response.data;
-      if (data == null) return {};
-      return Map<String, dynamic>.from(data as Map<dynamic, dynamic>);
-    } on FunctionException catch (e) {
-      final details = e.details;
-      String? msg;
-      if (details is Map) {
-        msg = details['error'] as String? ?? details['message'] as String?;
-      }
-      throw Exception(msg ?? 'حدث خطأ غير متوقع (${e.status})');
-    }
+    final data = await _invoke(
+      'owner-manage-booking',
+      body: {
+        'booking_id': bookingId,
+        'action': action,
+        if (proposedDate != null) 'booking_date': proposedDate,
+        if (proposedTime != null) 'booking_time': proposedTime,
+      },
+      headers: {'Authorization': 'Bearer $sessionToken'},
+    );
+    if (data == null) return {};
+    return Map<String, dynamic>.from(data as Map);
   }
 
   /// Postpone a confirmed booking to pending_customer_approval via direct REST
@@ -672,20 +564,12 @@ class SupabaseService {
     required String resolutionAction,
     required String reason,
   }) async {
-    final response = await client.functions.invoke(
-      'resolve-booking-conflict',
-      body: {
-        'booking_id': bookingId,
-        'resolution_action': resolutionAction,
-        'reason': reason,
-      },
-    );
-
-    if (response.status >= 400) {
-      throw Exception('Function error: ${response.status}');
-    }
-
-    return Map<String, dynamic>.from(response.data as Map<String, dynamic>);
+    final data = await _invoke('resolve-booking-conflict', body: {
+      'booking_id': bookingId,
+      'resolution_action': resolutionAction,
+      'reason': reason,
+    });
+    return Map<String, dynamic>.from(data as Map);
   }
 
   Future<List<Map<String, dynamic>>> getConflictingBookings({
