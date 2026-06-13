@@ -207,6 +207,7 @@
   "ownerApproveConfirmBtn": "نعم، قبول",
   "ownerApproveSuccess": "تم قبول الحجز",
   "ownerApproveFailed": "فشل قبول الحجز: ",
+  "ownerRejectSuccess": "تم رفض الحجز",
   "ownerRejectFailed": "فشل رفض الحجز: ",
   "ownerCompleteSuccess": "تم إنجاز الحجز بنجاح",
   "ownerCompleteFailed": "فشل إنهاء الحجز: ",

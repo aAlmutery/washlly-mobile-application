@@ -250,7 +250,6 @@ class _StationMapScreenState extends State<StationMapScreen> {
       _showSnackBar(loc.cancelAllBookingsNoPhone);
       return;
     }
-    SoundService.instance.playPopupSound();
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -273,6 +272,7 @@ class _StationMapScreenState extends State<StationMapScreen> {
       await SupabaseService.instance.cancelAllMapBookings(
           customerPhone: _customerPhone!, language: lang);
       if (!mounted) return;
+      SoundService.instance.playPopupSound();
       _showSnackBar(loc.cancelAllBookingsSuccess);
       _pollBookings();
     } catch (e) {
@@ -920,7 +920,6 @@ class _BottomPanelState extends State<_BottomPanel> {
   Future<void> _cancel(String bookingId) async {
     final loc = AppLocalizations.of(context)!;
     final messenger = ScaffoldMessenger.of(context);
-    SoundService.instance.playPopupSound();
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -946,6 +945,7 @@ class _BottomPanelState extends State<_BottomPanel> {
       );
       if (!mounted) return;
       _reload();
+      SoundService.instance.playPopupSound();
       messenger.showSnackBar(SnackBar(content: Text(loc.cancelBookingSuccess)));
     } catch (e) {
       if (!mounted) return;
@@ -956,7 +956,6 @@ class _BottomPanelState extends State<_BottomPanel> {
   Future<void> _acceptPostpone(String bookingId) async {
     final loc = AppLocalizations.of(context)!;
     final messenger = ScaffoldMessenger.of(context);
-    SoundService.instance.playPopupSound();
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -982,6 +981,7 @@ class _BottomPanelState extends State<_BottomPanel> {
       );
       if (!mounted) return;
       _reload();
+      SoundService.instance.playPopupSound();
       messenger.showSnackBar(SnackBar(content: Text(loc.acceptPostponeSuccess)));
     } catch (e) {
       if (!mounted) return;
@@ -992,7 +992,6 @@ class _BottomPanelState extends State<_BottomPanel> {
   Future<void> _rejectPostpone(String bookingId) async {
     final loc = AppLocalizations.of(context)!;
     final messenger = ScaffoldMessenger.of(context);
-    SoundService.instance.playPopupSound();
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -1020,6 +1019,7 @@ class _BottomPanelState extends State<_BottomPanel> {
       );
       if (!mounted) return;
       _reload();
+      SoundService.instance.playPopupSound();
       messenger.showSnackBar(SnackBar(content: Text(loc.rejectPostponeSuccess)));
     } catch (e) {
       if (!mounted) return;
@@ -1032,7 +1032,6 @@ class _BottomPanelState extends State<_BottomPanel> {
     final messenger = ScaffoldMessenger.of(context);
     int selectedRating = 0;
     bool submitting = false;
-    SoundService.instance.playPopupSound();
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -1093,6 +1092,7 @@ class _BottomPanelState extends State<_BottomPanel> {
                         if (ctx.mounted) Navigator.pop(ctx);
                         if (!mounted) return;
                         _reload();
+                        SoundService.instance.playPopupSound();
                         messenger.showSnackBar(
                           SnackBar(
                             content: Text(loc.rateSuccess),

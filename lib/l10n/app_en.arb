@@ -207,6 +207,7 @@
   "ownerApproveConfirmBtn": "Yes, Approve",
   "ownerApproveSuccess": "Booking approved",
   "ownerApproveFailed": "Failed to approve booking: ",
+  "ownerRejectSuccess": "Booking rejected",
   "ownerRejectFailed": "Failed to reject booking: ",
   "ownerCompleteSuccess": "Booking marked as completed",
   "ownerCompleteFailed": "Failed to complete booking: ",

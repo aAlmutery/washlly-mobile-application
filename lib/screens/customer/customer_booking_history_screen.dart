@@ -41,7 +41,6 @@ class _CustomerBookingHistoryScreenState
 
   Future<void> _cancel(String bookingId) async {
     final loc = AppLocalizations.of(context)!;
-    SoundService.instance.playPopupSound();
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -72,6 +71,7 @@ class _CustomerBookingHistoryScreenState
       _refresh();
       if (mounted) {
         final loc2 = AppLocalizations.of(context)!;
+        SoundService.instance.playPopupSound();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(loc2.cancelBookingSuccess)),
         );
@@ -88,7 +88,6 @@ class _CustomerBookingHistoryScreenState
 
   Future<void> _rejectPostpone(String bookingId) async {
     final loc = AppLocalizations.of(context)!;
-    SoundService.instance.playPopupSound();
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -120,6 +119,7 @@ class _CustomerBookingHistoryScreenState
       _refresh();
       if (mounted) {
         final loc2 = AppLocalizations.of(context)!;
+        SoundService.instance.playPopupSound();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(loc2.rejectPostponeSuccess)),
         );
@@ -136,7 +136,6 @@ class _CustomerBookingHistoryScreenState
 
   Future<void> _acceptPostpone(String bookingId) async {
     final loc = AppLocalizations.of(context)!;
-    SoundService.instance.playPopupSound();
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -166,6 +165,7 @@ class _CustomerBookingHistoryScreenState
       _refresh();
       if (mounted) {
         final loc2 = AppLocalizations.of(context)!;
+        SoundService.instance.playPopupSound();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(loc2.acceptPostponeSuccess)),
         );
@@ -184,7 +184,6 @@ class _CustomerBookingHistoryScreenState
     final loc = AppLocalizations.of(context)!;
     int selectedRating = 0;
     bool submitting = false;
-    SoundService.instance.playPopupSound();
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -246,6 +245,7 @@ class _CustomerBookingHistoryScreenState
                         if (ctx.mounted) Navigator.pop(ctx);
                         if (!mounted) return;
                         _refresh();
+                        SoundService.instance.playPopupSound();
                         scaffoldMessenger.showSnackBar(
                           SnackBar(
                             content: Text(l.rateSuccess),

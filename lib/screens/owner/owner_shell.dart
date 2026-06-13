@@ -504,7 +504,6 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
 
   Future<void> _cancelConfirmed(String bookingId) async {
     final loc = AppLocalizations.of(context)!;
-    SoundService.instance.playPopupSound();
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -533,6 +532,7 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
       _refresh();
       if (mounted) {
         final loc2 = AppLocalizations.of(context)!;
+        SoundService.instance.playPopupSound();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(loc2.ownerCancelSuccess),
@@ -555,7 +555,6 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
 
   Future<void> _approve(String bookingId) async {
     final loc = AppLocalizations.of(context)!;
-    SoundService.instance.playPopupSound();
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -584,6 +583,7 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
       _refresh();
       if (mounted) {
         final loc2 = AppLocalizations.of(context)!;
+        SoundService.instance.playPopupSound();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(loc2.ownerApproveSuccess),
@@ -609,6 +609,13 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
         sessionToken: widget.session.sessionToken,
       );
       _refresh();
+      if (mounted) {
+        final loc = AppLocalizations.of(context)!;
+        SoundService.instance.playPopupSound();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(loc.ownerRejectSuccess)),
+        );
+      }
     } catch (e) {
       if (mounted) {
         final loc = AppLocalizations.of(context)!;
@@ -668,6 +675,7 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
       _refresh();
       if (mounted) {
         final loc2 = AppLocalizations.of(context)!;
+        SoundService.instance.playPopupSound();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(loc2.ownerPostponeSuccess),
@@ -691,7 +699,6 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
   void _showRejectDialog(String bookingId) {
     final loc = AppLocalizations.of(context)!;
     final reasonController = TextEditingController();
-    SoundService.instance.playPopupSound();
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(

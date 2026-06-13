@@ -207,6 +207,7 @@
   "ownerApproveConfirmBtn": "بەڵێ، پەسەندبکە",
   "ownerApproveSuccess": "حجزەکە پەسەندکرا",
   "ownerApproveFailed": "سەرکەوتوو نەبوو لە پەسەندکردنی حجز: ",
+  "ownerRejectSuccess": "حجزەکە ڕەتکرایەوە",
   "ownerRejectFailed": "سەرکەوتوو نەبوو لە ڕەتکردنەوەی حجز: ",
   "ownerCompleteSuccess": "حجز وەک تەواوکراوە نیشانەکرا",
   "ownerCompleteFailed": "سەرکەوتوو نەبوو لە تەواوکردنی حجز: ",
