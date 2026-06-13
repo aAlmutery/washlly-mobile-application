@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../models/owner_session.dart';
 import '../../services/owner_session_service.dart';
 import '../../services/supabase_service.dart';
+import '../../utils/location_utils.dart';
 import 'owner_shell.dart';
 
 class OwnerLoginScreen extends StatefulWidget {
@@ -221,6 +223,25 @@ class _RegisterTabState extends State<_RegisterTab> {
     if (!_formKey.currentState!.validate()) return;
     setState(() { _loading = true; _error = null; });
 
+    // Fetch current location; fall back to 0.0 if permission denied or unavailable.
+    double lat = 0.0;
+    double lng = 0.0;
+    try {
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.whileInUse ||
+          permission == LocationPermission.always) {
+        final accuracy = await resolveLocationAccuracy();
+        final pos = await Geolocator.getCurrentPosition(
+          locationSettings: LocationSettings(accuracy: accuracy),
+        );
+        lat = pos.latitude;
+        lng = pos.longitude;
+      }
+    } catch (_) {}
+
     try {
       await SupabaseService.instance.ownerSelfRegister(
         ownerName: _nameController.text.trim(),
@@ -234,8 +255,8 @@ class _RegisterTabState extends State<_RegisterTab> {
           'working_hours_end': '22:00',
           'scheduling_type': 'slots',
           'slot_duration_minutes': 30,
-          'latitude': 0.0,
-          'longitude': 0.0,
+          'latitude': lat,
+          'longitude': lng,
           'image_url': null,
           'category': 'car_wash',
         },
