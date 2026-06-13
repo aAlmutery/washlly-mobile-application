@@ -9,6 +9,7 @@ import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
 import 'home_screen.dart';
 import 'owner/owner_shell.dart';
+import 'station_map_screen.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class WelcomeScreen extends StatefulWidget {
@@ -32,6 +33,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         Navigator.pushNamedAndRemoveUntil(
           context,
           OwnerShell.routeName,
+          (route) => false,
+        );
+      } else if (widget.sessionNotifier.session != null) {
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          StationMapScreen.routeName,
           (route) => false,
         );
       } else {
