@@ -174,7 +174,6 @@ class _BookingScreenState extends State<BookingScreen> {
 
     // Show spin wheel — calls spin-booking-discount API internally and returns
     // {token, discountPercent} on confirm, or null if the user dismisses.
-    SoundService.instance.playPopupSound();
     final spinResult = await showModalBottomSheet<Map<String, dynamic>>(
       context: context,
       isScrollControlled: true,
@@ -230,7 +229,6 @@ class _BookingScreenState extends State<BookingScreen> {
     // Show spin wheel with a local random pick.
     // TODO: replace onSpin with the real quick-booking spin API call once
     // the backend supports spin_token on create-quick-booking.
-    SoundService.instance.playPopupSound();
     final spinResult = await showModalBottomSheet<Map<String, dynamic>>(
       context: context,
       isScrollControlled: true,
