@@ -13,6 +13,7 @@ import 'state/customer_session_notifier.dart';
 import 'state/locale_notifier.dart';
 import 'state/theme_mode_notifier.dart';
 import 'theme/app_theme.dart';
+import 'services/sound_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,6 +21,7 @@ Future<void> main() async {
     url: supabaseUrl,
     anonKey: supabaseAnonKey,
   );
+  await SoundService.instance.init();
   runApp(WashllyApp(
     sessionNotifier: CustomerSessionNotifier(),
     localeNotifier: LocaleNotifier(),

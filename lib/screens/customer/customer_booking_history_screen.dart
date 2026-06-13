@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../models/booking.dart';
 import '../../models/customer_session.dart';
+import '../../services/sound_service.dart';
 import '../../services/supabase_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
@@ -40,6 +41,7 @@ class _CustomerBookingHistoryScreenState
 
   Future<void> _cancel(String bookingId) async {
     final loc = AppLocalizations.of(context)!;
+    SoundService.instance.playPopupSound();
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -86,6 +88,7 @@ class _CustomerBookingHistoryScreenState
 
   Future<void> _rejectPostpone(String bookingId) async {
     final loc = AppLocalizations.of(context)!;
+    SoundService.instance.playPopupSound();
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -133,6 +136,7 @@ class _CustomerBookingHistoryScreenState
 
   Future<void> _acceptPostpone(String bookingId) async {
     final loc = AppLocalizations.of(context)!;
+    SoundService.instance.playPopupSound();
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -180,6 +184,7 @@ class _CustomerBookingHistoryScreenState
     final loc = AppLocalizations.of(context)!;
     int selectedRating = 0;
     bool submitting = false;
+    SoundService.instance.playPopupSound();
     showDialog(
       context: context,
       barrierDismissible: false,

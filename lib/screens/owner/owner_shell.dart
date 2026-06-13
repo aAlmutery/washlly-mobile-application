@@ -5,6 +5,7 @@ import '../../models/booking.dart';
 import '../../models/owner_session.dart';
 import '../../models/service_model.dart';
 import '../../services/owner_session_service.dart';
+import '../../services/sound_service.dart';
 import '../../services/supabase_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
@@ -503,6 +504,7 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
 
   Future<void> _cancelConfirmed(String bookingId) async {
     final loc = AppLocalizations.of(context)!;
+    SoundService.instance.playPopupSound();
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -659,6 +661,7 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
   void _showRejectDialog(String bookingId) {
     final loc = AppLocalizations.of(context)!;
     final reasonController = TextEditingController();
+    SoundService.instance.playPopupSound();
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(

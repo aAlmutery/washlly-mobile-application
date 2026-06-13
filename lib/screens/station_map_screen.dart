@@ -11,6 +11,7 @@ import '../models/booking.dart';
 import '../models/customer_session.dart';
 import '../models/station.dart';
 import '../services/session_service.dart';
+import '../services/sound_service.dart';
 import '../services/supabase_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
@@ -249,6 +250,7 @@ class _StationMapScreenState extends State<StationMapScreen> {
       _showSnackBar(loc.cancelAllBookingsNoPhone);
       return;
     }
+    SoundService.instance.playPopupSound();
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -918,6 +920,7 @@ class _BottomPanelState extends State<_BottomPanel> {
   Future<void> _cancel(String bookingId) async {
     final loc = AppLocalizations.of(context)!;
     final messenger = ScaffoldMessenger.of(context);
+    SoundService.instance.playPopupSound();
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -953,6 +956,7 @@ class _BottomPanelState extends State<_BottomPanel> {
   Future<void> _acceptPostpone(String bookingId) async {
     final loc = AppLocalizations.of(context)!;
     final messenger = ScaffoldMessenger.of(context);
+    SoundService.instance.playPopupSound();
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -988,6 +992,7 @@ class _BottomPanelState extends State<_BottomPanel> {
   Future<void> _rejectPostpone(String bookingId) async {
     final loc = AppLocalizations.of(context)!;
     final messenger = ScaffoldMessenger.of(context);
+    SoundService.instance.playPopupSound();
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -1027,6 +1032,7 @@ class _BottomPanelState extends State<_BottomPanel> {
     final messenger = ScaffoldMessenger.of(context);
     int selectedRating = 0;
     bool submitting = false;
+    SoundService.instance.playPopupSound();
     showDialog(
       context: context,
       barrierDismissible: false,
