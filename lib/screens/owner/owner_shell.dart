@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../models/booking.dart';
 import '../../models/owner_session.dart';
 import '../../models/service_model.dart';
+import '../../services/notification_service.dart';
 import '../../services/owner_session_service.dart';
 import '../../services/sound_service.dart';
 import '../../services/supabase_service.dart';
@@ -42,6 +43,10 @@ class _OwnerShellState extends State<OwnerShell> {
       });
       if (session != null) {
         _bookingsFuture = _fetchBookings(session);
+        NotificationService.instance.linkToken(
+          phone: session.ownerPhone,
+          role: 'owner',
+        );
       }
     }
   }
@@ -61,6 +66,7 @@ class _OwnerShellState extends State<OwnerShell> {
   }
 
   void _onLogout() async {
+    await NotificationService.instance.unlinkToken();
     await OwnerSessionService.instance.clearOwnerSession();
     if (!mounted) return;
     Navigator.pushNamedAndRemoveUntil(context, HomeScreen.routeName, (_) => false);

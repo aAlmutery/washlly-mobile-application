@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'config.dart';
 import 'screens/customer/booking_screen.dart';
+import 'screens/customer/inbox_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/customer/profile_screen.dart';
 import 'screens/station_list_screen.dart';
@@ -53,6 +54,7 @@ class WashllyApp extends StatelessWidget {
       listenable: Listenable.merge([sessionNotifier, localeNotifier, themeModeNotifier]),
       builder: (context, _) {
         return MaterialApp(
+          navigatorKey: NotificationService.navigatorKey,
           title: AppLocalizations.of(context)?.appTitle ?? 'Washlly',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.light(),
@@ -89,6 +91,7 @@ class WashllyApp extends StatelessWidget {
             StationListScreen.routeName: (_) => const StationListScreen(),
             StationMapScreen.routeName: (_) => const StationMapScreen(),
             BookingScreen.routeName: (_) => const BookingScreen(),
+            InboxScreen.routeName: (_) => const InboxScreen(),
             ProfileScreen.routeName: (_) => ProfileScreen(
               sessionNotifier: sessionNotifier,
               localeNotifier: localeNotifier,

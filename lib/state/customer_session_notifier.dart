@@ -19,6 +19,12 @@ class CustomerSessionNotifier extends ChangeNotifier {
     _session = s;
     _loaded = true;
     notifyListeners();
+    if (s != null) {
+      NotificationService.instance.linkToken(
+        phone: s.customerPhone,
+        role: 'customer',
+      );
+    }
   }
 
   Future<void> save(CustomerSession session) async {
