@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'config.dart';
 import 'screens/customer/booking_screen.dart';
 import 'screens/home_screen.dart';
@@ -15,15 +16,18 @@ import 'state/customer_session_notifier.dart';
 import 'state/locale_notifier.dart';
 import 'state/theme_mode_notifier.dart';
 import 'theme/app_theme.dart';
+import 'services/notification_service.dart';
 import 'services/sound_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   await Supabase.initialize(
     url: supabaseUrl,
     anonKey: supabaseAnonKey,
   );
   await SoundService.instance.init();
+  await NotificationService.instance.initialize();
   runApp(WashllyApp(
     sessionNotifier: CustomerSessionNotifier(),
     localeNotifier: LocaleNotifier(),

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../models/customer_session.dart';
+import '../services/notification_service.dart';
 import '../services/session_service.dart';
 
 class CustomerSessionNotifier extends ChangeNotifier {
@@ -24,9 +25,14 @@ class CustomerSessionNotifier extends ChangeNotifier {
     await SessionService.instance.saveCustomerSession(session);
     _session = session;
     notifyListeners();
+    NotificationService.instance.linkToken(
+      phone: session.customerPhone,
+      role: 'customer',
+    );
   }
 
   Future<void> logout() async {
+    await NotificationService.instance.unlinkToken();
     await SessionService.instance.clearCustomerSession();
     _session = null;
     notifyListeners();

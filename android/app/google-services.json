@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "150569750985",
+    "project_id": "washlly-96de6",
+    "storage_bucket": "washlly-96de6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:150569750985:android:8f2281fdc89573e9b35818",
+        "android_client_info": {
+          "package_name": "com.washlly.washlly_mobile_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDPICjGGJdJuJLS8lcH9uDmYlEt6oqIrZ0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

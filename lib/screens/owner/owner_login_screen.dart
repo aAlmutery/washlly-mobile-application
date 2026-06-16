@@ -5,6 +5,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../models/owner_session.dart';
+import '../../services/notification_service.dart';
 import '../../services/owner_session_service.dart';
 import '../../services/supabase_service.dart';
 import '../../utils/location_utils.dart';
@@ -103,12 +104,14 @@ class _LoginTabState extends State<_LoginTab> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(loc.ownerLoginSuccess)),
       );
+      final ownerPhone = ownerData['owner_phone'] as String? ?? '';
       await OwnerSessionService.instance.saveOwnerSession(OwnerSession(
         stationId: ownerData['station_id'] as String? ?? '',
-        ownerPhone: ownerData['owner_phone'] as String? ?? '',
+        ownerPhone: ownerPhone,
         sessionToken: ownerData['session_token'] as String? ?? '',
         stationName: ownerData['station_name'] as String? ?? '',
       ));
+      NotificationService.instance.linkToken(phone: ownerPhone, role: 'owner');
       if (!mounted) return;
       Navigator.pushNamedAndRemoveUntil(context, OwnerShell.routeName, (_) => false);
     } catch (e) {
@@ -343,12 +346,14 @@ class _RegisterTabState extends State<_RegisterTab> {
         password: _passwordController.text,
       );
       if (!mounted) return;
+      final ownerPhone = ownerData['owner_phone'] as String? ?? '';
       await OwnerSessionService.instance.saveOwnerSession(OwnerSession(
         stationId: ownerData['station_id'] as String? ?? '',
-        ownerPhone: ownerData['owner_phone'] as String? ?? '',
+        ownerPhone: ownerPhone,
         sessionToken: ownerData['session_token'] as String? ?? '',
         stationName: ownerData['station_name'] as String? ?? '',
       ));
+      NotificationService.instance.linkToken(phone: ownerPhone, role: 'owner');
       if (!mounted) return;
       Navigator.pushNamedAndRemoveUntil(context, OwnerShell.routeName, (_) => false);
     } catch (e) {
