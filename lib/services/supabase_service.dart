@@ -572,6 +572,29 @@ class SupabaseService {
     return Map<String, dynamic>.from(data as Map);
   }
 
+  Future<void> saveDeviceToken({
+    required String phone,
+    required String role,
+    required String token,
+    required String platform,
+    required String language,
+  }) async {
+    await client.from('device_tokens').upsert(
+      {
+        'phone': phone,
+        'role': role,
+        'token': token,
+        'platform': platform,
+        'language': language,
+      },
+      onConflict: 'phone,role,platform',
+    );
+  }
+
+  Future<void> deleteDeviceToken(String token) async {
+    await client.from('device_tokens').delete().eq('token', token);
+  }
+
   Future<List<Map<String, dynamic>>> getConflictingBookings({
     required String stationId,
     required DateTime timeSlot,
