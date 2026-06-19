@@ -958,13 +958,6 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
     return Scaffold(
       appBar: AppBar(
         title: Text(loc.ownerBookingsTitle),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _refresh,
-            tooltip: loc.refreshTooltip,
-          ),
-        ],
         bottom: TabBar(
           controller: _tabController,
           labelColor: Colors.white,
