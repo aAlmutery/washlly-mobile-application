@@ -118,6 +118,14 @@ class _BookingScreenState extends State<BookingScreen> {
     } catch (_) {}
   }
 
+  Future<void> _refresh() async {
+    if (widget.station != null) {
+      await _loadServices();
+    } else {
+      await Future.wait([_loadQuickServices(), _fetchLocation()]);
+    }
+  }
+
   Future<void> _loadServices() async {
     try {
       final services = await SupabaseService.instance.fetchServices(widget.station!.id);
@@ -404,7 +412,9 @@ class _BookingScreenState extends State<BookingScreen> {
     return BottomNavScaffold(
       currentIndex: 2,
       title: widget.station != null ? '${loc.bookingTitleAtPrefix}${widget.station!.name}' : loc.quickBookingTitle,
-      body: Padding(
+      body: RefreshIndicator(
+        onRefresh: _refresh,
+        child: Padding(
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
@@ -527,7 +537,7 @@ class _BookingScreenState extends State<BookingScreen> {
             ],
           ),
         ),
-      ),
+      )),
     );
   }
 }

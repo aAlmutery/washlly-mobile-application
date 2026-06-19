@@ -58,11 +58,11 @@ class _OwnerShellState extends State<OwnerShell> {
         sessionToken: session.sessionToken,
       );
 
-  void _refreshBookings() {
+  Future<void> _refreshBookings() async {
     if (_session == null) return;
-    setState(() {
-      _bookingsFuture = _fetchBookings(_session!);
-    });
+    final future = _fetchBookings(_session!);
+    setState(() { _bookingsFuture = future; });
+    await future;
   }
 
   void _onLogout() async {
@@ -91,7 +91,7 @@ class _OwnerShellState extends State<OwnerShell> {
 
     final session = _session!;
     final bodies = <Widget>[
-      _OwnerHomeTab(session: session, bookingsFuture: _bookingsFuture),
+      _OwnerHomeTab(session: session, bookingsFuture: _bookingsFuture, onRefresh: _refreshBookings),
       _OwnerStationTab(session: session),
       _OwnerBookingsTab(
         session: session,
@@ -123,8 +123,9 @@ class _OwnerShellState extends State<OwnerShell> {
 class _OwnerHomeTab extends StatelessWidget {
   final OwnerSession session;
   final Future<List<Map<String, dynamic>>> bookingsFuture;
+  final Future<void> Function() onRefresh;
 
-  const _OwnerHomeTab({required this.session, required this.bookingsFuture});
+  const _OwnerHomeTab({required this.session, required this.bookingsFuture, required this.onRefresh});
 
   @override
   Widget build(BuildContext context) {
@@ -142,7 +143,10 @@ class _OwnerHomeTab extends StatelessWidget {
           final confirmed = bookings.where((b) => b['status'] == 'confirmed').length;
           final total = bookings.length;
 
-          return SingleChildScrollView(
+          return RefreshIndicator(
+            onRefresh: onRefresh,
+            child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -212,7 +216,7 @@ class _OwnerHomeTab extends StatelessWidget {
                 ],
               ],
             ),
-          );
+          ));
         },
       ),
     );
@@ -477,7 +481,7 @@ enum _TabType { pending, confirmed, done }
 class _OwnerBookingsTab extends StatefulWidget {
   final OwnerSession session;
   final Future<List<Map<String, dynamic>>> bookingsFuture;
-  final VoidCallback onRefresh;
+  final Future<void> Function() onRefresh;
 
   const _OwnerBookingsTab({
     required this.session,
@@ -753,11 +757,25 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
   Widget _buildList(List<Map<String, dynamic>> bookings, _TabType tabType) {
     final loc = AppLocalizations.of(context)!;
     if (bookings.isEmpty) {
-      return Center(
-        child: Text(loc.ownerNoBookings, style: const TextStyle(color: Colors.grey)),
+      return RefreshIndicator(
+        onRefresh: widget.onRefresh,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: 300,
+              child: Center(
+                child: Text(loc.ownerNoBookings, style: const TextStyle(color: Colors.grey)),
+              ),
+            ),
+          ],
+        ),
       );
     }
-    return ListView.builder(
+    return RefreshIndicator(
+      onRefresh: widget.onRefresh,
+      child: ListView.builder(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
       itemCount: bookings.length,
       itemBuilder: (context, index) {
@@ -931,7 +949,7 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
           ),
         );
       },
-    );
+    ));
   }
 
   @override
