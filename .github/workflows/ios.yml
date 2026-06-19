@@ -15,14 +15,18 @@ jobs:
           git clone https://github.com/flutter/flutter.git --depth 1 -b 3.27.1 ~/flutter
           echo "$HOME/flutter/bin" >> $GITHUB_PATH
 
-      - name: Flutter doctor
-        run: flutter doctor
-
       - name: Get dependencies
         run: flutter pub get
 
+      - name: Install CocoaPods
+        run: sudo gem install cocoapods
+
       - name: Install pods
-        run: cd ios && pod install && cd ..
+        run: |
+          cd ios
+          pod repo update
+          pod install
+          cd ..
 
       - name: Build iOS (no codesign)
         run: flutter build ios --release --no-codesign
