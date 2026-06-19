@@ -579,20 +579,21 @@ class SupabaseService {
     required String platform,
     required String language,
   }) async {
-    await client.from('device_tokens').upsert(
-      {
-        'phone': phone,
-        'role': role,
-        'token': token,
-        'platform': platform,
-        'language': language,
-      },
-      onConflict: 'phone,role,platform',
-    );
+    await _invoke('register-device-token', body: {
+      'action': 'save',
+      'phone': phone,
+      'role': role,
+      'token': token,
+      'platform': platform,
+      'language': language,
+    });
   }
 
   Future<void> deleteDeviceToken(String token) async {
-    await client.from('device_tokens').delete().eq('token', token);
+    await _invoke('register-device-token', body: {
+      'action': 'delete',
+      'token': token,
+    });
   }
 
   Future<List<Map<String, dynamic>>> getConflictingBookings({

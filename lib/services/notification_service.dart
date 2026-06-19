@@ -122,7 +122,9 @@ class NotificationService {
         platform: Platform.isIOS ? 'ios' : 'android',
         language: language,
       );
-    } catch (_) {}
+    } catch (e) {
+      assert(() { debugPrint('NotificationService.linkToken error: $e'); return true; }());
+    }
 
     // Replay a notification tap that arrived before the session was loaded.
     final pending = _pendingInitialMessage;
@@ -140,7 +142,9 @@ class NotificationService {
       final token = await getToken();
       if (token == null) return;
       await SupabaseService.instance.deleteDeviceToken(token);
-    } catch (_) {}
+    } catch (e) {
+      assert(() { debugPrint('NotificationService.unlinkToken error: $e'); return true; }());
+    }
   }
 
   // ── Private helpers ──────────────────────────────────────────────
