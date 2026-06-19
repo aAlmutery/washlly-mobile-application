@@ -43,3 +43,6 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Firebase Admin SDK service account key — contains a private key, never commit
+washlly-96de6-firebase-adminsdk-fbsvc-*.json

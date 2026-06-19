@@ -14,7 +14,8 @@
       "Bash(del lib\\\\screens\\\\new_home_screen.dart)",
       "WebFetch(domain:washlly.com)",
       "Bash(flutter devices *)",
-      "Skill(run)"
+      "Skill(run)",
+      "Bash(flutter run *)"
     ]
   }
 }
