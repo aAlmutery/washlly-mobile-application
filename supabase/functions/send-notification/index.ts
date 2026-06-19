@@ -1,16 +1,16 @@
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const FCM_PROJECT_ID = Deno.env.get("FCM_PROJECT_ID")!;
 const FCM_CLIENT_EMAIL = Deno.env.get("FCM_CLIENT_EMAIL")!;
-// Firebase stores newlines as \n in the JSON — restore them
 const FCM_PRIVATE_KEY = Deno.env.get("FCM_PRIVATE_KEY")!.replace(/\\n/g, "\n");
 
-// Exchange service-account credentials for a short-lived FCM access token
 async function getFcmAccessToken(): Promise<string> {
-  const pemBody = FCM_PRIVATE_KEY.replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----|\s/g, "");
+  const pemBody = FCM_PRIVATE_KEY.replace(
+    /-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----|\s/g,
+    "",
+  );
   const binaryDer = atob(pemBody);
   const buffer = new Uint8Array(binaryDer.length);
   for (let i = 0; i < binaryDer.length; i++) buffer[i] = binaryDer.charCodeAt(i);
@@ -43,7 +43,9 @@ async function getFcmAccessToken(): Promise<string> {
     new TextEncoder().encode(signingInput),
   );
   const sigB64 = btoa(String.fromCharCode(...new Uint8Array(sig)))
-    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=/g, "");
 
   const jwt = `${signingInput}.${sigB64}`;
 
@@ -55,13 +57,12 @@ async function getFcmAccessToken(): Promise<string> {
       assertion: jwt,
     }),
   });
-
   const json = await res.json();
   if (!json.access_token) throw new Error(`OAuth2 failed: ${JSON.stringify(json)}`);
   return json.access_token;
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });
   }
@@ -76,7 +77,6 @@ serve(async (req) => {
       );
     }
 
-    // Look up device tokens for this user
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     const { data: rows, error: dbError } = await supabase
       .from("device_tokens")
@@ -87,7 +87,7 @@ serve(async (req) => {
     if (dbError) throw dbError;
     if (!rows || rows.length === 0) {
       return new Response(
-        JSON.stringify({ message: "No device tokens found", sent: 0 }),
+        JSON.stringify({ success: true, sent: 0, failed: 0, results: [] }),
         { status: 200, headers: { "Content-Type": "application/json" } },
       );
     }
@@ -111,12 +111,17 @@ serve(async (req) => {
             },
           }),
         });
-        return res.json();
+        const json = await res.json();
+        const success = res.ok;
+        return { success, token: row.token, response: success ? json.name : json };
       }),
     );
 
+    const sent = results.filter((r) => r.success).length;
+    const failed = results.length - sent;
+
     return new Response(
-      JSON.stringify({ sent: results.length, results }),
+      JSON.stringify({ success: true, sent, failed, results }),
       { status: 200, headers: { "Content-Type": "application/json" } },
     );
   } catch (err) {
