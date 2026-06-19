@@ -10,9 +10,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'        # ← Change this (remove flutter-version line)
+      - name: Setup Flutter
+        run: |
+          git clone https://github.com/flutter/flutter.git --depth 1 -b stable ~/flutter
+          echo "$HOME/flutter/bin" >> $GITHUB_PATH
+
+      - name: Flutter version
+        run: flutter --version
 
       - name: Install pods
         run: cd ios && pod install && cd ..
