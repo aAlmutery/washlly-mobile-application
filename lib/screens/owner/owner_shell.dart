@@ -967,6 +967,9 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
         ],
         bottom: TabBar(
           controller: _tabController,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white60,
+          indicatorColor: Colors.white,
           tabs: [
             Tab(text: loc.ownerTabPending),
             Tab(text: loc.ownerTabConfirmed),
