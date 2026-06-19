@@ -15,7 +15,9 @@
       "WebFetch(domain:washlly.com)",
       "Bash(flutter devices *)",
       "Skill(run)",
-      "Bash(flutter run *)"
+      "Bash(flutter run *)",
+      "Bash(Get-ChildItem lib/screens/customer/)",
+      "Bash(Select-Object Name)"
     ]
   }
 }
