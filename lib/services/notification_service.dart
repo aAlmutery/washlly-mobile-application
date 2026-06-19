@@ -8,7 +8,7 @@ import 'supabase_service.dart';
 
 @pragma('vm:entry-point')
 Future<void> _backgroundMessageHandler(RemoteMessage message) async {
-  await Firebase.initializeApp();
+  if (Firebase.apps.isEmpty) await Firebase.initializeApp();
 }
 
 class NotificationService {
@@ -27,6 +27,9 @@ class NotificationService {
   // Kept in memory so token-refresh and tap-navigation know the current user.
   String? _linkedPhone;
   String? _linkedRole;
+
+  // Notification tap that arrived before the session was loaded (terminated-state cold start).
+  RemoteMessage? _pendingInitialMessage;
 
   Future<void> initialize() async {
     FirebaseMessaging.onBackgroundMessage(_backgroundMessageHandler);
@@ -82,12 +85,18 @@ class NotificationService {
     FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
 
     // Terminated tap: app was closed, opened via notification tap.
+    // Store the message here; _handleNotificationTap needs _linkedRole which is
+    // populated by linkToken() — called later once the session loads. If the
+    // role is already set (hot restart), handle it immediately.
     final initial = await _messaging.getInitialMessage();
     if (initial != null) {
-      // Defer until after the first frame so the navigator is ready.
-      WidgetsBinding.instance.addPostFrameCallback(
-        (_) => _handleNotificationTap(initial),
-      );
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_linkedRole != null) {
+          _handleNotificationTap(initial);
+        } else {
+          _pendingInitialMessage = initial;
+        }
+      });
     }
 
     // Keep the DB token fresh whenever FCM rotates it.
@@ -114,6 +123,13 @@ class NotificationService {
         language: language,
       );
     } catch (_) {}
+
+    // Replay a notification tap that arrived before the session was loaded.
+    final pending = _pendingInitialMessage;
+    if (pending != null) {
+      _pendingInitialMessage = null;
+      _handleNotificationTap(pending);
+    }
   }
 
   /// Call on logout to stop this device from receiving notifications.
