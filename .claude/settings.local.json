@@ -13,7 +13,8 @@
       "Bash(Select-Object Name, PSIsContainer)",
       "Bash(del lib\\\\screens\\\\new_home_screen.dart)",
       "WebFetch(domain:washlly.com)",
-      "Bash(flutter devices *)"
+      "Bash(flutter devices *)",
+      "Skill(run)"
     ]
   }
 }
