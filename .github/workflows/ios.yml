@@ -8,15 +8,18 @@ jobs:
   build-ios:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.2.2
 
       - name: Setup Flutter
         run: |
           git clone https://github.com/flutter/flutter.git --depth 1 -b stable ~/flutter
           echo "$HOME/flutter/bin" >> $GITHUB_PATH
 
-      - name: Flutter version
-        run: flutter --version
+      - name: Flutter doctor
+        run: flutter doctor
+
+      - name: Get dependencies
+        run: flutter pub get
 
       - name: Install pods
         run: cd ios && pod install && cd ..
