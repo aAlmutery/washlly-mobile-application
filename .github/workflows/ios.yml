@@ -1,25 +1,31 @@
 name: Build iOS IPA
+
 on:
   push:
     branches: [main]
+
 jobs:
   build-ios:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: 'stable'
+          channel: 'stable'        # ← Change this (remove flutter-version line)
+
       - name: Install pods
         run: cd ios && pod install && cd ..
+
       - name: Build iOS (no codesign)
-        run: |
-          flutter build ios --release --no-codesign
+        run: flutter build ios --release --no-codesign
+
       - name: Package into .ipa
         run: |
           mkdir -p Payload
           cp -r build/ios/iphoneos/Runner.app Payload/
           zip -r app.ipa Payload
+
       - uses: actions/upload-artifact@v4
         with:
           name: ios-ipa
