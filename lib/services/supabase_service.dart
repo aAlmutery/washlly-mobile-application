@@ -103,12 +103,16 @@ class SupabaseService {
     required String name,
     required int price,
     int? durationMinutes,
+    double? customerDiscount,
+    int sortOrder = 0,
   }) async {
     await client.from('services').insert({
       'station_id': stationId,
       'name': name,
       'price': price,
-      if (durationMinutes != null) 'duration_minutes': durationMinutes,
+      'duration_minutes': durationMinutes,
+      'customer_discount': customerDiscount,
+      'sort_order': sortOrder,
       'is_active': true,
     });
   }
@@ -116,7 +120,7 @@ class SupabaseService {
   Future<List<ServiceModel>> fetchServices(String stationId) async {
     final data = await client
         .from('services')
-        .select('id,name,price,duration_minutes')
+        .select('id,name,price,duration_minutes,customer_discount,sort_order')
         .eq('station_id', stationId)
         .eq('is_active', true)
         .order('sort_order');

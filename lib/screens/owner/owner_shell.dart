@@ -425,6 +425,8 @@ class _OwnerStationTabState extends State<_OwnerStationTab> {
         name: name,
         price: price,
         durationMinutes: duration,
+        customerDiscount: null,
+        sortOrder: 0,
       );
       _refresh();
       if (mounted) {
@@ -519,9 +521,16 @@ class _OwnerStationTabState extends State<_OwnerStationTab> {
                         child: const Icon(Icons.build_circle_outlined, color: AppColors.primary),
                       ),
                       title: Text(s.name, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold)),
-                      subtitle: s.durationMinutes != null
-                          ? Text('${s.durationMinutes} ${loc.ownerServiceDurationSuffix}', style: AppTextStyles.bodySmall)
-                          : null,
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (s.durationMinutes != null)
+                            Text('${s.durationMinutes} ${loc.ownerServiceDurationSuffix}', style: AppTextStyles.bodySmall),
+                          if (s.customerDiscount != null && s.customerDiscount! > 0)
+                            Text('${loc.ownerServicePrefix}${s.customerDiscount!.toStringAsFixed(0)}% off', style: AppTextStyles.bodySmall.copyWith(color: AppColors.success)),
+                        ],
+                      ),
                       trailing: Text(
                         '${s.price}${loc.ownerCurrencySuffix}',
                         style: AppTextStyles.bodyMedium.copyWith(
