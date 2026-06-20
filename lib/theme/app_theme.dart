@@ -113,6 +113,7 @@ abstract final class AppTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: colorScheme.primary,
           foregroundColor: Colors.white,
+          iconColor: Colors.white,
           elevation: 2,
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.lg,
