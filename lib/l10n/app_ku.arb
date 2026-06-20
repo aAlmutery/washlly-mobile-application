@@ -165,6 +165,8 @@
   "ownerRegisterSuccess": "ئەژمێر بە سەرکەوتوویی دروستکرا",
   "fieldRequired": "ئەم خانەیە داواکراوە",
   "passwordMinLength": "وشەی نهێنی دەبێت کەمەکەم ٦ پیت بێت",
+  "confirmPasswordLabel": "دووپاتکردنەوەی وشەی نهێنی",
+  "passwordMismatch": "وشەکانی نهێنی یەک نین",
   "ownerOverview": "کورتەیەک",
   "ownerPendingLabel": "چاوەڕوان",
   "ownerConfirmedLabel": "پشتڕاستکراوە",

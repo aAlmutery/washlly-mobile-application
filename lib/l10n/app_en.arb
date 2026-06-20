@@ -165,6 +165,8 @@
   "ownerRegisterSuccess": "Account created successfully",
   "fieldRequired": "This field is required",
   "passwordMinLength": "Password must be at least 6 characters",
+  "confirmPasswordLabel": "Confirm password",
+  "passwordMismatch": "Passwords do not match",
   "ownerOverview": "Overview",
   "ownerPendingLabel": "Pending",
   "ownerConfirmedLabel": "Confirmed",

@@ -212,10 +212,12 @@ class _RegisterTabState extends State<_RegisterTab> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   final _stationNameController = TextEditingController();
   String? _selectedGovernorate;
   bool _loading = false;
   bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
   String? _error;
 
   @override
@@ -223,6 +225,7 @@ class _RegisterTabState extends State<_RegisterTab> {
     _nameController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     _stationNameController.dispose();
     super.dispose();
   }
@@ -360,6 +363,28 @@ class _RegisterTabState extends State<_RegisterTab> {
               validator: (v) {
                 if (v == null || v.isEmpty) return loc.fieldRequired;
                 if (v.length < 6) return loc.passwordMinLength;
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _confirmPasswordController,
+              obscureText: _obscureConfirmPassword,
+              decoration: InputDecoration(
+                labelText: loc.confirmPasswordLabel,
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.lock_outline),
+                suffixIcon: IconButton(
+                  icon: Icon(_obscureConfirmPassword
+                      ? Icons.visibility
+                      : Icons.visibility_off),
+                  onPressed: () => setState(
+                      () => _obscureConfirmPassword = !_obscureConfirmPassword),
+                ),
+              ),
+              validator: (v) {
+                if (v == null || v.isEmpty) return loc.fieldRequired;
+                if (v != _passwordController.text) return loc.passwordMismatch;
                 return null;
               },
             ),
