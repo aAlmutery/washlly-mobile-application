@@ -335,52 +335,78 @@ class _OwnerStationTabState extends State<_OwnerStationTab> {
 
   Future<void> _showAddServiceDialog() async {
     final loc = AppLocalizations.of(context)!;
-    final nameController = TextEditingController();
+
+    List<String> serviceNames;
+    try {
+      serviceNames = await SupabaseService.instance.fetchServiceNames();
+    } catch (_) {
+      serviceNames = [];
+    }
+
+    if (!mounted) return;
+
+    if (serviceNames.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.ownerServiceInvalidInput)),
+      );
+      return;
+    }
+
+    String? selectedName;
     final priceController = TextEditingController();
     final durationController = TextEditingController();
 
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(loc.ownerAddService),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: InputDecoration(labelText: loc.ownerServiceName),
-              textCapitalization: TextCapitalization.words,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: Text(loc.ownerAddService),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                value: selectedName,
+                isExpanded: true,
+                decoration: InputDecoration(labelText: loc.ownerServiceName),
+                items: serviceNames
+                    .map((name) => DropdownMenuItem(
+                          value: name,
+                          child: Text(name, overflow: TextOverflow.ellipsis),
+                        ))
+                    .toList(),
+                onChanged: (value) => setDialogState(() => selectedName = value),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: priceController,
+                decoration: InputDecoration(labelText: loc.ownerServicePrice),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: durationController,
+                decoration: InputDecoration(labelText: loc.ownerServiceDuration),
+                keyboardType: TextInputType.number,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(loc.cancelButton),
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: priceController,
-              decoration: InputDecoration(labelText: loc.ownerServicePrice),
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: durationController,
-              decoration: InputDecoration(labelText: loc.ownerServiceDuration),
-              keyboardType: TextInputType.number,
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(loc.ownerAddServiceBtn),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(loc.cancelButton),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(loc.ownerAddServiceBtn),
-          ),
-        ],
       ),
     );
 
     if (confirmed != true) return;
 
-    final name = nameController.text.trim();
+    final name = selectedName ?? '';
     final price = int.tryParse(priceController.text.trim()) ?? 0;
     final duration = int.tryParse(durationController.text.trim());
 
