@@ -158,6 +158,8 @@
   "ownerRegisterTabTitle": "New Account",
   "ownerStationNameLabel": "Station Name",
   "ownerStationAddressLabel": "City / Area",
+  "ownerStationGovernorateLabel": "Governorate",
+  "ownerStationGovernorateRequired": "Please select a governorate",
   "ownerRegisterBtn": "Create Account",
   "ownerLoginSuccess": "Welcome back!",
   "ownerRegisterSuccess": "Account created successfully",

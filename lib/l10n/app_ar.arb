@@ -158,6 +158,8 @@
   "ownerRegisterTabTitle": "حساب جديد",
   "ownerStationNameLabel": "اسم المحطة",
   "ownerStationAddressLabel": "المدينة / المنطقة",
+  "ownerStationGovernorateLabel": "المحافظة",
+  "ownerStationGovernorateRequired": "يرجى اختيار المحافظة",
   "ownerRegisterBtn": "إنشاء الحساب",
   "ownerLoginSuccess": "مرحباً بعودتك!",
   "ownerRegisterSuccess": "تم إنشاء الحساب بنجاح",

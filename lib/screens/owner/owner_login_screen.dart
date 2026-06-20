@@ -202,12 +202,18 @@ class _RegisterTab extends StatefulWidget {
 }
 
 class _RegisterTabState extends State<_RegisterTab> {
+  static const _governorates = [
+    'Baghdad', 'Basra', 'Nineveh', 'Erbil', 'Sulaymaniyah', 'Duhok',
+    'Kirkuk', 'Anbar', 'Babylon', 'Diyala', 'Karbala', 'Maysan',
+    'Muthanna', 'Najaf', 'Qadisiyyah', 'Saladin', 'Thi Qar', 'Wasit',
+  ];
+
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _stationNameController = TextEditingController();
-  final _stationAddressController = TextEditingController();
+  String? _selectedGovernorate;
   bool _loading = false;
   bool _obscurePassword = true;
   String? _error;
@@ -218,12 +224,11 @@ class _RegisterTabState extends State<_RegisterTab> {
     _phoneController.dispose();
     _passwordController.dispose();
     _stationNameController.dispose();
-    _stationAddressController.dispose();
     super.dispose();
   }
 
   Future<void> _register() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate() || _selectedGovernorate == null) return;
     setState(() { _loading = true; _error = null; });
 
     // Fetch current location; fall back to 0.0 if permission denied or unavailable.
@@ -252,7 +257,7 @@ class _RegisterTabState extends State<_RegisterTab> {
         password: _passwordController.text,
         station: {
           'name': _stationNameController.text.trim(),
-          'address': _stationAddressController.text.trim(),
+          'address': _selectedGovernorate!,
           'detailed_address': '',
           'working_hours_start': '08:00',
           'working_hours_end': '22:00',
@@ -375,15 +380,24 @@ class _RegisterTabState extends State<_RegisterTab> {
                   (v == null || v.trim().isEmpty) ? loc.fieldRequired : null,
             ),
             const SizedBox(height: 16),
-            TextFormField(
-              controller: _stationAddressController,
+            DropdownButtonFormField<String>(
+              value: _selectedGovernorate,
+              isExpanded: true,
               decoration: InputDecoration(
-                labelText: loc.ownerStationAddressLabel,
+                labelText: loc.ownerStationGovernorateLabel,
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.location_city),
               ),
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? loc.fieldRequired : null,
+              items: _governorates
+                  .map((g) => DropdownMenuItem(
+                        value: g,
+                        child: Text(g, overflow: TextOverflow.ellipsis),
+                      ))
+                  .toList(),
+              onChanged: (v) => setState(() => _selectedGovernorate = v),
+              validator: (_) => _selectedGovernorate == null
+                  ? loc.ownerStationGovernorateRequired
+                  : null,
             ),
             if (_error != null) ...[
               const SizedBox(height: 12),

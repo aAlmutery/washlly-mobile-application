@@ -158,6 +158,8 @@
   "ownerRegisterTabTitle": "ئەژمێری نوێ",
   "ownerStationNameLabel": "ناوی مەحەتە",
   "ownerStationAddressLabel": "شار / ناوچە",
+  "ownerStationGovernorateLabel": "پارێزگا",
+  "ownerStationGovernorateRequired": "تکایە پارێزگایەک هەڵبژێرە",
   "ownerRegisterBtn": "ئەژمێر دروست بکە",
   "ownerLoginSuccess": "بەخێربێیت!",
   "ownerRegisterSuccess": "ئەژمێر بە سەرکەوتوویی دروستکرا",
