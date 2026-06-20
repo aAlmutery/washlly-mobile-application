@@ -158,6 +158,8 @@ class _OwnerHomeTab extends StatelessWidget {
               b['status'] == 'pending_owner_approval' ||
               b['status'] == 'pending_customer_approval').length;
           final confirmed = bookings.where((b) => b['status'] == 'confirmed').length;
+          final completed = bookings.where((b) => b['status'] == 'completed').length;
+          final cancelled = bookings.where((b) => b['status'] == 'cancelled').length;
           final total = bookings.length;
 
           return RefreshIndicator(
@@ -219,6 +221,28 @@ class _OwnerHomeTab extends StatelessWidget {
                           value: confirmed.toString(),
                           color: AppColors.statusConfirmed,
                           icon: Icons.check_circle,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _StatCard(
+                          label: loc.ownerStatusCompleted,
+                          value: completed.toString(),
+                          color: AppColors.statusCompleted,
+                          icon: Icons.task_alt,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: _StatCard(
+                          label: loc.ownerStatusCancelled,
+                          value: cancelled.toString(),
+                          color: AppColors.statusCancelled,
+                          icon: Icons.cancel_outlined,
                         ),
                       ),
                     ],
