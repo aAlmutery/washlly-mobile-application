@@ -187,6 +187,7 @@
   "ownerAddServiceSuccess": "خزمەتگوزاری بە سەرکەوتوویی زیادکرا",
   "ownerAddServiceFailed": "سەرکەوتوو نەبوو لە زیادکردنی خزمەتگوزاری: ",
   "ownerServiceInvalidInput": "تکایە ناو و نرخی دروست داخڵ بکە",
+  "ownerRegisterServiceRequired": "تکایە کەمەکەم یەک خزمەتگوزاری زیاد بکە",
   "ownerBookingsTitle": "حجزەکان",
   "refreshTooltip": "نوێکردنەوە",
   "ownerTabPending": "چاوەڕوان",

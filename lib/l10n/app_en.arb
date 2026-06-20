@@ -187,6 +187,7 @@
   "ownerAddServiceSuccess": "Service added successfully",
   "ownerAddServiceFailed": "Failed to add service: ",
   "ownerServiceInvalidInput": "Please enter a valid name and price",
+  "ownerRegisterServiceRequired": "Please add at least one service",
   "ownerBookingsTitle": "Bookings",
   "refreshTooltip": "Refresh",
   "ownerTabPending": "Pending",

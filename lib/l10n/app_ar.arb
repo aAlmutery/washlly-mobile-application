@@ -187,6 +187,7 @@
   "ownerAddServiceSuccess": "تم إضافة الخدمة بنجاح",
   "ownerAddServiceFailed": "فشل إضافة الخدمة: ",
   "ownerServiceInvalidInput": "يرجى إدخال اسم وسعر صحيحين",
+  "ownerRegisterServiceRequired": "يرجى إضافة خدمة واحدة على الأقل",
   "ownerBookingsTitle": "الحجوزات",
   "refreshTooltip": "تحديث",
   "ownerTabPending": "قيد الانتظار",
