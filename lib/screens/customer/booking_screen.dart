@@ -39,6 +39,7 @@ class _BookingScreenState extends State<BookingScreen> {
   List<String> _quickServiceNames = [];
   String? _selectedQuickServiceName;
   bool _loading = false;
+  bool _hasSession = false;
   String? _resultMessage;
   String? _createdBookingId;
 
@@ -54,6 +55,7 @@ class _BookingScreenState extends State<BookingScreen> {
       if (mounted && session != null) {
         _nameController.text = session.customerName;
         _phoneController.text = session.customerPhone;
+        setState(() => _hasSession = true);
       }
     });
     if (widget.station != null) {
@@ -448,14 +450,15 @@ class _BookingScreenState extends State<BookingScreen> {
               ],
               TextFormField(
                 controller: _nameController,
-                readOnly: true,
+                readOnly: _hasSession,
                 decoration: InputDecoration(labelText: loc.fullNameLabel),
+                textCapitalization: TextCapitalization.words,
                 validator: (value) => value?.trim().isEmpty == true ? loc.fullNameRequired : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _phoneController,
-                readOnly: true,
+                readOnly: _hasSession,
                 decoration: InputDecoration(labelText: loc.phoneLabel),
                 keyboardType: TextInputType.phone,
                 validator: (value) => value?.trim().isEmpty == true ? loc.phoneRequired : null,

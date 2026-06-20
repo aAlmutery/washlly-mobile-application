@@ -6,7 +6,6 @@ import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
 import '../state/customer_session_notifier.dart';
 import '../widgets/bottom_nav_scaffold.dart';
-import '../widgets/customer_login_sheet.dart';
 import '../widgets/notification_bell.dart';
 import 'customer/booking_screen.dart';
 
@@ -64,7 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _load() async {
     try {
       final data = await SupabaseService.instance.fetchDistinctServicesWithPrice();
-      if (mounted) setState(() { _services = data; _loading = false; });
+      if (mounted) setState(() { _services = data.take(4).toList(); _loading = false; });
     } catch (e) {
       if (mounted) setState(() { _error = e.toString(); _loading = false; });
     }
@@ -129,14 +128,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     minPrice: svc.minPrice,
                     icon: _iconForService(svc.name),
                     accent: _accentColors[i % _accentColors.length],
-                    onTap: () => requireCustomerLogin(
+                    onTap: () => Navigator.push(
                       context,
-                      onAuthenticated: (_) async => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => BookingScreen(
-                            preselectedServiceName: svc.name,
-                          ),
+                      MaterialPageRoute(
+                        builder: (_) => BookingScreen(
+                          preselectedServiceName: svc.name,
                         ),
                       ),
                     ),
@@ -227,7 +223,6 @@ class _ServiceCardState extends State<_ServiceCard> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final loc = AppLocalizations.of(context)!;
 
     return GestureDetector(
       onTapDown: (_) => setState(() => _pressed = true),
@@ -275,24 +270,6 @@ class _ServiceCardState extends State<_ServiceCard> {
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.sm,
-                  vertical: 2,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.primarySurface,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                ),
-                child: Text(
-                  '${widget.minPrice}${loc.servicePriceCurrencySuffix}',
-                  style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
               ),
             ],
           ),
