@@ -316,32 +316,9 @@ class SupabaseService {
     String customerPhone, {
     String? sessionToken,
   }) async {
-    if (sessionToken != null && sessionToken.isNotEmpty) {
-      try {
-        final response = await client.functions.invoke(
-          'customer-list-bookings',
-          body: {
-            'customer_phone': customerPhone,
-            'session_token': sessionToken,
-          },
-        );
-        if (response.status >= 400) _throwFunctionError(response.data);
-        final data = response.data;
-        if (data == null) return [];
-        final List list;
-        if (data is Map) {
-          list = (data['bookings'] as List?) ?? [];
-        } else if (data is List) {
-          list = data;
-        } else {
-          list = [];
-        }
-        return list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
-      } on FunctionException catch (_) {
-        // Edge function not deployed yet — fall through to REST fallback
-      }
-    }
-    // REST fallback: filter by phone, join services and stations
+    // Always use direct REST so services(name,price) and spin_discount_percent
+    // are included. The customer-list-bookings edge function returns services
+    // with name only (no price), so we skip it here.
     final data = await client
         .from('bookings')
         .select('*,services(name,price),stations(name)')
