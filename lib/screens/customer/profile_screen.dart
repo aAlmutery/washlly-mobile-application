@@ -9,9 +9,9 @@ import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/bottom_nav_scaffold.dart';
 import '../../widgets/customer_login_sheet.dart';
+import '../../widgets/notification_bell.dart';
 import '../home_screen.dart';
 import 'customer_booking_history_screen.dart';
-import 'inbox_screen.dart';
 import 'settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -121,12 +121,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       title: loc.bottomProfile,
       appBarActions: notifier.session != null
           ? [
-              IconButton(
-                icon: const Icon(Icons.notifications_outlined),
-                tooltip: loc.notificationsLabel,
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const InboxScreen()),
-                ),
+              NotificationBell(
+                customerPhone: notifier.session!.customerPhone,
               ),
             ]
           : null,

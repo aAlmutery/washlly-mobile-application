@@ -355,6 +355,15 @@ class SupabaseService {
     return Map<String, dynamic>.from(data as Map);
   }
 
+  Future<int> fetchUnreadNotificationCount(String customerPhone) async {
+    final data = await client
+        .from('customer_notifications')
+        .select('id')
+        .eq('customer_phone', customerPhone)
+        .eq('is_read', false);
+    return (data as List).length;
+  }
+
   Future<Map<String, dynamic>> customerGetInbox({
     required String customerPhone,
     required String sessionToken,

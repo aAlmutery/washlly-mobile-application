@@ -3,10 +3,11 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
+import '../state/customer_session_notifier.dart';
 import '../widgets/bottom_nav_scaffold.dart';
 import '../widgets/customer_login_sheet.dart';
+import '../widgets/notification_bell.dart';
 import 'customer/booking_screen.dart';
-import 'customer/inbox_screen.dart';
 import 'station_list_screen.dart';
 import 'station_map_screen.dart';
 
@@ -108,12 +109,8 @@ class _HomeScreenState extends State<HomeScreen> {
       currentIndex: 0,
       title: loc.appTitle,
       appBarActions: [
-        IconButton(
-          icon: const Icon(Icons.notifications_outlined),
-          tooltip: loc.notificationsLabel,
-          onPressed: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const InboxScreen()),
-          ),
+        NotificationBell(
+          customerPhone: CustomerSessionNotifier.instance.session?.customerPhone,
         ),
       ],
       body: CustomScrollView(
