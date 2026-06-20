@@ -12,6 +12,7 @@ class Booking {
   final String bookingTime;
   final String status; // pending, pending_owner_approval, pending_customer_approval, confirmed, completed, cancelled
   final double? price;
+  final int? discountPercent;
   final int? customerRating;
   final DateTime? ratedAt;
   final String? proposedDate;
@@ -66,6 +67,7 @@ class Booking {
     required this.bookingTime,
     required this.status,
     this.price,
+    this.discountPercent,
     this.customerRating,
     this.ratedAt,
     this.proposedDate,
@@ -103,6 +105,7 @@ class Booking {
       price: (servicesMap?['price'] as num?)?.toDouble()
           ?? (json['service_price'] as num?)?.toDouble()
           ?? (json['price'] as num?)?.toDouble(),
+      discountPercent: json['spin_discount_percent'] as int?,
       customerRating: json['customer_rating'] as int?,
       ratedAt: json['rated_at'] != null ? DateTime.tryParse(json['rated_at'] as String) : null,
       proposedDate: json['proposed_date'] as String?,

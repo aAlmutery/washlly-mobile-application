@@ -88,10 +88,31 @@ class BookingCard extends StatelessWidget {
             ),
             if (booking.price != null) ...[
               const SizedBox(height: AppSpacing.xs),
-              BookingInfoRow(
-                icon: Icons.attach_money,
-                text: '${booking.price!.toStringAsFixed(0)}${loc.servicePriceCurrencySuffix}',
-              ),
+              if (booking.discountPercent != null && booking.discountPercent! > 0) ...[
+                BookingInfoRow(
+                  icon: Icons.attach_money,
+                  text: '${loc.bookingOriginalPrice}${booking.price!.toStringAsFixed(0)}${loc.servicePriceCurrencySuffix}',
+                  strikethrough: true,
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                BookingInfoRow(
+                  icon: Icons.local_offer_outlined,
+                  text: '${booking.discountPercent}% off',
+                  iconColor: AppColors.success,
+                  textColor: AppColors.success,
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                BookingInfoRow(
+                  icon: Icons.price_check,
+                  text: '${loc.bookingFinalPrice}${(booking.price! * (1 - booking.discountPercent! / 100)).toStringAsFixed(0)}${loc.servicePriceCurrencySuffix}',
+                  iconColor: AppColors.success,
+                  textColor: AppColors.success,
+                ),
+              ] else
+                BookingInfoRow(
+                  icon: Icons.attach_money,
+                  text: '${booking.price!.toStringAsFixed(0)}${loc.servicePriceCurrencySuffix}',
+                ),
             ],
 
             if (booking.proposedDate != null) ...[
@@ -252,17 +273,36 @@ class BookingCard extends StatelessWidget {
 class BookingInfoRow extends StatelessWidget {
   final IconData icon;
   final String text;
+  final Color? iconColor;
+  final Color? textColor;
+  final bool strikethrough;
 
-  const BookingInfoRow({super.key, required this.icon, required this.text});
+  const BookingInfoRow({
+    super.key,
+    required this.icon,
+    required this.text,
+    this.iconColor,
+    this.textColor,
+    this.strikethrough = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 16, color: AppColors.textSecondary),
+        Icon(icon, size: 16, color: iconColor ?? AppColors.textSecondary),
         const SizedBox(width: AppSpacing.sm),
-        Expanded(child: Text(text, style: AppTextStyles.bodyMedium)),
+        Expanded(
+          child: Text(
+            text,
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: textColor,
+              decoration: strikethrough ? TextDecoration.lineThrough : null,
+              decorationColor: textColor ?? AppColors.textSecondary,
+            ),
+          ),
+        ),
       ],
     );
   }

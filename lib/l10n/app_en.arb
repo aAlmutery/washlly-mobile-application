@@ -264,6 +264,8 @@
   "servicePrefix": "Service: ",
   "datePrefix": "Date: ",
   "pricePrefix": "Price: ",
+  "bookingOriginalPrice": "Original price: ",
+  "bookingFinalPrice": "After discount: ",
   "proposedTimePrefix": "Proposed time from station: ",
   "yourRatingPrefix": "Your rating: ",
   "acceptPostponeBtn": "Accept New Appointment",

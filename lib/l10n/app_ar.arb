@@ -264,6 +264,8 @@
   "servicePrefix": "الخدمة: ",
   "datePrefix": "التاريخ: ",
   "pricePrefix": "السعر: ",
+  "bookingOriginalPrice": "السعر الأصلي: ",
+  "bookingFinalPrice": "بعد الخصم: ",
   "proposedTimePrefix": "موعد مقترح من المحطة: ",
   "yourRatingPrefix": "تقييمك: ",
   "acceptPostponeBtn": "قبول الموعد الجديد",

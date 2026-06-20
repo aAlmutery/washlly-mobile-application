@@ -264,6 +264,8 @@
   "servicePrefix": "خزمەتگوزاری: ",
   "datePrefix": "بەروار: ",
   "pricePrefix": "نرخ: ",
+  "bookingOriginalPrice": "نرخی ئەسڵی: ",
+  "bookingFinalPrice": "دوای داشکاندن: ",
   "proposedTimePrefix": "کاتی پێشنیازکراوی مەحەتە: ",
   "yourRatingPrefix": "هەڵسەنگاندنەکەت: ",
   "acceptPostponeBtn": "کاتی نوێ پەسەند بکە",
