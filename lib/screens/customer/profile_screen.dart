@@ -13,7 +13,6 @@ import '../home_screen.dart';
 import 'customer_booking_history_screen.dart';
 import 'inbox_screen.dart';
 import 'settings_screen.dart';
-import '../owner/owner_login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   static const routeName = '/profile';
@@ -235,22 +234,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           MaterialPageRoute(
                             builder: (_) => CustomerBookingHistoryScreen(session: notifier.session!),
                           ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                  ],
-                  // Owner Login Option — hidden when a customer session is active.
-                  if (notifier.session == null) ...[
-                    _ProfileOptionCard(
-                      iconData: Icons.business,
-                      iconColor: AppColors.primary,
-                      iconBackground: AppColors.primarySurface,
-                      title: loc.actionOwnerLoginTitle,
-                      subtitle: loc.profileOwnerLoginDesc,
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const OwnerLoginScreen()),
                         );
                       },
                     ),

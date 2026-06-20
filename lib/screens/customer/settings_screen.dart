@@ -5,6 +5,7 @@ import '../../state/theme_mode_notifier.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
+import '../owner/owner_login_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   final LocaleNotifier localeNotifier;
@@ -122,6 +123,15 @@ class SettingsScreen extends StatelessWidget {
                 title: loc.settingsMode,
                 subtitle: _currentModeName(context),
                 onTap: () => _showModeDialog(context),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              _SettingsTile(
+                icon: Icons.business,
+                title: loc.actionOwnerLoginTitle,
+                subtitle: loc.profileOwnerLoginDesc,
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const OwnerLoginScreen()),
+                ),
               ),
             ],
           ),
