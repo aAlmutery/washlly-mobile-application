@@ -130,6 +130,30 @@ class SupabaseService {
         .toList();
   }
 
+  /// Returns distinct active service names with the lowest price found
+  /// across all stations. Used by the home screen service grid.
+  Future<List<({String name, int minPrice})>> fetchDistinctServicesWithPrice() async {
+    final data = await client
+        .from('services')
+        .select('name,price')
+        .eq('is_active', true)
+        .order('name');
+
+    final Map<String, int> nameToMin = {};
+    for (final item in (data as List)) {
+      final name = (item as Map)['name'] as String;
+      final price = ((item)['price'] as num).toInt();
+      if (!nameToMin.containsKey(name) || price < nameToMin[name]!) {
+        nameToMin[name] = price;
+      }
+    }
+
+    return (nameToMin.entries.toList()
+          ..sort((a, b) => a.key.compareTo(b.key)))
+        .map((e) => (name: e.key, minPrice: e.value))
+        .toList();
+  }
+
   Future<List<String>> fetchServiceNames() async {
     final data = await client
         .from('services')

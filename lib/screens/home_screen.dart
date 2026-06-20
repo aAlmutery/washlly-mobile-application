@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../services/supabase_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
@@ -9,65 +10,34 @@ import '../widgets/customer_login_sheet.dart';
 import '../widgets/notification_bell.dart';
 import 'customer/booking_screen.dart';
 
-// ─── Domain ────────────────────────────────────────────────────────────────
+// ─── Helpers ───────────────────────────────────────────────────────────────
 
-enum _Filter { all, popular, recent }
-
-class _Service {
-  final String title;
-  final String subtitle;
-  final String price;
-  final IconData icon;
-  final Color accent;
-  final bool popular;
-  final bool recent;
-
-  const _Service({
-    required this.title,
-    required this.subtitle,
-    required this.price,
-    required this.icon,
-    required this.accent,
-    this.popular = false,
-    this.recent = false,
-  });
+IconData _iconForService(String name) {
+  final n = name.toLowerCase();
+  if (n.contains('wash') || n.contains('غسيل') || n.contains('غسل')) {
+    return Icons.local_car_wash;
+  }
+  if (n.contains('oil') || n.contains('زيت')) return Icons.opacity;
+  if (n.contains('clean') || n.contains('تنظيف')) return Icons.cleaning_services;
+  if (n.contains('vip') || n.contains('فاخر') || n.contains('ممتاز')) {
+    return Icons.workspace_premium;
+  }
+  if (n.contains('polish') || n.contains('تلميع')) return Icons.auto_awesome;
+  if (n.contains('tire') || n.contains('tyre') || n.contains('إطار')) {
+    return Icons.tire_repair;
+  }
+  if (n.contains('interior') || n.contains('داخل')) return Icons.airline_seat_recline_extra;
+  return Icons.car_repair;
 }
 
-List<_Service> _buildServices(AppLocalizations l) => [
-      _Service(
-        title: l.serviceCarWash,
-        subtitle: l.serviceCarWashSub,
-        price: '5,000',
-        icon: Icons.local_car_wash,
-        accent: AppColors.primary,
-        popular: true,
-        recent: true,
-      ),
-      _Service(
-        title: l.serviceOilChange,
-        subtitle: l.serviceOilChangeSub,
-        price: '25,000',
-        icon: Icons.opacity,
-        accent: AppColors.warning,
-        popular: true,
-      ),
-      _Service(
-        title: l.serviceFullClean,
-        subtitle: l.serviceFullCleanSub,
-        price: '15,000',
-        icon: Icons.cleaning_services,
-        accent: const Color(0xFF00897B),
-        recent: true,
-      ),
-      _Service(
-        title: l.serviceVipWash,
-        subtitle: l.serviceVipWashSub,
-        price: '35,000',
-        icon: Icons.workspace_premium,
-        accent: AppColors.statusPendingCustomer,
-        popular: true,
-      ),
-    ];
+const _accentColors = [
+  AppColors.primary,
+  AppColors.warning,
+  Color(0xFF00897B),
+  AppColors.statusPendingCustomer,
+  Color(0xFF00838F),
+  AppColors.statusCompleted,
+];
 
 // ─── Screen ────────────────────────────────────────────────────────────────
 
@@ -81,27 +51,28 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  _Filter _filter = _Filter.all;
-  late List<_Service> _allServices;
+  List<({String name, int minPrice})> _services = [];
+  bool _loading = true;
+  String? _error;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _allServices = _buildServices(AppLocalizations.of(context)!);
+  void initState() {
+    super.initState();
+    _load();
   }
 
-  List<_Service> get _filtered => switch (_filter) {
-        _Filter.popular => _allServices.where((s) => s.popular).toList(),
-        _Filter.recent => _allServices.where((s) => s.recent).toList(),
-        _Filter.all => _allServices,
-      };
-
-  void _setFilter(_Filter f) => setState(() => _filter = f);
+  Future<void> _load() async {
+    try {
+      final data = await SupabaseService.instance.fetchDistinctServicesWithPrice();
+      if (mounted) setState(() { _services = data; _loading = false; });
+    } catch (e) {
+      if (mounted) setState(() { _error = e.toString(); _loading = false; });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
-    final filtered = _filtered;
 
     return BottomNavScaffold(
       currentIndex: 0,
@@ -116,48 +87,63 @@ class _HomeScreenState extends State<HomeScreen> {
         physics: const BouncingScrollPhysics(),
         slivers: [
           SliverToBoxAdapter(child: _WelcomeHeader()),
-          SliverToBoxAdapter(
-            child: _FilterBar(active: _filter, onSelect: _setFilter),
-          ),
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.md, AppSpacing.md, AppSpacing.md, 0,
             ),
             sliver: SliverToBoxAdapter(
-              child: Text(loc.homeOurServices,
-                  style: AppTextStyles.titleLarge),
+              child: Text(loc.homeOurServices, style: AppTextStyles.titleLarge),
             ),
           ),
-          SliverPadding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            sliver: SliverGrid.builder(
-              gridDelegate:
-                  const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: AppSpacing.sm,
-                crossAxisSpacing: AppSpacing.sm,
-                mainAxisExtent: 150,
+          if (_loading)
+            const SliverFillRemaining(
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (_error != null || _services.isEmpty)
+            SliverFillRemaining(
+              child: Center(
+                child: Text(
+                  _services.isEmpty ? loc.ownerNoServices : (_error ?? ''),
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ),
-              itemCount: filtered.length,
-              itemBuilder: (context, i) {
-                final svc = filtered[i];
-                return _ServiceCard(
-                  service: svc,
-                  onTap: () => requireCustomerLogin(
-                    context,
-                    onAuthenticated: (_) async => Navigator.push(
+            )
+          else
+            SliverPadding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              sliver: SliverGrid.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: AppSpacing.sm,
+                  crossAxisSpacing: AppSpacing.sm,
+                  mainAxisExtent: 150,
+                ),
+                itemCount: _services.length,
+                itemBuilder: (context, i) {
+                  final svc = _services[i];
+                  return _ServiceCard(
+                    name: svc.name,
+                    minPrice: svc.minPrice,
+                    icon: _iconForService(svc.name),
+                    accent: _accentColors[i % _accentColors.length],
+                    onTap: () => requireCustomerLogin(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => BookingScreen(
-                          preselectedServiceName: svc.title,
+                      onAuthenticated: (_) async => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => BookingScreen(
+                            preselectedServiceName: svc.name,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -214,95 +200,20 @@ class _WelcomeHeader extends StatelessWidget {
   }
 }
 
-// ─── Filter bar ────────────────────────────────────────────────────────────
-
-class _FilterBar extends StatelessWidget {
-  final _Filter active;
-  final void Function(_Filter) onSelect;
-
-  const _FilterBar({required this.active, required this.onSelect});
-
-  @override
-  Widget build(BuildContext context) {
-    final loc = AppLocalizations.of(context)!;
-    final tabs = [
-      (_Filter.all, loc.allServices),
-      (_Filter.popular, loc.homeFilterPopular),
-      (_Filter.recent, loc.homeFilterRecent),
-    ];
-
-    return SizedBox(
-      height: 56,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
-        ),
-        itemCount: tabs.length,
-        separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
-        itemBuilder: (_, i) {
-          final (filter, label) = tabs[i];
-          return _FilterChip(
-            label: label,
-            selected: active == filter,
-            onTap: () => onSelect(filter),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _FilterChip extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _FilterChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeInOut,
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.xs + 2,
-        ),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-          border: Border.all(
-            color: selected ? AppColors.primary : AppColors.divider,
-            width: 1.5,
-          ),
-        ),
-        child: Text(
-          label,
-          style: AppTextStyles.labelLarge.copyWith(
-            color: selected ? Colors.white : AppColors.textSecondary,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 // ─── Service card ──────────────────────────────────────────────────────────
 
 class _ServiceCard extends StatefulWidget {
-  final _Service service;
+  final String name;
+  final int minPrice;
+  final IconData icon;
+  final Color accent;
   final VoidCallback onTap;
 
   const _ServiceCard({
-    required this.service,
+    required this.name,
+    required this.minPrice,
+    required this.icon,
+    required this.accent,
     required this.onTap,
   });
 
@@ -316,7 +227,6 @@ class _ServiceCardState extends State<_ServiceCard> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final svc = widget.service;
     final loc = AppLocalizations.of(context)!;
 
     return GestureDetector(
@@ -352,14 +262,14 @@ class _ServiceCardState extends State<_ServiceCard> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: svc.accent.withAlpha(28),
+                  color: widget.accent.withAlpha(28),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                 ),
-                child: Icon(svc.icon, color: svc.accent, size: 22),
+                child: Icon(widget.icon, color: widget.accent, size: 22),
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
-                svc.title,
+                widget.name,
                 style: AppTextStyles.bodyMedium.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -377,7 +287,7 @@ class _ServiceCardState extends State<_ServiceCard> {
                   borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
                 ),
                 child: Text(
-                  '${svc.price}${loc.servicePriceCurrencySuffix}',
+                  '${widget.minPrice}${loc.servicePriceCurrencySuffix}',
                   style: AppTextStyles.labelSmall.copyWith(
                     color: AppColors.primary,
                     fontWeight: FontWeight.bold,
