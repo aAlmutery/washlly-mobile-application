@@ -177,47 +177,55 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     )
                   else
-                    Card(
-                      color: AppColors.primarySurface,
-                      child: Padding(
-                        padding: const EdgeInsets.all(AppSpacing.md),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(Icons.person_outline, size: 40, color: AppColors.primary),
-                                const SizedBox(width: AppSpacing.md),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        loc.welcomeTitle,
-                                        style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold),
-                                      ),
-                                      const SizedBox(height: AppSpacing.xs),
-                                      Text(
-                                        loc.profileLoginPrompt,
-                                        style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
-                                      ),
-                                    ],
+                    Builder(builder: (context) {
+                      final cs = Theme.of(context).colorScheme;
+                      return Card(
+                        color: cs.primaryContainer,
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(Icons.person_outline, size: 40, color: cs.onPrimaryContainer),
+                                  const SizedBox(width: AppSpacing.md),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          loc.welcomeTitle,
+                                          style: AppTextStyles.bodyLarge.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            color: cs.onPrimaryContainer,
+                                          ),
+                                        ),
+                                        const SizedBox(height: AppSpacing.xs),
+                                        Text(
+                                          loc.profileLoginPrompt,
+                                          style: AppTextStyles.bodyMedium.copyWith(
+                                            color: cs.onPrimaryContainer.withAlpha(180),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton(
-                                onPressed: _openLoginSheet,
-                                child: Text(loc.profileLoginButton),
+                                ],
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: AppSpacing.md),
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: _openLoginSheet,
+                                  child: Text(loc.profileLoginButton),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ),
+                      );
+                    }),
                   const SizedBox(height: AppSpacing.xl),
                   Text(loc.profileOptionsTitle, style: AppTextStyles.titleMedium),
                   const SizedBox(height: AppSpacing.md),
