@@ -42,7 +42,7 @@ class SupabaseService {
   Future<List<Station>> fetchStations() async {
     final data = await client
         .from('stations')
-        .select('id,name,address,detailed_address,latitude,longitude,is_active')
+        .select('id,name,address,detailed_address,latitude,longitude,is_active,rating_average,rating_count')
         .eq('is_active', true)
         .order('name');
 

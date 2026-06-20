@@ -394,22 +394,63 @@ class _StationMapScreenState extends State<StationMapScreen> {
   }
 
   Marker _singleMarker(Station station, {required bool showLabel}) {
+    final hasRating = station.ratingAverage != null &&
+        station.ratingCount != null &&
+        station.ratingCount! > 0;
+
+    // Keep ORIGINAL width & alignment — changing them shifts the horizontal
+    // anchor and causes the label to drift sideways during map rotation.
+    // Only the height grows to accommodate the rating badge.
+    final double markerWidth = showLabel ? 80 : (hasRating ? 56 : 36);
+    final double markerHeight = showLabel
+        ? (hasRating ? 84 : 62)
+        : (hasRating ? 64 : 36);
+
     return Marker(
-      width: showLabel ? 80 : 36,
-      height: showLabel ? 62 : 36,
+      width: markerWidth,
+      height: markerHeight,
       point: LatLng(station.latitude!, station.longitude!),
       alignment: showLabel ? Alignment.bottomCenter : Alignment.center,
       child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: () => _showStationDetails(station),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (hasRating) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.amber.shade700,
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: const [
+                    BoxShadow(color: Colors.black26, blurRadius: 3, offset: Offset(0, 1)),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.star_rounded, size: 10, color: Colors.white),
+                    const SizedBox(width: 2),
+                    Text(
+                      station.ratingAverage!.toStringAsFixed(1),
+                      style: const TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 2),
+            ],
             const Icon(
               Icons.location_pin,
               color: Color(0xFF1565C0),
               size: 36,
               shadows: [
-                Shadow(color: Colors.black38, blurRadius: 4, offset: Offset(0, 2))
+                Shadow(color: Colors.black38, blurRadius: 4, offset: Offset(0, 2)),
               ],
             ),
             if (showLabel)
@@ -446,6 +487,7 @@ class _StationMapScreenState extends State<StationMapScreen> {
       height: size,
       point: center,
       child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: () {
           final bounds = LatLngBounds.fromPoints(
             group.map((s) => LatLng(s.latitude!, s.longitude!)).toList(),
@@ -564,6 +606,35 @@ class _StationMapScreenState extends State<StationMapScreen> {
                               Text(distText,
                                   style: const TextStyle(
                                       color: Colors.white70, fontSize: 12)),
+                            ],
+                          ),
+                        ],
+                        if (station.ratingAverage != null &&
+                            station.ratingCount != null &&
+                            station.ratingCount! > 0) ...[
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              ...List.generate(5, (i) {
+                                final filled = station.ratingAverage! >= i + 1;
+                                final half = !filled &&
+                                    station.ratingAverage! >= i + 0.5;
+                                return Icon(
+                                  filled
+                                      ? Icons.star_rounded
+                                      : half
+                                          ? Icons.star_half_rounded
+                                          : Icons.star_outline_rounded,
+                                  color: Colors.amber,
+                                  size: 14,
+                                );
+                              }),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${station.ratingAverage!.toStringAsFixed(1)} (${station.ratingCount})',
+                                style: const TextStyle(
+                                    color: Colors.white70, fontSize: 12),
+                              ),
                             ],
                           ),
                         ],
