@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/booking.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
@@ -130,6 +131,51 @@ class BookingCard extends StatelessWidget {
                 ],
               ),
             ],
+
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.map_outlined, size: 16),
+                    label: Text(loc.directionsGoogleMaps, overflow: TextOverflow.ellipsis),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF1A73E8),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                    ),
+                    onPressed: () async {
+                      final query = Uri.encodeComponent(booking.stationName);
+                      final uri = Uri.parse(
+                        'https://www.google.com/maps/search/?api=1&query=$query',
+                      );
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      }
+                    },
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.navigation_outlined, size: 16),
+                    label: Text(loc.directionsWaze, overflow: TextOverflow.ellipsis),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF00AAFF),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                    ),
+                    onPressed: () async {
+                      final query = Uri.encodeComponent(booking.stationName);
+                      final uri = Uri.parse(
+                        'https://waze.com/ul?q=$query&navigate=yes',
+                      );
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
 
             if (onMarkDone != null || onAcceptPostpone != null || onRejectPostpone != null || canCancel || onRate != null) ...[
               const SizedBox(height: AppSpacing.sm),

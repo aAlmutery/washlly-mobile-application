@@ -6,6 +6,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../models/booking.dart';
 import '../models/customer_session.dart';
@@ -673,7 +674,49 @@ class _StationMapScreenState extends State<StationMapScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+            if (station.latitude != null && station.longitude != null) ...[
+              const SizedBox(height: 4),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        icon: const Icon(Icons.map_outlined, size: 18),
+                        label: Text(loc.directionsGoogleMaps),
+                        onPressed: () async {
+                          final uri = Uri.parse(
+                            'https://www.google.com/maps/dir/?api=1'
+                            '&destination=${station.latitude},${station.longitude}',
+                          );
+                          if (await canLaunchUrl(uri)) {
+                            await launchUrl(uri, mode: LaunchMode.externalApplication);
+                          }
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        icon: const Icon(Icons.navigation_outlined, size: 18),
+                        label: Text(loc.directionsWaze),
+                        onPressed: () async {
+                          final uri = Uri.parse(
+                            'https://waze.com/ul'
+                            '?ll=${station.latitude},${station.longitude}'
+                            '&navigate=yes',
+                          );
+                          if (await canLaunchUrl(uri)) {
+                            await launchUrl(uri, mode: LaunchMode.externalApplication);
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 12),
 
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
