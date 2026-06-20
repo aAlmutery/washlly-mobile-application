@@ -177,6 +177,34 @@ class SupabaseService {
     return Map<String, dynamic>.from(data as Map);
   }
 
+  /// Fetches quota, active status, outstanding debt, and latest active
+  /// subscription for the owner's station. Returns a Map with keys:
+  /// free_requests_quota, is_active, outstanding_debt, subscription (nullable Map).
+  Future<Map<String, dynamic>> fetchOwnerInfo(String stationId) async {
+    final ownerRow = await client
+        .from('station_owners')
+        .select('free_requests_quota,is_active,outstanding_debt')
+        .eq('station_id', stationId)
+        .single();
+
+    Map<String, dynamic>? subscription;
+    try {
+      subscription = await client
+          .from('subscriptions')
+          .select('*')
+          .eq('station_id', stationId)
+          .eq('is_active', true)
+          .order('created_at', ascending: false)
+          .limit(1)
+          .maybeSingle();
+    } catch (_) {}
+
+    return {
+      ...Map<String, dynamic>.from(ownerRow as Map),
+      'subscription': subscription,
+    };
+  }
+
   Future<Map<String, dynamic>> ownerLoginLookup(String identifier) async {
     final data = await _invoke('owner-login-lookup', body: {'identifier': identifier});
     return Map<String, dynamic>.from(data as Map);

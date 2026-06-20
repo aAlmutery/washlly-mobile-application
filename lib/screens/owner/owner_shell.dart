@@ -137,7 +137,7 @@ class _OwnerShellState extends State<OwnerShell> {
 
 // ─────────────────────────── Home Tab ───────────────────────────
 
-class _OwnerHomeTab extends StatelessWidget {
+class _OwnerHomeTab extends StatefulWidget {
   final OwnerSession session;
   final Future<List<Map<String, dynamic>>> bookingsFuture;
   final Future<void> Function() onRefresh;
@@ -145,12 +145,32 @@ class _OwnerHomeTab extends StatelessWidget {
   const _OwnerHomeTab({required this.session, required this.bookingsFuture, required this.onRefresh});
 
   @override
+  State<_OwnerHomeTab> createState() => _OwnerHomeTabState();
+}
+
+class _OwnerHomeTabState extends State<_OwnerHomeTab> {
+  late Future<Map<String, dynamic>> _ownerInfoFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _ownerInfoFuture = SupabaseService.instance.fetchOwnerInfo(widget.session.stationId);
+  }
+
+  Future<void> _refresh() async {
+    setState(() {
+      _ownerInfoFuture = SupabaseService.instance.fetchOwnerInfo(widget.session.stationId);
+    });
+    await widget.onRefresh();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: Text(session.stationName)),
+      appBar: AppBar(title: Text(widget.session.stationName)),
       body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: bookingsFuture,
+        future: widget.bookingsFuture,
         builder: (context, snapshot) {
           final bookings = snapshot.data ?? [];
           final pending = bookings.where((b) =>
@@ -163,13 +183,14 @@ class _OwnerHomeTab extends StatelessWidget {
           final total = bookings.length;
 
           return RefreshIndicator(
-            onRefresh: onRefresh,
+            onRefresh: _refresh,
             child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // ── Station header card ────────────────────────────────────
                 Card(
                   color: AppColors.primary,
                   child: Padding(
@@ -183,12 +204,12 @@ class _OwnerHomeTab extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                session.stationName,
+                                widget.session.stationName,
                                 style: AppTextStyles.titleLarge.copyWith(color: Colors.white),
                               ),
                               const SizedBox(height: AppSpacing.xs),
                               Text(
-                                session.ownerPhone,
+                                widget.session.ownerPhone,
                                 style: AppTextStyles.bodyMedium.copyWith(color: Colors.white70),
                               ),
                             ],
@@ -199,6 +220,123 @@ class _OwnerHomeTab extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
+
+                // ── Subscription & Quota card ──────────────────────────────
+                Text(loc.ownerSubscriptionTitle, style: AppTextStyles.titleMedium),
+                const SizedBox(height: 12),
+                FutureBuilder<Map<String, dynamic>>(
+                  future: _ownerInfoFuture,
+                  builder: (context, infoSnap) {
+                    if (infoSnap.connectionState == ConnectionState.waiting) {
+                      return const Card(
+                        child: Padding(
+                          padding: EdgeInsets.all(AppSpacing.lg),
+                          child: Center(child: CircularProgressIndicator()),
+                        ),
+                      );
+                    }
+                    if (infoSnap.hasError || infoSnap.data == null) {
+                      return const SizedBox.shrink();
+                    }
+                    final info = infoSnap.data!;
+                    final isActive = info['is_active'] as bool? ?? true;
+                    final freeQuota = info['free_requests_quota'] as int? ?? 0;
+                    final debt = (info['outstanding_debt'] as num?)?.toDouble() ?? 0.0;
+                    final sub = info['subscription'] as Map?;
+
+                    return Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Status row
+                            Row(
+                              children: [
+                                Icon(
+                                  isActive ? Icons.check_circle_rounded : Icons.block_rounded,
+                                  color: isActive ? AppColors.success : AppColors.error,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: AppSpacing.sm),
+                                Text(
+                                  isActive ? loc.ownerStatusActive : loc.ownerStatusSuspended,
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: isActive ? AppColors.success : AppColors.error,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const Divider(height: AppSpacing.lg),
+
+                            // Free quota
+                            _InfoRow(
+                              icon: Icons.confirmation_number_outlined,
+                              iconColor: AppColors.primary,
+                              label: loc.ownerFreeQuotaLabel,
+                              value: '$freeQuota ${loc.ownerRequestsRemaining}',
+                            ),
+
+                            // Outstanding debt — only show when > 0
+                            if (debt > 0) ...[
+                              const SizedBox(height: AppSpacing.sm),
+                              _InfoRow(
+                                icon: Icons.account_balance_wallet_outlined,
+                                iconColor: AppColors.error,
+                                label: loc.ownerOutstandingDebt,
+                                value: '${debt.toStringAsFixed(0)}${loc.servicePriceCurrencySuffix}',
+                                valueColor: AppColors.error,
+                              ),
+                            ],
+
+                            // Active subscription
+                            const SizedBox(height: AppSpacing.sm),
+                            if (sub == null)
+                              _InfoRow(
+                                icon: Icons.workspace_premium_outlined,
+                                iconColor: AppColors.textSecondary,
+                                label: loc.ownerSubscriptionPackage,
+                                value: loc.ownerNoActiveSubscription,
+                                valueColor: AppColors.textSecondary,
+                              )
+                            else ...[
+                              if (sub['package_name'] != null || sub['plan_name'] != null)
+                                _InfoRow(
+                                  icon: Icons.workspace_premium_rounded,
+                                  iconColor: Colors.amber.shade700,
+                                  label: loc.ownerSubscriptionPackage,
+                                  value: (sub['package_name'] ?? sub['plan_name'] ?? '').toString(),
+                                ),
+                              if (sub['paid_requests_quota'] != null || sub['requests_quota'] != null) ...[
+                                const SizedBox(height: AppSpacing.sm),
+                                _InfoRow(
+                                  icon: Icons.confirmation_number_rounded,
+                                  iconColor: AppColors.success,
+                                  label: loc.ownerPaidQuotaLabel,
+                                  value: '${sub['paid_requests_quota'] ?? sub['requests_quota']} ${loc.ownerRequestsRemaining}',
+                                ),
+                              ],
+                              if (sub['expires_at'] != null) ...[
+                                const SizedBox(height: AppSpacing.sm),
+                                _InfoRow(
+                                  icon: Icons.calendar_month_outlined,
+                                  iconColor: AppColors.warning,
+                                  label: loc.ownerSubscriptionExpires,
+                                  value: (sub['expires_at'] as String).substring(0, 10),
+                                  valueColor: AppColors.warning,
+                                ),
+                              ],
+                            ],
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: AppSpacing.lg),
+
+                // ── Bookings overview ──────────────────────────────────────
                 Text(loc.ownerOverview, style: AppTextStyles.titleMedium),
                 const SizedBox(height: 12),
                 if (snapshot.connectionState == ConnectionState.waiting)
@@ -260,6 +398,51 @@ class _OwnerHomeTab extends StatelessWidget {
           ));
         },
       ),
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String label;
+  final String value;
+  final Color? valueColor;
+
+  const _InfoRow({
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+    required this.value,
+    this.valueColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 18, color: iconColor),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(label, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
+              Flexible(
+                child: Text(
+                  value,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: valueColor,
+                  ),
+                  textAlign: TextAlign.end,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
