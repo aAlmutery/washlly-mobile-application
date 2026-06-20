@@ -1,9 +1,6 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:image_picker/image_picker.dart';
 import '../../models/owner_session.dart';
 import '../../services/notification_service.dart';
 import '../../services/owner_session_service.dart';
@@ -214,7 +211,6 @@ class _RegisterTabState extends State<_RegisterTab> {
   bool _loading = false;
   bool _obscurePassword = true;
   String? _error;
-  XFile? _stationImage;
 
   @override
   void dispose() {
@@ -224,64 +220,6 @@ class _RegisterTabState extends State<_RegisterTab> {
     _stationNameController.dispose();
     _stationAddressController.dispose();
     super.dispose();
-  }
-
-  Future<void> _pickImage() async {
-    final loc = AppLocalizations.of(context)!;
-    final source = await showModalBottomSheet<ImageSource>(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 8),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 12),
-            ListTile(
-              leading: const Icon(Icons.photo_library_outlined),
-              title: Text(loc.stationImagePickGallery),
-              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
-            ),
-            ListTile(
-              leading: const Icon(Icons.camera_alt_outlined),
-              title: Text(loc.stationImageTakePhoto),
-              onTap: () => Navigator.pop(ctx, ImageSource.camera),
-            ),
-            if (_stationImage != null)
-              ListTile(
-                leading: const Icon(Icons.delete_outline, color: Colors.red),
-                title: Text(loc.stationImageRemove,
-                    style: const TextStyle(color: Colors.red)),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  setState(() => _stationImage = null);
-                },
-              ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
-    );
-    if (source == null || !mounted) return;
-    final picked = await ImagePicker().pickImage(
-      source: source,
-      maxWidth: 1024,
-      maxHeight: 1024,
-      imageQuality: 80,
-    );
-    if (picked != null && mounted) {
-      setState(() => _stationImage = picked);
-    }
   }
 
   Future<void> _register() async {
@@ -446,76 +384,6 @@ class _RegisterTabState extends State<_RegisterTab> {
               ),
               validator: (v) =>
                   (v == null || v.trim().isEmpty) ? loc.fieldRequired : null,
-            ),
-            const SizedBox(height: 16),
-            GestureDetector(
-              onTap: _pickImage,
-              child: Container(
-                height: 150,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: _stationImage != null
-                        ? Colors.blue.shade300
-                        : Colors.grey.shade300,
-                    width: 1.5,
-                  ),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: _stationImage != null
-                    ? Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          Image.file(
-                            File(_stationImage!.path),
-                            fit: BoxFit.cover,
-                          ),
-                          Positioned(
-                            top: 8,
-                            right: 8,
-                            child: GestureDetector(
-                              onTap: () =>
-                                  setState(() => _stationImage = null),
-                              child: Container(
-                                decoration: const BoxDecoration(
-                                  color: Colors.black54,
-                                  shape: BoxShape.circle,
-                                ),
-                                padding: const EdgeInsets.all(6),
-                                child: const Icon(Icons.close,
-                                    color: Colors.white, size: 16),
-                              ),
-                            ),
-                          ),
-                        ],
-                      )
-                    : Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.add_photo_alternate_outlined,
-                              size: 44,
-                              color: Colors.blue.shade300),
-                          const SizedBox(height: 8),
-                          Text(
-                            loc.stationImageLabel,
-                            style: TextStyle(
-                              color: Colors.blue.shade600,
-                              fontWeight: FontWeight.w500,
-                              fontSize: 14,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            loc.stationImageOptional,
-                            style: TextStyle(
-                              color: Colors.grey.shade500,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-              ),
             ),
             if (_error != null) ...[
               const SizedBox(height: 12),
