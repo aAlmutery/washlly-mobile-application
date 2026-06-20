@@ -4,6 +4,12 @@ import '../services/notification_service.dart';
 import '../services/session_service.dart';
 
 class CustomerSessionNotifier extends ChangeNotifier {
+  static CustomerSessionNotifier? _instance;
+
+  /// The single instance created in main(). Accessible to any code that needs
+  /// to update the session (e.g. requireCustomerLogin in customer_login_sheet).
+  static CustomerSessionNotifier get instance => _instance!;
+
   CustomerSession? _session;
   bool _loaded = false;
 
@@ -11,6 +17,7 @@ class CustomerSessionNotifier extends ChangeNotifier {
   bool get loaded => _loaded;
 
   CustomerSessionNotifier() {
+    _instance = this;
     _init();
   }
 

@@ -32,7 +32,7 @@ class _BookingScreenState extends State<BookingScreen> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
-  TimeOfDay _selectedTime = TimeOfDay(hour: 12, minute: 0);
+  TimeOfDay? _selectedTime;
   List<ServiceModel> _services = [];
   ServiceModel? _selectedService;
   List<String> _quickServiceNames = [];
@@ -162,7 +162,7 @@ class _BookingScreenState extends State<BookingScreen> {
   Future<void> _pickTime() async {
     final picked = await showTimePicker(
       context: context,
-      initialTime: _selectedTime,
+      initialTime: _selectedTime ?? TimeOfDay.now(),
     );
     if (picked != null) {
       setState(() {
@@ -172,11 +172,18 @@ class _BookingScreenState extends State<BookingScreen> {
   }
 
   String get _formattedDate => DateFormat('yyyy-MM-dd').format(_selectedDate);
-  String get _formattedTime => _selectedTime.format(context);
-  String get _formattedTimeIso => '${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')}';
+  String? get _formattedTime => _selectedTime?.format(context);
+  String? get _formattedTimeIso => _selectedTime == null
+      ? null
+      : '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}';
 
   Future<void> _createMapBooking() async {
     if (!_formKey.currentState!.validate() || widget.station == null || _selectedService == null) {
+      return;
+    }
+    if (_selectedTime == null) {
+      final loc = AppLocalizations.of(context)!;
+      setState(() => _resultMessage = loc.timeRequired);
       return;
     }
 
@@ -195,7 +202,7 @@ class _BookingScreenState extends State<BookingScreen> {
           stationId: widget.station!.id,
           serviceId: _selectedService!.id,
           bookingDate: _formattedDate,
-          bookingTime: _formattedTimeIso,
+          bookingTime: _formattedTimeIso!,
           customerPhone: _phoneController.text.trim(),
         ),
       ),
@@ -214,7 +221,7 @@ class _BookingScreenState extends State<BookingScreen> {
         customerName: _nameController.text.trim(),
         customerPhone: _phoneController.text.trim(),
         bookingDate: _formattedDate,
-        bookingTime: _formattedTimeIso,
+        bookingTime: _formattedTimeIso!,
         spinDiscountPercent: spinResult['discountPercent'] as int? ?? 0,
         spinToken: spinResult['token'] as String? ?? '',
       );
@@ -250,6 +257,11 @@ class _BookingScreenState extends State<BookingScreen> {
 
   Future<void> _createQuickBooking() async {
     if (!_formKey.currentState!.validate() || _position == null || _selectedQuickServiceName == null) return;
+    if (_selectedTime == null) {
+      final loc = AppLocalizations.of(context)!;
+      setState(() => _resultMessage = loc.timeRequired);
+      return;
+    }
 
     // Show spin wheel with a local random pick.
     // TODO: replace onSpin with the real quick-booking spin API call once
@@ -281,7 +293,7 @@ class _BookingScreenState extends State<BookingScreen> {
         customerName: _nameController.text.trim(),
         customerPhone: _phoneController.text.trim(),
         bookingDate: _formattedDate,
-        bookingTime: _formattedTimeIso,
+        bookingTime: _formattedTimeIso!,
         serviceKind: _selectedQuickServiceName!,
         customerLat: _position!.latitude,
         customerLng: _position!.longitude,
@@ -431,12 +443,14 @@ class _BookingScreenState extends State<BookingScreen> {
               ],
               TextFormField(
                 controller: _nameController,
+                readOnly: true,
                 decoration: InputDecoration(labelText: loc.fullNameLabel),
                 validator: (value) => value?.trim().isEmpty == true ? loc.fullNameRequired : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _phoneController,
+                readOnly: true,
                 decoration: InputDecoration(labelText: loc.phoneLabel),
                 keyboardType: TextInputType.phone,
                 validator: (value) => value?.trim().isEmpty == true ? loc.phoneRequired : null,
@@ -454,7 +468,11 @@ class _BookingScreenState extends State<BookingScreen> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: _pickTime,
-                      child: Text('${loc.timeLabelPrefix}$_formattedTime'),
+                      child: Text(
+                        _selectedTime == null
+                            ? loc.chooseTimeLabel
+                            : '${loc.timeLabelPrefix}$_formattedTime',
+                      ),
                     ),
                   ),
                 ],
@@ -466,12 +484,16 @@ class _BookingScreenState extends State<BookingScreen> {
                 else
                   DropdownButtonFormField<ServiceModel>(
                     value: _selectedService,
+                    isExpanded: true,
                     decoration: InputDecoration(labelText: loc.chooseServiceLabel),
                     items: _services
                         .map(
                           (service) => DropdownMenuItem(
                             value: service,
-                            child: Text('${service.name} - ${service.price}${loc.servicePriceCurrencySuffix}'),
+                            child: Text(
+                              '${service.name} - ${service.price}${loc.servicePriceCurrencySuffix}',
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         )
                         .toList(),
@@ -496,9 +518,13 @@ class _BookingScreenState extends State<BookingScreen> {
                 else
                   DropdownButtonFormField<String>(
                     value: _selectedQuickServiceName,
+                    isExpanded: true,
                     decoration: InputDecoration(labelText: loc.chooseServiceLabel),
                     items: _quickServiceNames
-                        .map((n) => DropdownMenuItem(value: n, child: Text(n)))
+                        .map((n) => DropdownMenuItem(
+                              value: n,
+                              child: Text(n, overflow: TextOverflow.ellipsis),
+                            ))
                         .toList(),
                     onChanged: (v) => setState(() => _selectedQuickServiceName = v),
                   ),

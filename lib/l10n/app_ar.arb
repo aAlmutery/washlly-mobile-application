@@ -49,6 +49,8 @@
   "phoneRequired": "رقم الهاتف مطلوب",
   "dateLabelPrefix": "التاريخ: ",
   "timeLabelPrefix": "الوقت: ",
+  "chooseTimeLabel": "اختر الوقت",
+  "timeRequired": "يرجى اختيار الوقت",
   "chooseServiceLabel": "اختر الخدمة",
   "servicePriceCurrencySuffix": " دينار",
   "bookingButtonMap": "احجز عبر الخريطة",

@@ -3,6 +3,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../models/customer_session.dart';
 import '../services/session_service.dart';
 import '../services/supabase_service.dart';
+import '../state/customer_session_notifier.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
@@ -27,7 +28,7 @@ Future<void> requireCustomerLogin(
     ),
     builder: (ctx) => CustomerLoginSheet(
       onSuccess: (newSession) async {
-        await SessionService.instance.saveCustomerSession(newSession);
+        await CustomerSessionNotifier.instance.save(newSession);
         if (!ctx.mounted) return;
         Navigator.pop(ctx);
         if (!context.mounted) return;

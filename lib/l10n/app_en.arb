@@ -49,6 +49,8 @@
   "phoneRequired": "Phone number required",
   "dateLabelPrefix": "Date: ",
   "timeLabelPrefix": "Time: ",
+  "chooseTimeLabel": "Choose time",
+  "timeRequired": "Please choose a time",
   "chooseServiceLabel": "Choose service",
   "servicePriceCurrencySuffix": " IQD",
   "bookingButtonMap": "Book via Map",

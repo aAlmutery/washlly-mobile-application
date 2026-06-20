@@ -49,6 +49,8 @@
   "phoneRequired": "ژمارەی تەلەفۆن داواکراوە",
   "dateLabelPrefix": "بەروار: ",
   "timeLabelPrefix": "کات: ",
+  "chooseTimeLabel": "کات هەڵبژێرە",
+  "timeRequired": "تکایە کاتێک هەڵبژێرە",
   "chooseServiceLabel": "خزمەتگوزاری هەڵبژێرە",
   "servicePriceCurrencySuffix": " دینار",
   "bookingButtonMap": "لە ڕێگای نەخشە حجز بکە",
