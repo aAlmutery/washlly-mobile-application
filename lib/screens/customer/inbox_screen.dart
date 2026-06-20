@@ -6,7 +6,6 @@ import '../../services/supabase_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
-import '../../widgets/bottom_nav_scaffold.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class InboxScreen extends StatefulWidget {
@@ -120,10 +119,8 @@ class _InboxScreenState extends State<InboxScreen> {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
 
-    return BottomNavScaffold(
-      currentIndex: 2,
-      title: loc.notificationsLabel,
-      notificationPhone: customerPhone.isNotEmpty ? customerPhone : null,
+    return Scaffold(
+      appBar: AppBar(title: Text(loc.notificationsLabel)),
       body: FutureBuilder<void>(
         future: _loadFuture,
         builder: (context, snapshot) {
