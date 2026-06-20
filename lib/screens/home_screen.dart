@@ -158,14 +158,6 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
           ),
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.md, 0, AppSpacing.md, AppSpacing.xl,
-            ),
-            sliver: SliverToBoxAdapter(
-              child: _PromoBanner(),
-            ),
-          ),
         ],
       ),
     );
@@ -200,40 +192,22 @@ class _WelcomeHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Avatar placeholder
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(50),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white38, width: 2),
+              Text(
+                loc.welcomeTitle,
+                style: AppTextStyles.titleLarge.copyWith(
+                  color: Colors.white,
                 ),
-                child: const Icon(Icons.person, color: Colors.white, size: 28),
               ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      loc.welcomeTitle,
-                      style: AppTextStyles.titleLarge.copyWith(
-                        color: Colors.white,
-                      ),
-                    ),
-                    Text(
-                      loc.welcomeSubtitle.split('.').first,
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: Colors.white70,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+              Text(
+                loc.welcomeSubtitle.split('.').first,
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: Colors.white70,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
@@ -421,118 +395,4 @@ class _ServiceCardState extends State<_ServiceCard> {
   }
 }
 
-// ─── Promo banner ──────────────────────────────────────────────────────────
-
-class _PromoBanner extends StatelessWidget {
-  const _PromoBanner();
-
-  @override
-  Widget build(BuildContext context) {
-    final loc = AppLocalizations.of(context)!;
-
-    return GestureDetector(
-      onTap: () => requireCustomerLogin(
-        context,
-        onAuthenticated: (_) async =>
-            Navigator.pushNamed(context, BookingScreen.routeName),
-      ),
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF6A1B9A), Color(0xFF4527A0)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF6A1B9A).withAlpha(80),
-              blurRadius: 22,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withAlpha(45),
-                      borderRadius:
-                          BorderRadius.circular(AppSpacing.radiusFull),
-                    ),
-                    child: Text(
-                      '🎉  ${loc.homeSpecialOffer}',
-                      style: AppTextStyles.labelSmall.copyWith(
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    loc.homeVipPromoTitle,
-                    style: AppTextStyles.titleLarge.copyWith(
-                      color: Colors.white,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    loc.homeVipPromoOffer,
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: Colors.white70,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: AppSpacing.sm,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius:
-                          BorderRadius.circular(AppSpacing.radiusFull),
-                    ),
-                    child: Text(
-                      loc.homeBookNow,
-                      style: AppTextStyles.labelLarge.copyWith(
-                        color: const Color(0xFF6A1B9A),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Container(
-              width: 76,
-              height: 76,
-              decoration: BoxDecoration(
-                color: Colors.white.withAlpha(30),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.workspace_premium,
-                color: Colors.white,
-                size: 42,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
