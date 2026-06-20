@@ -17,7 +17,31 @@
       "Skill(run)",
       "Bash(flutter run *)",
       "Bash(Get-ChildItem lib/screens/customer/)",
-      "Bash(Select-Object Name)"
+      "Bash(Select-Object Name)",
+      "Bash($ADB *)",
+      "Bash(/c/Users/Ali/AppData/Local/Android/Sdk/platform-tools/adb.exe -s 102712534C001398 shell input tap 675 2400)",
+      "Bash(/c/Users/Ali/AppData/Local/Android/Sdk/platform-tools/adb.exe -s 102712534C001398 exec-out screencap -p)",
+      "Bash(/c/Users/Ali/AppData/Local/Android/Sdk/platform-tools/adb.exe -s 102712534C001398 shell input tap 170 680)",
+      "Bash(/c/Users/Ali/AppData/Local/Android/Sdk/platform-tools/adb.exe -s 102712534C001398 shell input tap 162 560)",
+      "Bash(/c/Users/Ali/AppData/Local/Android/Sdk/platform-tools/adb.exe -s 102712534C001398 shell input tap 300 700)",
+      "Bash(/c/Users/Ali/AppData/Local/Android/Sdk/platform-tools/adb.exe -s 102712534C001398 logcat -d -t 200)",
+      "Bash(/c/Users/Ali/AppData/Local/Android/Sdk/platform-tools/adb.exe -s 102712534C001398 logcat -c)",
+      "Bash(/c/Users/Ali/AppData/Local/Android/Sdk/platform-tools/adb.exe -s 102712534C001398 shell input swipe 540 1000 540 600 500)",
+      "Bash(/c/Users/Ali/AppData/Local/Android/Sdk/platform-tools/adb.exe -s 102712534C001398 logcat -d)",
+      "Bash(/c/Users/Ali/AppData/Local/Android/Sdk/platform-tools/adb.exe -s 102712534C001398 shell input tap 400 1050)",
+      "Bash(/c/Users/Ali/AppData/Local/Android/Sdk/platform-tools/adb.exe -s 102712534C001398 shell input tap 540 900)",
+      "Bash(/c/Users/Ali/AppData/Local/Android/Sdk/platform-tools/adb.exe -s 102712534C001398 shell input tap 990 1840)",
+      "Bash(/c/Users/Ali/AppData/Local/Android/Sdk/platform-tools/adb.exe -s 102712534C001398 shell am start -n com.washlly.washlly_mobile_app/.MainActivity)",
+      "Bash(/c/Users/Ali/AppData/Local/Android/Sdk/platform-tools/adb.exe -s 102712534C001398 logcat -d -s flutter)",
+      "Bash(/c/Users/Ali/AppData/Local/Android/Sdk/platform-tools/adb.exe -s 102712534C001398 shell getevent -pl)",
+      "Bash(/c/Users/Ali/AppData/Local/Android/Sdk/platform-tools/adb.exe -s 102712534C001398 shell input tap 162 570)",
+      "Bash(/c/Python312/python.exe *)",
+      "Bash(/c/Users/Ali/AppData/Local/Android/Sdk/platform-tools/adb.exe -s 102712534C001398 shell input tap 540 600)",
+      "Bash(/c/Users/Ali/AppData/Local/Android/Sdk/platform-tools/adb.exe -s 102712534C001398 shell input tap 780 1250)",
+      "Bash(/c/Users/Ali/AppData/Local/Android/Sdk/platform-tools/adb.exe -s 102712534C001398 shell input tap 780 1100)",
+      "Bash(git -C C:/inetpub/wwwroot/washlly-mobile-application status)",
+      "Bash(git -C C:/inetpub/wwwroot/washlly-mobile-application diff --stat)",
+      "Bash(git *)"
     ]
   }
 }
