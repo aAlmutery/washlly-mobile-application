@@ -254,6 +254,7 @@ class _RegisterTabState extends State<_RegisterTab> {
       return;
     }
 
+    final dialogFormKey = GlobalKey<FormState>();
     String? selectedName;
     final priceController = TextEditingController();
     final durationController = TextEditingController();
@@ -263,34 +264,45 @@ class _RegisterTabState extends State<_RegisterTab> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
           title: Text(loc.ownerAddService),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              DropdownButtonFormField<String>(
-                value: selectedName,
-                isExpanded: true,
-                decoration: InputDecoration(labelText: loc.ownerServiceName),
-                items: _serviceNames
-                    .map((n) => DropdownMenuItem(
-                          value: n,
-                          child: Text(n, overflow: TextOverflow.ellipsis),
-                        ))
-                    .toList(),
-                onChanged: (v) => setDialogState(() => selectedName = v),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: priceController,
-                decoration: InputDecoration(labelText: loc.ownerServicePrice),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: durationController,
-                decoration: InputDecoration(labelText: loc.ownerServiceDuration),
-                keyboardType: TextInputType.number,
-              ),
-            ],
+          content: Form(
+            key: dialogFormKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField<String>(
+                  value: selectedName,
+                  isExpanded: true,
+                  decoration: InputDecoration(labelText: loc.ownerServiceName),
+                  items: _serviceNames
+                      .map((n) => DropdownMenuItem(
+                            value: n,
+                            child: Text(n, overflow: TextOverflow.ellipsis),
+                          ))
+                      .toList(),
+                  onChanged: (v) => setDialogState(() => selectedName = v),
+                  validator: (_) =>
+                      selectedName == null ? loc.fieldRequired : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: priceController,
+                  decoration: InputDecoration(labelText: loc.ownerServicePrice),
+                  keyboardType: TextInputType.number,
+                  validator: (v) {
+                    final n = int.tryParse(v?.trim() ?? '');
+                    if (n == null || n <= 0) return loc.fieldRequired;
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: durationController,
+                  decoration:
+                      InputDecoration(labelText: loc.ownerServiceDuration),
+                  keyboardType: TextInputType.number,
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -298,7 +310,11 @@ class _RegisterTabState extends State<_RegisterTab> {
               child: Text(loc.cancelButton),
             ),
             ElevatedButton(
-              onPressed: () => Navigator.pop(ctx, true),
+              onPressed: () {
+                if (dialogFormKey.currentState!.validate()) {
+                  Navigator.pop(ctx, true);
+                }
+              },
               child: Text(loc.ownerAddServiceBtn),
             ),
           ],
@@ -307,20 +323,11 @@ class _RegisterTabState extends State<_RegisterTab> {
     );
 
     if (confirmed != true) return;
-    final name = selectedName ?? '';
     final price = int.tryParse(priceController.text.trim()) ?? 0;
     final duration = int.tryParse(durationController.text.trim()) ?? 30;
-    if (name.isEmpty || price <= 0) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.ownerServiceInvalidInput)),
-        );
-      }
-      return;
-    }
     setState(() {
       _services.add({
-        'name': name,
+        'name': selectedName!,
         'price': price,
         'duration_minutes': duration,
         'customer_discount': null,
