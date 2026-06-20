@@ -3,12 +3,18 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../services/supabase_service.dart';
 import '../screens/customer/inbox_screen.dart';
 
-/// Bell icon with a red unread-count badge. Pass [customerPhone] when the
-/// customer is logged in; pass null to show a plain bell with no badge.
+/// Bell icon with a red unread-count badge.
+/// Pass [customerPhone] and [sessionToken] when the customer is logged in;
+/// pass null to show a plain bell with no badge.
 class NotificationBell extends StatefulWidget {
   final String? customerPhone;
+  final String? sessionToken;
 
-  const NotificationBell({super.key, this.customerPhone});
+  const NotificationBell({
+    super.key,
+    this.customerPhone,
+    this.sessionToken,
+  });
 
   @override
   State<NotificationBell> createState() => _NotificationBellState();
@@ -26,15 +32,21 @@ class _NotificationBellState extends State<NotificationBell> {
   @override
   void didUpdateWidget(NotificationBell old) {
     super.didUpdateWidget(old);
-    if (old.customerPhone != widget.customerPhone) _load();
+    if (old.customerPhone != widget.customerPhone ||
+        old.sessionToken != widget.sessionToken) {
+      _load();
+    }
   }
 
   Future<void> _load() async {
     final phone = widget.customerPhone;
-    if (phone == null || phone.isEmpty) return;
+    final token = widget.sessionToken;
+    if (phone == null || phone.isEmpty || token == null || token.isEmpty) return;
     try {
-      final count =
-          await SupabaseService.instance.fetchUnreadNotificationCount(phone);
+      final count = await SupabaseService.instance.fetchUnreadNotificationCount(
+        customerPhone: phone,
+        sessionToken: token,
+      );
       if (mounted) setState(() => _unread = count);
     } catch (_) {}
   }
@@ -58,8 +70,7 @@ class _NotificationBellState extends State<NotificationBell> {
                   color: Colors.red,
                   shape: BoxShape.circle,
                 ),
-                constraints:
-                    const BoxConstraints(minWidth: 16, minHeight: 16),
+                constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
                 child: Text(
                   _unread > 99 ? '99+' : '$_unread',
                   style: const TextStyle(

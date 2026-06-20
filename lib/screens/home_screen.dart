@@ -111,6 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
       appBarActions: [
         NotificationBell(
           customerPhone: CustomerSessionNotifier.instance.session?.customerPhone,
+          sessionToken: CustomerSessionNotifier.instance.session?.sessionToken,
         ),
       ],
       body: CustomScrollView(

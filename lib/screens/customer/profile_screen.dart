@@ -123,6 +123,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ? [
               NotificationBell(
                 customerPhone: notifier.session!.customerPhone,
+                sessionToken: notifier.session!.sessionToken,
               ),
             ]
           : null,

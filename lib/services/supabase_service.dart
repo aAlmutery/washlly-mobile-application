@@ -355,13 +355,16 @@ class SupabaseService {
     return Map<String, dynamic>.from(data as Map);
   }
 
-  Future<int> fetchUnreadNotificationCount(String customerPhone) async {
-    final data = await client
-        .from('customer_notifications')
-        .select('id')
-        .eq('customer_phone', customerPhone)
-        .eq('is_read', false);
-    return (data as List).length;
+  Future<int> fetchUnreadNotificationCount({
+    required String customerPhone,
+    required String sessionToken,
+  }) async {
+    final data = await _invoke('customer-get-inbox', body: {
+      'customer_phone': customerPhone,
+      'session_token': sessionToken,
+    });
+    final notifications = (data as Map)['notifications'] as List? ?? [];
+    return notifications.where((n) => (n as Map)['is_read'] == false).length;
   }
 
   Future<Map<String, dynamic>> customerGetInbox({
