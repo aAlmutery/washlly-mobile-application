@@ -119,6 +119,8 @@
   "supportLeaveAppMessage": "اختر طريقة التواصل مع فريق الدعم.",
   "supportOpenWhatsApp": "واتساب",
   "supportCallNow": "اتصل الآن",
+  "supportWhatsAppDesc": "تحدث معنا عبر واتساب",
+  "supportCallDesc": "اتصل بنا مباشرة",
   "profileSupportComingSoon": "الدعم قريبًا",
   "profileAboutTitle": "حول Washlly",
   "profileAboutDesc": "إصدار التطبيق والمعلومات",

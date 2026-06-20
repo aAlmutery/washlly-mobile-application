@@ -119,6 +119,8 @@
   "supportLeaveAppMessage": "شێوازی پەیوەندیکردن بە تیمی پشتیوانی دیاری بکە.",
   "supportOpenWhatsApp": "واتساپ",
   "supportCallNow": "ئێستا پەیوەندی بکە",
+  "supportWhatsAppDesc": "لە واتساپ پێوەندیمان پێوە بکە",
+  "supportCallDesc": "ڕاستەوخۆ پەیوەندیمان پێوە بکە",
   "profileSupportComingSoon": "پشتیوانی بەم زووانە دێت",
   "profileAboutTitle": "دەربارەی Washlly",
   "profileAboutDesc": "وەشانی ئەپ و زانیاری",

@@ -11,12 +11,24 @@ import '../../services/supabase_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../state/locale_notifier.dart';
+import '../../state/theme_mode_notifier.dart';
 import '../../widgets/status_badge.dart';
+import '../customer/settings_screen.dart';
 import '../home_screen.dart';
 
 class OwnerShell extends StatefulWidget {
   static const routeName = '/owner-shell';
-  const OwnerShell({super.key});
+
+  final LocaleNotifier localeNotifier;
+  final ThemeModeNotifier themeModeNotifier;
+
+  const OwnerShell({
+    super.key,
+    required this.localeNotifier,
+    required this.themeModeNotifier,
+  });
 
   @override
   State<OwnerShell> createState() => _OwnerShellState();
@@ -98,7 +110,12 @@ class _OwnerShellState extends State<OwnerShell> {
         bookingsFuture: _bookingsFuture,
         onRefresh: _refreshBookings,
       ),
-      _OwnerProfileTab(session: session, onLogout: _onLogout),
+      _OwnerProfileTab(
+        session: session,
+        onLogout: _onLogout,
+        localeNotifier: widget.localeNotifier,
+        themeModeNotifier: widget.themeModeNotifier,
+      ),
     ];
 
     return Scaffold(
@@ -1019,11 +1036,48 @@ class _OwnerBookingsTabState extends State<_OwnerBookingsTab>
 
 // ─────────────────────────── Profile Tab ───────────────────────────
 
-class _OwnerProfileTab extends StatelessWidget {
+class _OwnerProfileTab extends StatefulWidget {
   final OwnerSession session;
   final VoidCallback onLogout;
+  final LocaleNotifier localeNotifier;
+  final ThemeModeNotifier themeModeNotifier;
 
-  const _OwnerProfileTab({required this.session, required this.onLogout});
+  const _OwnerProfileTab({
+    required this.session,
+    required this.onLogout,
+    required this.localeNotifier,
+    required this.themeModeNotifier,
+  });
+
+  @override
+  State<_OwnerProfileTab> createState() => _OwnerProfileTabState();
+}
+
+class _OwnerProfileTabState extends State<_OwnerProfileTab> {
+  Future<void> _openWhatsApp() async {
+    final uri = Uri.parse('https://wa.me/9647736939153');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  Future<void> _callSupport() async {
+    final uri = Uri.parse('tel:+9647736939153');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  void _openSettings() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SettingsScreen(
+          localeNotifier: widget.localeNotifier,
+          themeModeNotifier: widget.themeModeNotifier,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1057,12 +1111,12 @@ class _OwnerProfileTab extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            session.stationName,
+                            widget.session.stationName,
                             style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: AppSpacing.xs),
                           Text(
-                            session.ownerPhone,
+                            widget.session.ownerPhone,
                             style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
                           ),
                           const SizedBox(height: AppSpacing.sm),
@@ -1088,6 +1142,76 @@ class _OwnerProfileTab extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.xl),
+            Text(loc.profileOptionsTitle, style: AppTextStyles.titleMedium),
+            const SizedBox(height: AppSpacing.md),
+            _OwnerProfileOptionCard(
+              iconData: Icons.settings,
+              iconColor: AppColors.primary,
+              iconBackground: AppColors.primarySurface,
+              title: loc.profileSettings,
+              subtitle: loc.profileSettingsDesc,
+              onTap: _openSettings,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            _OwnerProfileOptionCard(
+              iconData: Icons.chat_rounded,
+              iconColor: const Color(0xFF25D366),
+              iconBackground: const Color(0x0725D366),
+              title: loc.supportOpenWhatsApp,
+              subtitle: loc.supportWhatsAppDesc,
+              onTap: _openWhatsApp,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            _OwnerProfileOptionCard(
+              iconData: Icons.call_rounded,
+              iconColor: Colors.blue,
+              iconBackground: const Color(0x070000FF),
+              title: loc.supportCallNow,
+              subtitle: loc.supportCallDesc,
+              onTap: _callSupport,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            _OwnerProfileOptionCard(
+              iconData: Icons.info,
+              iconColor: AppColors.primary,
+              iconBackground: AppColors.primarySurface,
+              title: loc.profileAboutTitle,
+              subtitle: loc.profileAboutDesc,
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    final dlgLoc = AppLocalizations.of(context)!;
+                    return AlertDialog(
+                      title: Text(dlgLoc.profileAboutTitle),
+                      content: SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              dlgLoc.profileAboutAppName,
+                              style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            Text(dlgLoc.profileVersion, style: AppTextStyles.bodyMedium),
+                            const SizedBox(height: AppSpacing.sm),
+                            Text(dlgLoc.profileAboutContent, style: AppTextStyles.bodyMedium),
+                          ],
+                        ),
+                      ),
+                      actions: [
+                        ElevatedButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: Text(dlgLoc.profileClose),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
+            const SizedBox(height: AppSpacing.lg),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
@@ -1105,7 +1229,7 @@ class _OwnerProfileTab extends StatelessWidget {
                         ElevatedButton(
                           onPressed: () {
                             Navigator.pop(ctx);
-                            onLogout();
+                            widget.onLogout();
                           },
                           style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
                           child: Text(
@@ -1151,3 +1275,65 @@ class _OwnerInfoRow extends StatelessWidget {
     );
   }
 }
+
+// ─────────────────────────── Owner Profile Helpers ───────────────────────────
+
+class _OwnerProfileOptionCard extends StatelessWidget {
+  final IconData iconData;
+  final Color iconColor;
+  final Color iconBackground;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _OwnerProfileOptionCard({
+    required this.iconData,
+    required this.iconColor,
+    required this.iconBackground,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Row(
+            children: [
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: iconBackground,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                ),
+                child: Center(child: Icon(iconData, color: iconColor, size: 28)),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(subtitle, style: AppTextStyles.bodySmall),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, color: AppColors.textDisabled),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+

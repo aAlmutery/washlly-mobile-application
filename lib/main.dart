@@ -97,7 +97,10 @@ class WashllyApp extends StatelessWidget {
               localeNotifier: localeNotifier,
               themeModeNotifier: themeModeNotifier,
             ),
-            OwnerShell.routeName: (_) => const OwnerShell(),
+            OwnerShell.routeName: (_) => OwnerShell(
+              localeNotifier: localeNotifier,
+              themeModeNotifier: themeModeNotifier,
+            ),
           },
         );
       },
