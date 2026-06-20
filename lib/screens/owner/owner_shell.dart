@@ -190,37 +190,6 @@ class _OwnerHomeTabState extends State<_OwnerHomeTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ── Station header card ────────────────────────────────────
-                Card(
-                  color: AppColors.primary,
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.local_car_wash, color: Colors.white, size: 40),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                widget.session.stationName,
-                                style: AppTextStyles.titleLarge.copyWith(color: Colors.white),
-                              ),
-                              const SizedBox(height: AppSpacing.xs),
-                              Text(
-                                widget.session.ownerPhone,
-                                style: AppTextStyles.bodyMedium.copyWith(color: Colors.white70),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-
                 // ── Subscription & Quota card ──────────────────────────────
                 Text(loc.ownerSubscriptionTitle, style: AppTextStyles.titleMedium),
                 const SizedBox(height: 12),
