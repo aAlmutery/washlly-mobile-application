@@ -173,15 +173,12 @@ class _WelcomeHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
 
+    final cs = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.primaryDark, AppColors.primaryLight],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.only(
+      decoration: BoxDecoration(
+        color: cs.primaryContainer,
+        borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(AppSpacing.radiusXl),
           bottomRight: Radius.circular(AppSpacing.radiusXl),
         ),
@@ -198,13 +195,13 @@ class _WelcomeHeader extends StatelessWidget {
               Text(
                 loc.welcomeTitle,
                 style: AppTextStyles.titleLarge.copyWith(
-                  color: Colors.white,
+                  color: cs.onPrimaryContainer,
                 ),
               ),
               Text(
                 loc.welcomeSubtitle.split('.').first,
                 style: AppTextStyles.bodySmall.copyWith(
-                  color: Colors.white70,
+                  color: cs.onPrimaryContainer.withAlpha(180),
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
