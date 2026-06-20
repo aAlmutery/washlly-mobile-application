@@ -21,7 +21,8 @@ class BookingScreen extends StatefulWidget {
   static const routeName = '/booking';
 
   final Station? station;
-  const BookingScreen({super.key, this.station});
+  final String? preselectedServiceName;
+  const BookingScreen({super.key, this.station, this.preselectedServiceName});
 
   @override
   State<BookingScreen> createState() => _BookingScreenState();
@@ -110,9 +111,13 @@ class _BookingScreenState extends State<BookingScreen> {
     try {
       final names = await SupabaseService.instance.fetchServiceNames();
       if (mounted) {
+        final preselect = widget.preselectedServiceName;
+        final match = preselect != null && names.contains(preselect)
+            ? preselect
+            : (names.isNotEmpty ? names.first : null);
         setState(() {
           _quickServiceNames = names;
-          _selectedQuickServiceName = names.isNotEmpty ? names.first : null;
+          _selectedQuickServiceName = match;
         });
       }
     } catch (_) {}

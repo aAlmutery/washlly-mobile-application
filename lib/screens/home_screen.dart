@@ -8,8 +8,6 @@ import '../widgets/bottom_nav_scaffold.dart';
 import '../widgets/customer_login_sheet.dart';
 import '../widgets/notification_bell.dart';
 import 'customer/booking_screen.dart';
-import 'station_list_screen.dart';
-import 'station_map_screen.dart';
 
 // ─── Domain ────────────────────────────────────────────────────────────────
 
@@ -136,9 +134,9 @@ class _HomeScreenState extends State<HomeScreen> {
               gridDelegate:
                   const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                mainAxisSpacing: AppSpacing.md,
-                crossAxisSpacing: AppSpacing.md,
-                mainAxisExtent: 220,
+                mainAxisSpacing: AppSpacing.sm,
+                crossAxisSpacing: AppSpacing.sm,
+                mainAxisExtent: 150,
               ),
               itemCount: filtered.length,
               itemBuilder: (context, i) {
@@ -147,8 +145,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   service: svc,
                   onTap: () => requireCustomerLogin(
                     context,
-                    onAuthenticated: (_) async =>
-                        Navigator.pushNamed(context, BookingScreen.routeName),
+                    onAuthenticated: (_) async => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => BookingScreen(
+                          preselectedServiceName: svc.title,
+                        ),
+                      ),
+                    ),
                   ),
                 );
               },
@@ -233,74 +237,7 @@ class _WelcomeHeader extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.lg),
-          // Quick-navigation pills
-          Row(
-            children: [
-              _NavPill(
-                icon: Icons.map_outlined,
-                label: loc.actionMapTitle,
-                onTap: () => Navigator.pushReplacementNamed(
-                    context, StationMapScreen.routeName),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              _NavPill(
-                icon: Icons.list_alt_outlined,
-                label: loc.actionStationsTitle,
-                onTap: () => Navigator.pushReplacementNamed(
-                    context, StationListScreen.routeName),
-              ),
-            ],
-          ),
         ],
-      ),
-    );
-  }
-}
-
-class _NavPill extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _NavPill({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm + 2,
-          ),
-          decoration: BoxDecoration(
-            color: Colors.white.withAlpha(35),
-            borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-            border: Border.all(color: Colors.white30),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, color: Colors.white, size: 18),
-              const SizedBox(width: AppSpacing.xs),
-              Flexible(
-                child: Text(
-                  label,
-                  style: AppTextStyles.labelLarge.copyWith(color: Colors.white),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -423,10 +360,10 @@ class _ServiceCardState extends State<_ServiceCard> {
         duration: const Duration(milliseconds: 110),
         curve: Curves.easeOut,
         child: Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: const EdgeInsets.all(AppSpacing.sm + 4),
           decoration: BoxDecoration(
             color: isDark ? AppColors.surfaceCardDark : AppColors.surfaceCard,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
             border: Border.all(color: AppColors.divider),
             boxShadow: [
               BoxShadow(
@@ -438,45 +375,35 @@ class _ServiceCardState extends State<_ServiceCard> {
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                width: 50,
-                height: 50,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
                   color: svc.accent.withAlpha(28),
-                  borderRadius:
-                      BorderRadius.circular(AppSpacing.radiusMd),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                 ),
-                child: Icon(svc.icon, color: svc.accent, size: 26),
+                child: Icon(svc.icon, color: svc.accent, size: 22),
               ),
-              const SizedBox(height: AppSpacing.md),
+              const SizedBox(height: AppSpacing.sm),
               Text(
                 svc.title,
-                style: AppTextStyles.bodyLarge.copyWith(
+                style: AppTextStyles.bodyMedium.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: AppSpacing.xs),
-              Text(
-                svc.subtitle,
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: AppSpacing.xs),
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.sm,
-                  vertical: AppSpacing.xs,
+                  vertical: 2,
                 ),
                 decoration: BoxDecoration(
                   color: AppColors.primarySurface,
-                  borderRadius:
-                      BorderRadius.circular(AppSpacing.radiusFull),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
                 ),
                 child: Text(
                   '${svc.price}${loc.servicePriceCurrencySuffix}',
