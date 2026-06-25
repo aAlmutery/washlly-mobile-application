@@ -296,7 +296,7 @@ class _BookingScreenState extends State<BookingScreen> {
 
     setState(() { _loading = true; _resultMessage = null; });
     try {
-      await SupabaseService.instance.createQuickBooking(
+      final result = await SupabaseService.instance.createQuickBooking(
         customerName: _nameController.text.trim(),
         customerPhone: _phoneController.text.trim(),
         bookingDate: _formattedDate,
@@ -306,6 +306,11 @@ class _BookingScreenState extends State<BookingScreen> {
         customerLng: _position!.longitude,
       );
       if (!mounted) return;
+      final targetCount = result['target_count'] as int? ?? 0;
+      if (targetCount == 0) {
+        setState(() => _resultMessage = AppLocalizations.of(context)!.quickNoStationsFound);
+        return;
+      }
       final loc = AppLocalizations.of(context)!;
       SoundService.instance.playPopupSound();
       await showDialog<void>(
@@ -313,7 +318,7 @@ class _BookingScreenState extends State<BookingScreen> {
         barrierDismissible: false,
         builder: (ctx) => AlertDialog(
           title: Text(loc.quickBookingSuccessTitle),
-          content: Text(loc.quickBookingSuccessMessage),
+          content: Text('${loc.quickBookingSentPrefix}$targetCount${loc.quickBookingSentSuffix}'),
           actions: [
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx),
