@@ -208,13 +208,19 @@ class _RegisterTabState extends State<_RegisterTab> {
     'Muthanna', 'Najaf', 'Qadisiyyah', 'Saladin', 'Thi Qar', 'Wasit',
   ];
 
+  static const _slotOptions = [15, 30, 45, 60];
+
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _stationNameController = TextEditingController();
+  final _detailedAddressController = TextEditingController();
   String? _selectedGovernorate;
+  TimeOfDay _openTime = const TimeOfDay(hour: 8, minute: 0);
+  TimeOfDay _closeTime = const TimeOfDay(hour: 22, minute: 0);
+  int _slotDuration = 30;
   final List<Map<String, dynamic>> _services = [];
   List<String> _serviceNames = [];
   bool _loading = false;
@@ -229,6 +235,7 @@ class _RegisterTabState extends State<_RegisterTab> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     _stationNameController.dispose();
+    _detailedAddressController.dispose();
     super.dispose();
   }
 
@@ -372,11 +379,13 @@ class _RegisterTabState extends State<_RegisterTab> {
         station: {
           'name': _stationNameController.text.trim(),
           'address': _selectedGovernorate!,
-          'detailed_address': '',
-          'working_hours_start': '08:00',
-          'working_hours_end': '22:00',
+          'detailed_address': _detailedAddressController.text.trim(),
+          'working_hours_start':
+              '${_openTime.hour.toString().padLeft(2, '0')}:${_openTime.minute.toString().padLeft(2, '0')}',
+          'working_hours_end':
+              '${_closeTime.hour.toString().padLeft(2, '0')}:${_closeTime.minute.toString().padLeft(2, '0')}',
           'scheduling_type': 'slots',
-          'slot_duration_minutes': 30,
+          'slot_duration_minutes': _slotDuration,
           'latitude': lat,
           'longitude': lng,
           'image_url': null,
@@ -526,6 +535,76 @@ class _RegisterTabState extends State<_RegisterTab> {
               validator: (_) => _selectedGovernorate == null
                   ? loc.ownerStationGovernorateRequired
                   : null,
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _detailedAddressController,
+              decoration: InputDecoration(
+                labelText: loc.ownerStationDetailedAddressLabel,
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.signpost),
+              ),
+              textCapitalization: TextCapitalization.sentences,
+            ),
+            const SizedBox(height: 24),
+            Text(
+              loc.ownerStationWorkingHoursLabel,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      final picked = await showTimePicker(
+                        context: context,
+                        initialTime: _openTime,
+                      );
+                      if (picked != null) setState(() => _openTime = picked);
+                    },
+                    icon: const Icon(Icons.wb_sunny_outlined, size: 18),
+                    label: Text(
+                      '${loc.ownerStationOpenLabel} ${_openTime.format(context)}',
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      final picked = await showTimePicker(
+                        context: context,
+                        initialTime: _closeTime,
+                      );
+                      if (picked != null) setState(() => _closeTime = picked);
+                    },
+                    icon: const Icon(Icons.nights_stay_outlined, size: 18),
+                    label: Text(
+                      '${loc.ownerStationCloseLabel} ${_closeTime.format(context)}',
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<int>(
+              value: _slotDuration,
+              isExpanded: true,
+              decoration: InputDecoration(
+                labelText: loc.ownerStationSlotDurationLabel,
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.timer_outlined),
+              ),
+              items: _slotOptions
+                  .map((d) => DropdownMenuItem(
+                        value: d,
+                        child: Text('$d ${loc.ownerServiceDurationSuffix}'),
+                      ))
+                  .toList(),
+              onChanged: (v) {
+                if (v != null) setState(() => _slotDuration = v);
+              },
             ),
             const SizedBox(height: 24),
             Row(
