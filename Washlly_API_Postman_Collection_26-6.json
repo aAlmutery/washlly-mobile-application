@@ -1,0 +1,1445 @@
+{
+  "info": {
+    "_postman_id": "f1f76df9-4c6f-4b5e-9af5-d3fd8de8d889",
+    "name": "Washlly Website API - Latest",
+    "description": "Updated: 2026-06-23.\nSupabase Edge Functions and REST endpoints for Washlly website/customer portal/station portal.\nCustomer access, customer inbox, owner portal booking actions, ratings, quick booking, REST data, WhatsApp utilities, Firebase Cloud Messaging push notifications, and station credit/suspension lifecycle are included.\nStation credit uses station_owners.free_requests_quota as the unified remaining request counter: map booking consumes one request from the selected station, quick booking consumes one request per targeted station, payment-callback tops up quota, and check-subscriptions hides stations with zero quota.\nUse Supabase Auth separately to fill ownerAccessToken/adminAccessToken for protected owner/admin calls.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "supabaseUrl",
+      "value": "https://yhklvtzonvgzkodysawu.supabase.co"
+    },
+    {
+      "key": "functionsBase",
+      "value": "{{supabaseUrl}}/functions/v1"
+    },
+    {
+      "key": "restBase",
+      "value": "{{supabaseUrl}}/rest/v1"
+    },
+    {
+      "key": "anonKey",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inloa2x2dHpvbnZnemtvZHlzYXd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0OTgyMzYsImV4cCI6MjA5MTA3NDIzNn0.K0sxdzG1C1ytFU7Zb-ZCY2tCyEG2ryVUE-7SNdmo7xc"
+    },
+    {
+      "key": "ownerAccessToken",
+      "value": "PASTE_OWNER_USER_ACCESS_TOKEN"
+    },
+    {
+      "key": "adminAccessToken",
+      "value": "PASTE_ADMIN_USER_ACCESS_TOKEN"
+    },
+    {
+      "key": "customerSessionToken",
+      "value": "PASTE_CUSTOMER_SESSION_TOKEN"
+    },
+    {
+      "key": "customerPhone",
+      "value": "07736635435"
+    },
+    {
+      "key": "customerPhoneNormalized",
+      "value": "9647736635435"
+    },
+    {
+      "key": "customerName",
+      "value": "Mustafa"
+    },
+    {
+      "key": "stationId",
+      "value": "PASTE_STATION_UUID"
+    },
+    {
+      "key": "serviceId",
+      "value": "PASTE_SERVICE_UUID"
+    },
+    {
+      "key": "bookingId",
+      "value": "PASTE_BOOKING_UUID"
+    },
+    {
+      "key": "notificationId",
+      "value": "PASTE_NOTIFICATION_UUID"
+    },
+    {
+      "key": "requestId",
+      "value": "PASTE_QUICK_REQUEST_UUID"
+    },
+    {
+      "key": "spinToken",
+      "value": "PASTE_SPIN_TOKEN"
+    },
+    {
+      "key": "customerLat",
+      "value": "36.1911"
+    },
+    {
+      "key": "customerLng",
+      "value": "44.0092"
+    },
+    {
+      "key": "bookingDate",
+      "value": "2026-05-18"
+    },
+    {
+      "key": "bookingTime",
+      "value": "18:30"
+    },
+    {
+      "key": "proposedDate",
+      "value": "2026-05-18"
+    },
+    {
+      "key": "proposedTime",
+      "value": "20:30"
+    },
+    {
+      "key": "rating",
+      "value": "5"
+    },
+    {
+      "key": "conversationId",
+      "value": "PASTE_CONVERSATION_UUID_OPTIONAL"
+    },
+    {
+      "key": "ownerId",
+      "value": "PASTE_OWNER_UUID"
+    },
+    {
+      "key": "spinDiscountPercent",
+      "value": "0"
+    },
+    {
+      "key": "bookingNumber",
+      "value": "PASTE_BOOKING_NUMBER"
+    },
+    {
+      "key": "deviceToken",
+      "value": "PASTE_FCM_DEVICE_TOKEN"
+    },
+    {
+      "key": "platform",
+      "value": "android"
+    },
+    {
+      "key": "pushRole",
+      "value": "customer"
+    },
+    {
+      "key": "pushTitle",
+      "value": "Booking Confirmed"
+    },
+    {
+      "key": "pushBody",
+      "value": "Your booking has been confirmed"
+    },
+    {
+      "key": "ownerPhoneNormalized",
+      "value": "9647836635435"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Customer Login and Session",
+      "item": [
+        {
+          "name": "customer-login-by-phone - direct login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{anonKey}}"
+              }
+            ],
+            "description": "Creates or resumes a direct customer web session without OTP. If the phone has no saved name and customer_name is omitted, the response returns requires_name=true.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_phone\": \"{{customerPhone}}\",\n  \"customer_name\": \"{{customerName}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{functionsBase}}/customer-login-by-phone"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test(\"Direct customer login response is successful\", function () {",
+                  "  pm.expect(data.success).to.eql(true);",
+                  "});",
+                  "if (data.session_token) pm.collectionVariables.set(\"customerSessionToken\", data.session_token);",
+                  "if (data.customer_phone) pm.collectionVariables.set(\"customerPhoneNormalized\", data.customer_phone);",
+                  "if (data.customer_name) pm.collectionVariables.set(\"customerName\", data.customer_name);",
+                  "pm.test(\"OTP is not required for the current customer flow\", function () {",
+                  "  pm.expect(data.requires_verification).to.not.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "customer-update-profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{anonKey}}"
+              }
+            ],
+            "description": "Updates the saved customer display name for an active direct customer session.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_phone\": \"{{customerPhone}}\",\n  \"session_token\": \"{{customerSessionToken}}\",\n  \"customer_name\": \"{{customerName}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{functionsBase}}/customer-update-profile"
+          }
+        }
+      ],
+      "description": "Direct customer login. First login needs name and phone; later login can use the phone only if a profile already exists."
+    },
+    {
+      "name": "02 - Customer Inbox and Booking Actions",
+      "item": [
+        {
+          "name": "customer-get-inbox",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{anonKey}}"
+              }
+            ],
+            "description": "Returns customer notifications and visible bookings. Powers inbox and bell count.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_phone\": \"{{customerPhone}}\",\n  \"session_token\": \"{{customerSessionToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{functionsBase}}/customer-get-inbox"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data.notifications && data.notifications[0]) pm.collectionVariables.set(\"notificationId\", data.notifications[0].id);",
+                  "if (data.bookings && data.bookings[0]) pm.collectionVariables.set(\"bookingId\", data.bookings[0].id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "customer-mark-notification-read - one",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{anonKey}}"
+              }
+            ],
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_phone\": \"{{customerPhone}}\",\n  \"session_token\": \"{{customerSessionToken}}\",\n  \"notification_id\": \"{{notificationId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{functionsBase}}/customer-mark-notification-read"
+          }
+        },
+        {
+          "name": "customer-mark-notification-read - all",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{anonKey}}"
+              }
+            ],
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_phone\": \"{{customerPhone}}\",\n  \"session_token\": \"{{customerSessionToken}}\",\n  \"mark_all\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{functionsBase}}/customer-mark-notification-read"
+          }
+        },
+        {
+          "name": "customer-list-bookings",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{anonKey}}"
+              }
+            ],
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_phone\": \"{{customerPhone}}\",\n  \"session_token\": \"{{customerSessionToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{functionsBase}}/customer-list-bookings"
+          }
+        },
+        {
+          "name": "customer-manage-booking - cancel",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{anonKey}}"
+              }
+            ],
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"booking_id\": \"{{bookingId}}\",\n  \"action\": \"cancel\",\n  \"customer_phone\": \"{{customerPhone}}\",\n  \"session_token\": \"{{customerSessionToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{functionsBase}}/customer-manage-booking"
+          }
+        },
+        {
+          "name": "customer-manage-booking - postpone",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{anonKey}}"
+              }
+            ],
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"booking_id\": \"{{bookingId}}\",\n  \"action\": \"postpone\",\n  \"booking_date\": \"{{proposedDate}}\",\n  \"booking_time\": \"{{proposedTime}}\",\n  \"customer_phone\": \"{{customerPhone}}\",\n  \"session_token\": \"{{customerSessionToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{functionsBase}}/customer-manage-booking"
+          }
+        },
+        {
+          "name": "customer-manage-booking - accept station time",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{anonKey}}"
+              }
+            ],
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"booking_id\": \"{{bookingId}}\",\n  \"action\": \"accept_postpone\",\n  \"customer_phone\": \"{{customerPhone}}\",\n  \"session_token\": \"{{customerSessionToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{functionsBase}}/customer-manage-booking"
+          }
+        },
+        {
+          "name": "customer-submit-rating",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{anonKey}}"
+              }
+            ],
+            "description": "Completes the booking and submits a 1-5 station rating. Booking must be confirmed/completed and unrated.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"booking_id\": \"{{bookingId}}\",\n  \"customer_phone\": \"{{customerPhone}}\",\n  \"session_token\": \"{{customerSessionToken}}\",\n  \"rating\": \"{{rating}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{functionsBase}}/customer-submit-rating"
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Booking Creation",
+      "item": [
+        {
+          "name": "spin-booking-discount",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{anonKey}}"
+              }
+            ],
+            "description": "Get spin_token before create-map-booking. Valid discounts: 0, 5, 10, 15.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"station_id\": \"{{stationId}}\",\n  \"service_id\": \"{{serviceId}}\",\n  \"booking_date\": \"{{bookingDate}}\",\n  \"booking_time\": \"{{bookingTime}}\",\n  \"customer_phone\": \"{{customerPhone}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{functionsBase}}/spin-booking-discount"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data.token) pm.collectionVariables.set(\"spinToken\", data.token);",
+                  "if (data.discountPercent !== undefined) pm.collectionVariables.set(\"spinDiscountPercent\", String(data.discountPercent));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "create-map-booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{anonKey}}"
+              }
+            ],
+            "description": "Creates a regular map booking. Consumes 1 request from station_owners.free_requests_quota for the selected station; when quota reaches 0, the station is suspended and hidden from the map.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"station_id\": \"{{stationId}}\",\n  \"service_id\": \"{{serviceId}}\",\n  \"customer_name\": \"{{customerName}}\",\n  \"customer_phone\": \"{{customerPhone}}\",\n  \"booking_date\": \"{{bookingDate}}\",\n  \"booking_time\": \"{{bookingTime}}\",\n  \"spin_discount_percent\": \"{{spinDiscountPercent}}\",\n  \"spin_token\": \"{{spinToken}}\",\n  \"language\": \"ar\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{functionsBase}}/create-map-booking"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data.bookingId) pm.collectionVariables.set(\"bookingId\", data.bookingId);",
+                  "if (data.bookingNumber) pm.collectionVariables.set(\"bookingNumber\", String(data.bookingNumber));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "create-quick-booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{anonKey}}"
+              }
+            ],
+            "description": "Creates quick bookings for the nearest eligible stations. Consumes 1 request per targeted station from station_owners.free_requests_quota; service_kind filters matching active services when provided.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_name\": \"{{customerName}}\",\n  \"customer_phone\": \"{{customerPhone}}\",\n  \"booking_date\": \"{{bookingDate}}\",\n  \"booking_time\": \"{{bookingTime}}\",\n  \"service_kind\": \"quick\",\n  \"language\": \"ar\",\n  \"customer_lat\": \"{{customerLat}}\",\n  \"customer_lng\": \"{{customerLng}}\",\n  \"exclude_station_ids\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{functionsBase}}/create-quick-booking"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data.request_id) pm.collectionVariables.set(\"requestId\", data.request_id);",
+                  "if (data.targets && data.targets[0]) {",
+                  "  pm.collectionVariables.set(\"bookingId\", data.targets[0].booking_id);",
+                  "  pm.collectionVariables.set(\"stationId\", data.targets[0].station_id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "cancel-map-booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{anonKey}}"
+              }
+            ],
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"booking_id\": \"{{bookingId}}\",\n  \"customer_phone\": \"{{customerPhone}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{functionsBase}}/cancel-map-booking"
+          }
+        },
+        {
+          "name": "cancel-all-map-bookings",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{anonKey}}"
+              }
+            ],
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_phone\": \"{{customerPhone}}\",\n  \"language\": \"ar\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{functionsBase}}/cancel-all-map-bookings"
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Owner Portal",
+      "item": [
+        {
+          "name": "owner-self-register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{anonKey}}"
+              }
+            ],
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"owner_name\": \"Mustafa\",\n  \"owner_phone\": \"{{customerPhone}}\",\n  \"email\": \"optional@example.com\",\n  \"password\": \"123456\",\n  \"free_requests_quota\": 20,\n  \"station\": {\n    \"name\": \"Washlly\",\n    \"address\": \"Erbil\",\n    \"detailed_address\": \"Near main street\",\n    \"working_hours_start\": \"08:00\",\n    \"working_hours_end\": \"22:00\",\n    \"scheduling_type\": \"slots\",\n    \"slot_duration_minutes\": 30,\n    \"latitude\": 36.1911,\n    \"longitude\": 44.0092,\n    \"image_url\": null,\n    \"category\": \"car_wash\"\n  },\n  \"services\": [\n    {\n      \"name\": \"General wash\",\n      \"price\": 8000,\n      \"duration_minutes\": 30,\n      \"customer_discount\": null,\n      \"sort_order\": 0\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{functionsBase}}/owner-self-register"
+          }
+        },
+        {
+          "name": "owner-login-lookup",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{anonKey}}"
+              }
+            ],
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"{{customerPhone}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{functionsBase}}/owner-login-lookup"
+          }
+        },
+        {
+          "name": "owner-manage-booking - confirm",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ownerAccessToken}}"
+              }
+            ],
+            "description": "Requires ownerAccessToken. One-time owner action.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"booking_id\": \"{{bookingId}}\",\n  \"action\": \"confirm\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{functionsBase}}/owner-manage-booking"
+          }
+        },
+        {
+          "name": "owner-manage-booking - reject",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ownerAccessToken}}"
+              }
+            ],
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"booking_id\": \"{{bookingId}}\",\n  \"action\": \"reject\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{functionsBase}}/owner-manage-booking"
+          }
+        },
+        {
+          "name": "owner-manage-booking - postpone",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ownerAccessToken}}"
+              }
+            ],
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"booking_id\": \"{{bookingId}}\",\n  \"action\": \"postpone\",\n  \"booking_date\": \"{{proposedDate}}\",\n  \"booking_time\": \"{{proposedTime}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{functionsBase}}/owner-manage-booking"
+          }
+        },
+        {
+          "name": "payment-callback",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Payment provider callback. On paid status, creates/updates a subscription, adds the package request count to station_owners.free_requests_quota, clears outstanding_debt, and reactivates the station.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"station_id\": \"{{stationId}}\",\n  \"package_code\": \"starter_20\",\n  \"status\": \"paid\",\n  \"amount\": 5,\n  \"transaction_id\": \"TEST-REFERENCE\",\n  \"response\": \"json\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{functionsBase}}/payment-callback?response=json"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05 - REST Public and Protected Data",
+      "item": [
+        {
+          "name": "stations - active",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{anonKey}}"
+              }
+            ],
+            "description": "",
+            "url": "{{restBase}}/stations?is_active=eq.true&select=*"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (Array.isArray(data) && data[0]) pm.collectionVariables.set(\"stationId\", data[0].id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "services by station",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{anonKey}}"
+              }
+            ],
+            "description": "",
+            "url": "{{restBase}}/services?station_id=eq.{{stationId}}&is_active=eq.true&select=*"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (Array.isArray(data) && data[0]) pm.collectionVariables.set(\"serviceId\", data[0].id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "owner bookings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ownerAccessToken}}"
+              }
+            ],
+            "description": "",
+            "url": "{{restBase}}/bookings?station_id=eq.{{stationId}}&select=*,services(name,price)&order=created_at.desc"
+          }
+        },
+        {
+          "name": "rated bookings - admin",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "description": "",
+            "url": "{{restBase}}/bookings?customer_rating=not.is.null&select=id,booking_number,customer_name,customer_phone,customer_rating,rated_at,created_at,stations(name),services(name)&order=rated_at.desc"
+          }
+        },
+        {
+          "name": "station rating summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{anonKey}}"
+              }
+            ],
+            "description": "",
+            "url": "{{restBase}}/stations?select=id,name,rating_average,rating_count&rating_count=gt.0&order=rating_average.desc"
+          }
+        },
+        {
+          "name": "customer profiles - admin",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "description": "",
+            "url": "{{restBase}}/customer_profiles?select=*&order=created_at.desc"
+          }
+        },
+        {
+          "name": "block customer - admin",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_blocked\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{restBase}}/customer_profiles?customer_phone=eq.{{customerPhoneNormalized}}"
+          }
+        },
+        {
+          "name": "unblock customer - admin",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_blocked\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{restBase}}/customer_profiles?customer_phone=eq.{{customerPhoneNormalized}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 - WhatsApp and Admin Utilities",
+      "item": [
+        {
+          "name": "whatsapp-send",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{anonKey}}"
+              }
+            ],
+            "description": "Admin/direct messaging utility. Not used for booking decisions.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"{{customerPhoneNormalized}}\",\n  \"message\": \"Admin test message from Postman\",\n  \"conversation_id\": \"{{conversationId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{functionsBase}}/whatsapp-send"
+          }
+        },
+        {
+          "name": "whatsapp-webhook - inbound audit sample",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{anonKey}}"
+              }
+            ],
+            "description": "Audits inbound messages only. Booking flow and customer OTP login are disabled.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"object\": \"whatsapp_business_account\",\n  \"entry\": [\n    {\n      \"id\": \"sample-entry\",\n      \"changes\": [\n        {\n          \"value\": {\n            \"messages\": [\n              {\n                \"from\": \"{{customerPhoneNormalized}}\",\n                \"id\": \"wamid.sample\",\n                \"type\": \"text\",\n                \"text\": {\n                  \"body\": \"Test inbound message\"\n                }\n              }\n            ]\n          }\n        }\n      ]\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{functionsBase}}/whatsapp-webhook"
+          }
+        },
+        {
+          "name": "check-subscriptions",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{anonKey}}"
+              }
+            ],
+            "description": "Scheduled/admin utility for subscription expiry and station credit visibility. Expires old subscription rows and hides active stations whose free_requests_quota is 0 or less.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{functionsBase}}/check-subscriptions"
+          }
+        },
+        {
+          "name": "send-suspension-notice",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{anonKey}}"
+              }
+            ],
+            "description": "Sends owner suspension/quota/package notice. Admin/employee calls require an access token; internal Edge Function calls may use the service role token.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"owner_id\": \"{{ownerId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{functionsBase}}/send-suspension-notice"
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 - Push Notifications (FCM)",
+      "item": [
+        {
+          "name": "device_tokens - upsert customer token (service role/admin only)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Prefer",
+                "value": "resolution=merge-duplicates,return=representation"
+              }
+            ],
+            "url": {
+              "raw": "{{restBase}}/device_tokens?on_conflict=phone,role,platform",
+              "host": [
+                "{{restBase}}"
+              ],
+              "path": [
+                "device_tokens"
+              ],
+              "query": [
+                {
+                  "key": "on_conflict",
+                  "value": "phone,role,platform"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"{{customerPhoneNormalized}}\",\n  \"role\": \"customer\",\n  \"token\": \"{{deviceToken}}\",\n  \"platform\": \"{{platform}}\",\n  \"language\": \"ar\"\n}"
+            },
+            "description": "Stores or updates the latest FCM token for a customer device. In production, call this from a secure backend wrapper or service-role context."
+          }
+        },
+        {
+          "name": "device_tokens - upsert owner token (service role/admin only)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Prefer",
+                "value": "resolution=merge-duplicates,return=representation"
+              }
+            ],
+            "url": {
+              "raw": "{{restBase}}/device_tokens?on_conflict=phone,role,platform",
+              "host": [
+                "{{restBase}}"
+              ],
+              "path": [
+                "device_tokens"
+              ],
+              "query": [
+                {
+                  "key": "on_conflict",
+                  "value": "phone,role,platform"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"{{ownerPhoneNormalized}}\",\n  \"role\": \"owner\",\n  \"token\": \"{{deviceToken}}\",\n  \"platform\": \"{{platform}}\",\n  \"language\": \"ar\"\n}"
+            },
+            "description": "Stores or updates the latest FCM token for a station owner device."
+          }
+        },
+        {
+          "name": "send-notification - customer push",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{anonKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{functionsBase}}/send-notification",
+              "host": [
+                "{{functionsBase}}"
+              ],
+              "path": [
+                "send-notification"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"{{customerPhoneNormalized}}\",\n  \"role\": \"customer\",\n  \"title\": \"{{pushTitle}}\",\n  \"body\": \"{{pushBody}}\",\n  \"data\": {\n    \"booking_id\": \"{{bookingId}}\",\n    \"status\": \"confirmed\"\n  }\n}"
+            },
+            "description": "Sends an FCM v1 push notification to all stored customer tokens for the phone number."
+          }
+        },
+        {
+          "name": "send-notification - owner push",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{anonKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{functionsBase}}/send-notification",
+              "host": [
+                "{{functionsBase}}"
+              ],
+              "path": [
+                "send-notification"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"{{ownerPhoneNormalized}}\",\n  \"role\": \"owner\",\n  \"title\": \"New Booking\",\n  \"body\": \"You have a new booking at your station\",\n  \"data\": {\n    \"booking_id\": \"{{bookingId}}\",\n    \"station_id\": \"{{stationId}}\"\n  }\n}"
+            },
+            "description": "Sends an FCM v1 push notification to all stored station owner tokens for the phone number."
+          }
+        },
+        {
+          "name": "notify-on-booking-change - insert sample",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{anonKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{functionsBase}}/notify-on-booking-change",
+              "host": [
+                "{{functionsBase}}"
+              ],
+              "path": [
+                "notify-on-booking-change"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"INSERT\",\n  \"record\": {\n    \"id\": \"{{bookingId}}\",\n    \"station_id\": \"{{stationId}}\",\n    \"customer_phone\": \"{{customerPhoneNormalized}}\",\n    \"status\": \"pending\"\n  },\n  \"old_record\": null\n}"
+            },
+            "description": "Database webhook-compatible sample for a new booking. The DB trigger normally calls this automatically."
+          }
+        },
+        {
+          "name": "notify-on-booking-change - status update sample",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{anonKey}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{anonKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{functionsBase}}/notify-on-booking-change",
+              "host": [
+                "{{functionsBase}}"
+              ],
+              "path": [
+                "notify-on-booking-change"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"UPDATE\",\n  \"record\": {\n    \"id\": \"{{bookingId}}\",\n    \"station_id\": \"{{stationId}}\",\n    \"customer_phone\": \"{{customerPhoneNormalized}}\",\n    \"status\": \"confirmed\"\n  },\n  \"old_record\": {\n    \"status\": \"pending\"\n  }\n}"
+            },
+            "description": "Database webhook-compatible sample for a booking status change. Notifies the customer for supported statuses."
+          }
+        }
+      ]
+    }
+  ]
+}
