@@ -207,17 +207,24 @@ class SupabaseService {
   Future<Map<String, dynamic>> fetchOwnerInfo(String stationId) async {
     final ownerRow = await client
         .from('station_owners')
-        .select('free_requests_quota,is_active,outstanding_debt')
+        .select('free_requests_quota,outstanding_debt')
         .eq('station_id', stationId)
+        .single();
+
+    // Suspension status lives on stations (is_active, suspension_reason, suspended_at)
+    final stationRow = await client
+        .from('stations')
+        .select('is_active,suspension_reason,suspended_at')
+        .eq('id', stationId)
         .single();
 
     Map<String, dynamic>? subscription;
     try {
       subscription = await client
           .from('subscriptions')
-          .select('*')
+          .select('package_code,request_limit,requests_used,status,start_date,end_date,paid_at')
           .eq('station_id', stationId)
-          .eq('is_active', true)
+          .eq('status', 'active')
           .order('created_at', ascending: false)
           .limit(1)
           .maybeSingle();
@@ -225,6 +232,7 @@ class SupabaseService {
 
     return {
       ...Map<String, dynamic>.from(ownerRow as Map),
+      ...Map<String, dynamic>.from(stationRow as Map),
       'subscription': subscription,
     };
   }

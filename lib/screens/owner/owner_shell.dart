@@ -209,6 +209,7 @@ class _OwnerHomeTabState extends State<_OwnerHomeTab> {
                     }
                     final info = infoSnap.data!;
                     final isActive = info['is_active'] as bool? ?? true;
+                    final suspensionReason = info['suspension_reason'] as String?;
                     final freeQuota = info['free_requests_quota'] as int? ?? 0;
                     final debt = (info['outstanding_debt'] as num?)?.toDouble() ?? 0.0;
                     final sub = info['subscription'] as Map?;
@@ -239,13 +240,27 @@ class _OwnerHomeTabState extends State<_OwnerHomeTab> {
                             ),
                             const Divider(height: AppSpacing.lg),
 
-                            // Free quota
+                            // Free quota (unified remaining counter)
                             _InfoRow(
                               icon: Icons.confirmation_number_outlined,
                               iconColor: AppColors.primary,
                               label: loc.ownerFreeQuotaLabel,
                               value: '$freeQuota ${loc.ownerRequestsRemaining}',
                             ),
+
+                            // Suspension reason — only show when suspended
+                            if (!isActive && suspensionReason != null) ...[
+                              const SizedBox(height: AppSpacing.sm),
+                              _InfoRow(
+                                icon: Icons.info_outline_rounded,
+                                iconColor: AppColors.error,
+                                label: loc.ownerSuspensionReason,
+                                value: suspensionReason == 'free_quota_exhausted'
+                                    ? loc.ownerSuspensionReasonFreeQuota
+                                    : suspensionReason,
+                                valueColor: AppColors.error,
+                              ),
+                            ],
 
                             // Outstanding debt — only show when > 0
                             if (debt > 0) ...[
@@ -270,29 +285,29 @@ class _OwnerHomeTabState extends State<_OwnerHomeTab> {
                                 valueColor: AppColors.textSecondary,
                               )
                             else ...[
-                              if (sub['package_name'] != null || sub['plan_name'] != null)
+                              if (sub['package_code'] != null)
                                 _InfoRow(
                                   icon: Icons.workspace_premium_rounded,
                                   iconColor: Colors.amber.shade700,
                                   label: loc.ownerSubscriptionPackage,
-                                  value: (sub['package_name'] ?? sub['plan_name'] ?? '').toString(),
+                                  value: sub['package_code'].toString(),
                                 ),
-                              if (sub['paid_requests_quota'] != null || sub['requests_quota'] != null) ...[
+                              if (sub['request_limit'] != null) ...[
                                 const SizedBox(height: AppSpacing.sm),
                                 _InfoRow(
                                   icon: Icons.confirmation_number_rounded,
                                   iconColor: AppColors.success,
                                   label: loc.ownerPaidQuotaLabel,
-                                  value: '${sub['paid_requests_quota'] ?? sub['requests_quota']} ${loc.ownerRequestsRemaining}',
+                                  value: '${sub['request_limit']}${sub['requests_used'] != null ? '  (${sub['requests_used']} ${loc.ownerSubscriptionRequestsUsed})' : ''}',
                                 ),
                               ],
-                              if (sub['expires_at'] != null) ...[
+                              if (sub['end_date'] != null) ...[
                                 const SizedBox(height: AppSpacing.sm),
                                 _InfoRow(
                                   icon: Icons.calendar_month_outlined,
                                   iconColor: AppColors.warning,
                                   label: loc.ownerSubscriptionExpires,
-                                  value: (sub['expires_at'] as String).substring(0, 10),
+                                  value: (sub['end_date'] as String).substring(0, 10),
                                   valueColor: AppColors.warning,
                                 ),
                               ],
